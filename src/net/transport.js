@@ -85,8 +85,10 @@ function openLocal(roomCode) {
   });
 }
 
-/** 生成房间暗号：两个字 + 四位数字，便于口头或聊天软件里传达 */
+/** 队伍的房间号：随机长串。玩家看不到它，在大厅里点队伍名就能加入（D-055） */
 export function makeRoomCode() {
-  const WORDS = ['燕子', '青竹', '白鹤', '流云', '寒江', '孤舟', '明月', '松风', '梅雪', '铁剑', '青锋', '落霞'];
-  return WORDS[Math.floor(Math.random() * WORDS.length)] + '-' + String(Math.floor(1000 + Math.random() * 9000));
+  return 'party-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
+
+/** 大厅：所有开设队伍的房主都在这里广播自己的队伍，客人来这里搜索 */
+export const LOBBY_ROOM = 'lobby-v1';

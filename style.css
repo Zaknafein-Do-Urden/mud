@@ -367,3 +367,11 @@ button.adopt { font-size: 12px; padding: 0 8px; margin-left: 6px; }
 
 .pn-move { cursor: help; border-bottom: 1px dotted var(--border); }
 .pn-move.locked { opacity: 0.6; }
+
+/* ---- 大厅、队伍栏（D-055）---- */
+#lobby { width: min(480px, calc(100vw - 24px)); }
+.lb-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.lb-name { font-weight: bold; flex: 1; }
+.lb-count { color: var(--muted); font-size: 13px; }
+#party .pt-member { margin-right: 4px; }
+#party .pt-kick { font-size: 11px; padding: 0 6px; margin-right: 10px; }

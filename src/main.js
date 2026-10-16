@@ -111,6 +111,8 @@ function partyCommand(cmd) {
   const arg = rest.join(' ');
   if (['开设队伍', '组队'].includes(verb)) { party.host(); return true; }
   if (['加入队伍', '加入'].includes(verb)) { party.join(arg); return true; }
+  if (['搜索队伍', '找队伍'].includes(verb)) { party.search(); return true; }
+  if (['踢出', '请离'].includes(verb)) { party.kick(arg); return true; }
   if (['离开队伍', '退出队伍', '解散队伍'].includes(verb)) {
     if (!party.role()) print([{ cls: 'err', text: '你不在队伍中。' }]);
     else party.leave();
@@ -118,7 +120,7 @@ function partyCommand(cmd) {
   }
   if (verb === '队伍') {
     const ms = party.members();
-    print([{ cls: 'party', text: party.role() ? `队伍成员：${ms.map((m) => m.name + (m.host ? '（队长）' : '')).join('、')}${party.code() ? `　暗号：${party.code()}` : ''}` : '你不在队伍中。在旅店或门派驻地可以 开设队伍 / 加入队伍 暗号。' }]);
+    print([{ cls: 'party', text: party.role() ? `队伍成员：${ms.map((m) => m.name + (m.host ? '（队长）' : '')).join('、')}` : '你不在队伍中。在旅店或门派驻地可以 开设队伍 或 搜索队伍。' }]);
     return true;
   }
   return false;
@@ -209,20 +211,56 @@ function refreshQuick() {
   if (r.bank === 'true') add('钱庄', '@bank');
   if (r.inn === 'true') add('休息', '休息');
   // 旅店、门派驻地可以组队（D-011、D-046）
-  if (!party.role() && r.inn === 'true') { add('开设队伍', '开设队伍'); add('加入队伍', '@join'); }
+  if (!party.role() && r.inn === 'true') { add('开设队伍', '开设队伍'); add('搜索队伍', '搜索队伍'); }
   if (party.isHost()) { add('说话', '@say'); add('解散队伍', '解散队伍'); }
   add('背包', 'i');
   add('帮助', 'help');
 }
 
-/** 队伍栏：成员与暗号 */
+/** 队伍栏：成员；队长可以把人请出队伍（D-055） */
 function refreshParty() {
   const box = $('party');
   if (!party.role() || party.role() === 'joining') { box.hidden = true; return; }
   box.hidden = false;
-  const ms = party.members();
-  box.textContent = `${party.isHost() ? `队伍暗号「${party.code()}」　` : ''}队伍：${ms.map((m) => m.name + (m.host ? '（队长）' : '')).join('、')}`;
+  box.replaceChildren(`队伍（${party.members().length}/4）：`);
+  for (const m of party.members()) {
+    const span = document.createElement('span');
+    span.className = 'pt-member';
+    span.textContent = m.name + (m.host ? '（队长）' : '');
+    box.append(span);
+    if (party.isHost() && !m.host) {
+      const b = document.createElement('button');
+      b.className = 'pt-kick';
+      b.textContent = '踢出';
+      b.addEventListener('click', () => { if (confirm(`把${m.name}请出队伍？`)) party.kick(m.pid); });
+      box.append(b);
+    }
+  }
 }
+
+/** 大厅：搜到的队伍列表（D-055） */
+function showLobby(list) {
+  const dlg = $('lobby');
+  const box = $('lobby-list');
+  box.replaceChildren();
+  if (!list.length) box.append(Object.assign(document.createElement('p'), { className: 'pn-hint', textContent: '正在搜索……这里眼下没有人带队。可以稍等片刻，或者自己开设一个。' }));
+  for (const p of list) {
+    const row = document.createElement('div');
+    row.className = 'lb-row';
+    const full = p.count >= p.max;
+    row.append(Object.assign(document.createElement('span'), { className: 'lb-name', textContent: `${p.host}的队伍` }),
+      Object.assign(document.createElement('span'), { className: 'lb-count', textContent: `${p.count}/${p.max} 人${p.ok ? '' : '（游戏版本不同）'}` }));
+    const b = document.createElement('button');
+    b.textContent = full ? '已满' : '加入';
+    b.disabled = full || !p.ok;
+    b.addEventListener('click', () => { dlg.close(); party.pick(p.code); });
+    row.append(b);
+    box.append(row);
+  }
+  if (!dlg.open) dlg.showModal();
+}
+$('lobby-close').addEventListener('click', () => $('lobby').close());
+$('lobby').addEventListener('close', () => party.closeSearch());
 
 function refreshStatus() {
   const st = game.statusView();
@@ -371,7 +409,6 @@ quick.addEventListener('click', (e) => {
   // @ 开头的是打开面板或输入框，不是命令
   if (cmd === '@market') panels.open('market');
   else if (cmd === '@bank') panels.open('bank');
-  else if (cmd === '@join') { const code = prompt('输入队长告诉你的队伍暗号（如 燕子-1234）：'); if (code) run(`加入队伍 ${code.trim()}`); }
   else if (cmd === '@say') { const t = prompt('对队友说：'); if (t) run(`说 ${t}`); }
   else { run(cmd); input.focus(); }
 });
@@ -387,6 +424,7 @@ const party = initParty({
   get contentHash() { return contentHash; },
   print: (entries) => { print(entries); },
   refresh: () => refreshQuick(),
+  showLobby: (list) => showLobby(list),
   save: () => saveLocal(game.state),
   // 客人入队后加载所有主线内容，房主那边的剧情文字里的链接才能正常显示
   onJoined: () => Promise.all(Object.keys(db.index.storylines ?? {}).map((id) => loadStoryline(db, id))),

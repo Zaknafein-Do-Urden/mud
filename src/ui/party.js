@@ -1,7 +1,7 @@
 // 联机控制（D-048）：开设 / 加入队伍、消息收发、按接收者分发输出、出招倒计时、客人一侧的结算。
 // 引擎只认命令；这里负责把命令和输出在房主与客人之间搬运。协议见 docs/MULTIPLAYER.md §8。
 
-import { openTransport, makeRoomCode } from '../net/transport.js';
+import { openTransport, makeRoomCode, LOBBY_ROOM } from '../net/transport.js';
 import { GUEST_LOCAL, HOST_PRIVATE, MAX_GUESTS } from '../game-party.js';
 import { gainExp } from '../character.js';
 import { regionOf } from './map.js';
@@ -32,6 +32,9 @@ export function initParty(hooks) {
   let deadline = 0;
   let joinTimeout = null;
   let lastPosRoom = null;
+  let lobby = null; // 大厅连接：房主用来广播，客人用来搜索
+  let lobbyTimer = null;
+  const parties = new Map(); // 客人搜到的队伍：code → {code, host, count, max, ok, seen}
 
   const sys = (text, cls = 'party') => hooks.print([{ cls, text }]);
 
@@ -52,8 +55,104 @@ export function initParty(hooks) {
     g.partyStart(code);
     net.onMessage(onHostMessage);
     net.onPeerLeave((pid) => { if (g.member(pid)) show(g.removeMember(pid)); });
-    sys(`你开设了队伍，暗号是「${code}」。把暗号告诉朋友，在旅店或门派驻地输入"加入队伍 ${code}"即可加入（最多 ${MAX_GUESTS} 人）。`);
+    await openLobbyAsHost();
+    sys(`你开设了队伍，最多 ${MAX_GUESTS + 1} 人。和你在同一个旅店或门派驻地的玩家"搜索队伍"就能看到你；你离开这里后，别人就搜不到了。`);
     hooks.refresh();
+  }
+
+  // ================= 大厅（D-055）=================
+
+  /**
+   * 房主：进入大厅，平时不说话；有人搜索时，只有与搜索者在同一个旅店或门派驻地、
+   * 并且队伍未满，才回应（D-056）。
+   */
+  async function openLobbyAsHost() {
+    try {
+      lobby = await openTransport(LOBBY_ROOM);
+    } catch {
+      sys('（大厅连接失败，其他玩家暂时搜不到你的队伍。）', 'err');
+      return;
+    }
+    lobby.onMessage((msg, pid) => {
+      if (msg?.t !== 'search') return;
+      const g = hooks.game();
+      if (g.state.player.room !== msg.room) return; // 不在同一个地方
+      if (g.party.members.length >= MAX_GUESTS) return; // 队伍已满
+      announce(pid);
+    });
+  }
+
+  function announce(to) {
+    const g = hooks.game();
+    if (!lobby || role !== 'host' || !g.party || !to) return;
+    lobby.send({
+      t: 'party', v: PROTOCOL, hash: hooks.contentHash, code: g.party.code,
+      host: g.state.player.name, count: 1 + g.party.members.length, max: MAX_GUESTS + 1,
+    }, to);
+  }
+
+  function closeLobby() {
+    clearInterval(lobbyTimer);
+    lobbyTimer = null;
+    if (lobby) {
+      if (role === 'host' && hooks.game().party) lobby.send({ t: 'gone', code: hooks.game().party.code });
+      lobby.leave();
+    }
+    lobby = null;
+    parties.clear();
+  }
+
+  /** 客人：进入大厅搜索队伍。列表随房主的广播实时更新，10 秒没消息的队伍视为已解散 */
+  async function search() {
+    const g = hooks.game();
+    if (role) { sys('你已经在队伍中了。', 'err'); return; }
+    if (g.room()?.props.inn !== 'true') { sys('要在旅店或门派驻地才能搜索队伍。', 'err'); return; }
+    if (!lobby) {
+      try {
+        lobby = await openTransport(LOBBY_ROOM);
+      } catch (err) {
+        sys(`联机服务连接失败：${err.message}`, 'err');
+        return;
+      }
+      lobby.onMessage((msg) => {
+        if (msg?.t === 'party' && msg.code) {
+          parties.set(msg.code, { ...msg, ok: msg.v === PROTOCOL && msg.hash === hooks.contentHash, seen: Date.now() });
+          hooks.showLobby?.(lobbyList());
+        } else if (msg?.t === 'gone') {
+          parties.delete(msg.code);
+          hooks.showLobby?.(lobbyList());
+        }
+      });
+      const ask = () => lobby?.send({ t: 'search', room: hooks.game().state.player.room });
+      lobby.onPeerJoin(ask);
+      ask();
+      // 每 3 秒重新问一次：走开或满员的队伍不再回应，过期后从列表里消失
+      lobbyTimer = setInterval(() => { ask(); hooks.showLobby?.(lobbyList()); }, 3000);
+    }
+    hooks.showLobby?.(lobbyList());
+  }
+
+  function lobbyList() {
+    const now = Date.now();
+    for (const [code, p] of parties) if (now - p.seen > 7000) parties.delete(code);
+    return [...parties.values()].sort((a, b) => a.host.localeCompare(b.host, 'zh'));
+  }
+
+  /** 客人：从列表里选了一个队伍 */
+  function pick(code) {
+    closeLobby();
+    join(code);
+  }
+
+  // ================= 踢人（D-055）=================
+
+  function kick(pidOrName) {
+    const g = hooks.game();
+    if (role !== 'host') { sys('只有队长能请人离队。', 'err'); return; }
+    const m = g.party.members.find((x) => x.pid === pidOrName || x.name === pidOrName);
+    if (!m) { sys(`队伍里没有「${pidOrName}」。`, 'err'); return; }
+    net.send({ t: 'bye', reason: `你被${g.state.player.name}请出了队伍。` }, m.pid);
+    show(g.removeMember(m.pid));
   }
 
   function onHostMessage(msg, pid) {
@@ -155,6 +254,7 @@ export function initParty(hooks) {
   function disband() {
     const g = hooks.game();
     if (role !== 'host') return;
+    closeLobby();
     net.send({ t: 'bye', reason: `${g.state.player.name}解散了队伍。` });
     cleanup();
     g.partyEnd();
@@ -167,7 +267,7 @@ export function initParty(hooks) {
   async function join(code) {
     const g = hooks.game();
     if (role) return;
-    if (!code) { sys('加入哪个队伍？例如：加入队伍 燕子-1234', 'err'); return; }
+    if (!code) { search(); return; }
     if (g.room()?.props.inn !== 'true') { sys('要在旅店或门派驻地才能加入队伍。', 'err'); return; }
     if (g.state.battle) return;
     try {
@@ -177,7 +277,7 @@ export function initParty(hooks) {
       return;
     }
     role = 'joining';
-    sys(`正在寻找暗号为「${code}」的队伍……`);
+    sys('正在连接队伍……');
     const hello = (pid) => net.send({ t: 'hello', v: PROTOCOL, hash: hooks.contentHash, char: g.state.player }, pid);
     net.onPeerJoin(hello);
     net.onMessage(onGuestMessage);
@@ -186,7 +286,7 @@ export function initParty(hooks) {
     });
     hello(); // 已经在房间里的人也打个招呼
     joinTimeout = setTimeout(() => {
-      if (role === 'joining') { sys('找不到这个队伍。请确认暗号，或者让队长重新开设。', 'err'); cleanup(); hooks.refresh(); }
+      if (role === 'joining') { sys('连不上这个队伍，可能已经解散了。请重新搜索。', 'err'); cleanup(); hooks.refresh(); }
     }, 20000);
   }
 
@@ -266,6 +366,7 @@ export function initParty(hooks) {
   }
 
   function cleanup() {
+    closeLobby();
     stopTimer();
     clearTimeout(joinTimeout);
     if (net) net.leave();
@@ -276,7 +377,8 @@ export function initParty(hooks) {
   }
 
   return {
-    host, join, disband, dispatch, guestRun,
+    host, join, disband, dispatch, guestRun, search, pick, kick,
+    closeSearch: () => { if (!role) closeLobby(); },
     leave: () => (role === 'host' ? disband() : role ? leaveGuest(true) : null),
     role: () => role,
     isHost: () => role === 'host',
