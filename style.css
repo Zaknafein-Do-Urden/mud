@@ -401,3 +401,10 @@ button.adopt { font-size: 12px; padding: 0 8px; margin-left: 6px; }
 
 /* 市集：本地无货（D-076） */
 .pn-dim { color: var(--muted, #999); font-size: 12px; }
+
+/* 买不起的选项（D-078） */
+.choice:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* 地图：通往其他区域的出口按钮（D-084） */
+.map-exit rect { stroke-dasharray: 3 2; }
+.map-exit:not(.unknown) { cursor: pointer; }

@@ -459,7 +459,16 @@ export function resolveRound(db, b, emit) {
       emit('fx', `${guard.name}抢上一步，挡在${target.name}身前。`);
       target = guard;
     }
-    attack(db, b, u, target, m, posture[target.key] ?? '无', emit);
+    if (m.effects.some((e) => e.split(':')[0] === '群攻')) {
+      // 群攻：打到所有对手，多人时每人六成伤害（D-081）
+      const foes = b.units.filter((x) => x.side !== u.side && alive(x));
+      const scale = foes.length > 1 ? AOE_RATE : 1;
+      const list = [target, ...foes.filter((x) => x !== target)];
+      list.forEach((t, i) => {
+        if (i === 1) emit('tag', '这一招波及了所有对手！');
+        attack(db, b, u, t, m, posture[t.key] ?? '无', emit, { scale, quiet: i > 0, primary: i === 0 });
+      });
+    } else attack(db, b, u, target, m, posture[target.key] ?? '无', emit);
     if (enemiesOf(b).every((e) => !alive(e)) || playersOf(b).every((p) => !alive(p))) break;
   }
 
@@ -502,9 +511,13 @@ function actText(b, u, m) {
   return pick(b, pool?.[m.stance] ?? FIST[m.stance]);
 }
 
-function attack(db, b, u, target, m, tPosture, emit) {
+/** 群攻招式对多个对手时，每人受的伤害比例（D-081） */
+const AOE_RATE = 0.6;
+
+/** opts：scale 伤害比例（群攻）、quiet 不再重复出招描述、primary 是否主目标（只有主目标吃附加效果、记合击） */
+function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
   const ctx = { N: u.name, n: target.name, move: m.name, part: pick(b, PARTS), W: u.weaponName };
-  emit('act', fill(actText(b, u, m), ctx));
+  if (!opts.quiet) emit('act', fill(actText(b, u, m), ctx));
 
   const innerSk = u.innerId ? db.skill[u.innerId] : null;
   const talentPower = 1 + 0.04 * (m.stance === '刚' ? tal(u, 'manli') : tal(u, 'ruili'))
@@ -529,17 +542,20 @@ function attack(db, b, u, target, m, tPosture, emit) {
   if (u.status.振奋) delete u.status.振奋;
   if (flaw > 1) delete target.status.破绽;
   // dmgx：敌人伤害倍率（自适应战斗用来拉长战斗，减少运气成分，D-051）
-  const dmg = Math.max(1, Math.round(value * mult * armor * flaw * (u.dmgx ?? 1) * (0.9 + rand(b) * 0.2)));
+  const roll = 0.9 + rand(b) * 0.2;
+  const dmg = Math.max(1, Math.round(value * mult * armor * flaw * (u.dmgx ?? 1) * roll * (opts.scale ?? 1)));
+  // 不计克制的伤害：合击按它算，对手的克制对合击不起作用（D-080）
+  const raw = Math.max(1, Math.round(value * armor * flaw * (u.dmgx ?? 1) * roll * (opts.scale ?? 1)));
 
   const outcome = unblockable ? '$N身形如燕子穿帘，绕过了$n的守势！（燕回巢）' : OUTCOME[m.stance + tPosture];
   if (outcome) emit('tag', fill(outcome, ctx));
   else if (tPosture === '无') emit('tag', fill('$n门户大开，结结实实挨了这一下。', ctx));
   target.hp = Math.max(0, target.hp - dmg);
   emit('hit', `${target.name}${woundText(dmg / target.maxHp)}。（气血 -${dmg}）`, { target: target.key });
-  if (u.side === 'p') u.roundHit = { target: target.key, dmg, mult, skill: m.skill }; // 玩家和 NPC 队友都记，合击用
+  if (u.side === 'p' && opts.primary !== false) u.roundHit = { target: target.key, dmg, raw, mult, skill: m.skill }; // 玩家和 NPC 队友都记，合击用
 
-  // 招式附加效果：只在没有被克制时生效
-  if (mult >= 1 && alive(target)) {
+  // 招式附加效果：只在没有被克制时生效；群攻只作用在主目标身上
+  if (mult >= 1 && alive(target) && opts.primary !== false) {
     for (const e of m.effects) {
       const [kind, k] = e.split(':');
       if (kind === '内伤') { target.status.内伤 = 3; target.status.内伤dot = Math.max(3, Math.round(dmg * 0.2 * (1 + 0.25 * tal(u, 'zhongchuang')))); emit('fx', `${target.name}受了内伤。`); }
@@ -622,15 +638,15 @@ function comboMatch(db, c, P, Q) {
   if ((P.skills[A.skill] ?? 0) < A.lv || (Q.skills[B.skill] ?? 0) < B.lv) return null;
   const bonus = num(c.props.bonus, 1.5) - 1;
   if (db.skill[A.skill]?.props.stance === '守') {
-    // 护攻：P 用守招护住 Q，Q 的攻击没被克制
+    // 护攻：P 用守招护住 Q，Q 出手
     if (P.roundGuard?.skill !== A.skill || P.roundGuard.target !== Q.key) return null;
-    if (Q.roundHit?.skill !== B.skill || Q.roundHit.mult < 1) return null;
-    return { target: Q.roundHit.target, dmg: Math.round(Q.roundHit.dmg * bonus) };
+    if (Q.roundHit?.skill !== B.skill) return null;
+    return { target: Q.roundHit.target, dmg: Math.round(Q.roundHit.raw * bonus) };
   }
-  // 合击：两人打同一个对手，都没被克制
+  // 合击：两人打同一个对手。对手的克制对合击不起作用：额外伤害按不计克制的伤害算（D-080）
   if (P.roundHit?.skill !== A.skill || Q.roundHit?.skill !== B.skill) return null;
-  if (P.roundHit.target !== Q.roundHit.target || P.roundHit.mult < 1 || Q.roundHit.mult < 1) return null;
-  return { target: P.roundHit.target, dmg: Math.round((P.roundHit.dmg + Q.roundHit.dmg) * bonus) };
+  if (P.roundHit.target !== Q.roundHit.target) return null;
+  return { target: P.roundHit.target, dmg: Math.round((P.roundHit.raw + Q.roundHit.raw) * bonus) };
 }
 
 function resolveCombos(db, b, emit) {

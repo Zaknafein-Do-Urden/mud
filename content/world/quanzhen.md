@@ -76,13 +76,13 @@ cap: 15
 
 === move: quanzhen.jianfa.1
 skill: quanzhen.jianfa
-name: 三环套月
+name: 白虹贯日
 level: 0
 power: 20
 mp: 7
 omen: $N长剑在身前连画三个圆圈，剑尖始终指着你……|$N脚踏七星，剑身平举……
 ---
-$N剑尖连转三圈，「$招」，一圈套一圈地逼向$n$部位！
+$N长剑一挺，「$招」，剑光如一道白虹，直贯$n$部位！
 
 === move: quanzhen.jianfa.2
 skill: quanzhen.jianfa

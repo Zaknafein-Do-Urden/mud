@@ -192,7 +192,7 @@ export function initPanels(api) {
 
     if (tab === '合击') {
       // 双人合击（D-065）：组队时两人同一回合各出一招触发
-      body.append(el('p', 'pn-hint', '组队时，两人同一回合用下面这些武功出招就会触发合击。"合击"要打同一个对手；"护攻"是甲用守招护住乙（守招目标选乙），乙出手。双方都不能被对手克制。'));
+      body.append(el('p', 'pn-hint', '组队时，两人同一回合用下面这些武功出招就会触发合击。"合击"要打同一个对手；"护攻"是甲用守招护住乙（守招目标选乙），乙出手。对手的克制对合击不起作用。'));
       for (const c of g.comboView()) {
         const box = el('div', 'pn-item' + (c.mine ? '' : ' faded'));
         const sideText = (x, who) => `${who}：${x.sect ? x.sect + '·' : ''}${x.name} ${x.lv} 级${x.have ? (x.have >= x.lv ? '（你已达到）' : `（你 ${x.have} 级）`) : ''}`;
@@ -237,7 +237,16 @@ export function initPanels(api) {
         const box = el('div', 'pn-story');
         box.append(el('h3', 'pn-name', `${s.name}${s.xiuwei ? `（建议修为 ${s.xiuwei}）` : ''}`));
         if (!s.started) {
-          box.append(el('p', 'pn-hint', `尚未开始。${s.hint}`));
+          // 尚未开始：只显示四个字，怎么开始放在提示里（D-082）
+          const head = el('p', 'pn-hint', '尚未开始');
+          box.append(head);
+          if (s.hint) {
+            const tip = el('p', 'pn-hint pn-goal-hint', s.hint);
+            tip.hidden = true;
+            const btn = button('提示', () => { tip.hidden = !tip.hidden; btn.textContent = tip.hidden ? '提示' : '收起提示'; }, { cls: 'pn-tip' });
+            head.append(btn);
+            box.append(tip);
+          }
         } else {
           box.append(el('p', 'pn-moves', s.brief));
           const list = el('ol', 'pn-chapters');

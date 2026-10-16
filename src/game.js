@@ -481,7 +481,8 @@ export class Game {
     if (d.props.do && !resume) this.apply(words(d.props.do)); // 进入该对话即生效的效果（恢复时不重复）
     // do 里的 goto 可能触发了目标房间的剧情对话：那个对话接管，这里不再收尾（否则会把它关掉）
     if (this.dialogId !== id) return;
-    const choices = m.choices.filter((c) => this.check(c.cond));
+    // 只差钱的选项（如铁匠铺、武馆）也列出来，灰色不能点（D-078）；其他条件不满足的照旧不显示
+    const choices = m.choices.map((c) => (this.check(c.cond) ? c : this.onlyMoneyShort(c.cond) ? { ...c, disabled: true } : null)).filter(Boolean);
     // ifnone：除"离开"类选项外一个都没有时显示的话（如"目前没有门派任务"，D-054）
     if (d.props.ifnone && !choices.some((c) => c.target || c.effects.length)) this.emit('say', d.props.ifnone);
     if (!choices.length) { this.endDialog(); return; }
@@ -491,7 +492,13 @@ export class Game {
   }
 
   emitChoices() {
-    this.dialog.forEach((c, i) => this.emit('choice', c.text, { n: i + 1 }));
+    this.dialog.forEach((c, i) => this.emit('choice', c.disabled ? `${c.text}（钱不够）` : c.text, { n: i + 1, disabled: !!c.disabled }));
+  }
+
+  /** 条件里不满足的只有"钱够不够"（money:） */
+  onlyMoneyShort(conds) {
+    const failed = conds.filter((c) => !this.check([c]));
+    return failed.length > 0 && failed.every((c) => c.startsWith('money:'));
   }
 
   endDialog() {
@@ -521,6 +528,7 @@ export class Game {
   choose(n) {
     const c = this.dialog[n - 1];
     if (!c) { this.emit('err', '没有这个选项。'); this.emitChoices(); return; }
+    if (c.disabled) { this.emit('err', '钱不够。'); this.emitChoices(); return; }
     this.emit('echo', `> ${c.text}`);
     const locked = this.locked;
     this.dialog = null;

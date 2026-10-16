@@ -132,7 +132,7 @@ for (const b of all) {
   if (b.type === 'move') {
     if (!db.skill[b.props.skill]) err(b, `所属武功不存在: ${b.props.skill}`);
     for (const k of ['power', 'mp', 'level']) if (Number.isNaN(Number(b.props[k] ?? 0))) err(b, `${k} 需要数字`);
-    const okEffects = b.props.support === 'true' ? ['疗伤', '回气', '振奋', '护体', '解穴'] : ['内伤', '点穴', '破绽', '吸内', '化内', '缴械'];
+    const okEffects = b.props.support === 'true' ? ['疗伤', '回气', '振奋', '护体', '解穴'] : ['内伤', '点穴', '破绽', '吸内', '化内', '缴械', '群攻'];
     for (const e of parseList(b.props.effects)) if (!okEffects.includes(e.split(':')[0])) err(b, `未知招式效果: ${e}`);
     if (b.props.stance && !['刚', '巧', '守'].includes(b.props.stance)) err(b, `招式的 stance 只能是 刚/巧/守: ${b.props.stance}`);
     if (b.props.support === 'true' && (b.props.stance ?? db.skill[b.props.skill]?.props.stance) !== '守') err(b, '辅助招式必须是守招');
@@ -182,7 +182,7 @@ for (const b of all) {
     if (!/^\d+,\d+$/.test(b.props.pos ?? '')) err(b, 'pos 应为 "x,y"（大地图坐标）');
   }
   if (b.type === 'goods' && !(Number(b.props.price) > 0)) err(b, 'price 需要正数');
-  if (b.type === 'item' && b.props.slot === 'weapon' && !['刀', '剑', '枪', '棍', '鞭'].includes(b.props.weapon)) err(b, `兵器的 weapon 应为 刀/剑/枪/棍/鞭: ${b.props.weapon}`);
+  if (b.type === 'item' && b.props.slot === 'weapon' && !['刀', '剑', '枪', '棍', '鞭', '暗器'].includes(b.props.weapon)) err(b, `兵器的 weapon 应为 刀/剑/枪/棍/鞭/暗器: ${b.props.weapon}`);
   if (b.type === 'quest') {
     if (!b.props.flag || !b.props.name) err(b, 'quest 需要 name 和 flag');
     if (b.props.where && !db.room[b.props.where]) err(b, `where 房间不存在: ${b.props.where}`);

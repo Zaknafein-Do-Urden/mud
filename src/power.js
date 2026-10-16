@@ -5,7 +5,7 @@ const num = (v, d = 0) => (v === undefined || v === '' ? d : Number(v));
 const list = (s) => (s ?? '').split(/[,，]/).map((x) => x.trim()).filter(Boolean);
 
 /** 招式附带效果的折算：控制类 +10%，内力类 +5% */
-const EFFECT_BONUS = { 内伤: 0.1, 点穴: 0.1, 破绽: 0.1, 缴械: 0.1, 吸内: 0.05, 化内: 0.05 };
+const EFFECT_BONUS = { 内伤: 0.1, 点穴: 0.1, 破绽: 0.1, 缴械: 0.1, 群攻: 0.1, 吸内: 0.05, 化内: 0.05 };
 /** 内功、轻功没有招式，按"标准招式"（威力 25，约等于门派入门招式）在同等级的攻击值折算 */
 export const STANDARD_POWER = 25;
 

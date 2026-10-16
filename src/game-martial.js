@@ -178,7 +178,7 @@ export const martial = {
     if (!sectId) { this.emit('err', '这里没有可以传授你武功的人。'); return; }
     const sect = this.db.sect[sectId];
     if (p.sect?.id !== sectId) { this.emit('err', `你不是${sect.props.name}弟子，人家不会传你武功。`); return; }
-    const skills = Object.values(this.db.skill).filter((s) => s.props.sect === sectId);
+    const skills = Object.values(this.db.skill).filter((s) => s.props.sect === sectId && s.props.secret !== 'true'); // 绝学不能直接学（D-085）
     const ranks = sectRanks(sect);
     if (!name) {
       this.emit('sys', `【${sect.props.name}武学】（学 武功名）`);
@@ -190,6 +190,8 @@ export const martial = {
       return;
     }
     const sk = skills.find((s) => s.props.name === name || s.id === name);
+    const secret = Object.values(this.db.skill).find((s) => s.props.sect === sectId && s.props.secret === 'true' && (s.props.name === name || s.id === name));
+    if (!sk && secret) { this.emit('err', `${secret.props.name}是本门绝学，师父不会轻易传授。达到第四阶后，向师父请缨做门派绝学任务。`); return; }
     if (!sk) { this.emit('err', `${sect.props.name}没有「${name}」这门功夫。`); return; }
     if (p.skills[sk.id] !== undefined) { this.emit('sys', '你已经学会了。用 修炼 提升它。'); return; }
     const r = Number(sk.props.rank ?? 0);
@@ -206,7 +208,8 @@ export const martial = {
     const sectId = this.sectOfMaster();
     if (!sectId || p.sect?.id !== sectId) return [];
     const ranks = sectRanks(this.db.sect[sectId]);
-    const todo = Object.values(this.db.skill).filter((s) => s.props.sect === sectId && p.skills[s.id] === undefined);
+    // 绝学（secret）只能通过门派绝学任务得到，不在传授列表里（D-085）
+    const todo = Object.values(this.db.skill).filter((s) => s.props.sect === sectId && p.skills[s.id] === undefined && s.props.secret !== 'true');
     const label = (s) => `${s.props.name}（${s.props.kind}${s.props.stance ? '·' + s.props.stance : ''}）`;
     const locked = todo.filter((s) => Number(s.props.rank ?? 0) > p.sect.rank);
     if (locked.length) this.emit('say', '要更高的阶位才能学：' + locked.map((s) => `${label(s)}需${ranks[Number(s.props.rank)]?.name ?? '更高阶位'}`).join('、'));

@@ -29,7 +29,7 @@ export function newPlayer(startRoom) {
     hp: null, // null 表示满血（首次计算时填入）
     potential: 0,
     inventory: {},
-    money: 200, // 身上的现钱（文）
+    money: 120, // 身上的现钱（文）：开局 120（D-079）
     bank: 0, // 钱庄存款
     cargo: {}, // 马车上的货物 {goodsId: 件数}
     // 开局只会一门庄稼把式；其他基础武功去城里的武馆花钱学（D-061）

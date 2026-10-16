@@ -62,7 +62,7 @@ function flush() {
 
 let choiceBox = null;
 
-function render({ cls, text, n, cmd }) {
+function render({ cls, text, n, cmd, disabled }) {
   if (cls === 'choice') {
     if (!choiceBox) {
       choiceBox = document.createElement('div');
@@ -72,6 +72,7 @@ function render({ cls, text, n, cmd }) {
     const b = document.createElement('button');
     b.className = 'choice';
     b.dataset.choice = n;
+    b.disabled = !!disabled; // 买不起的选项：灰色不能点（D-078）
     b.append(`${n}. `, renderText(text, (id) => game.kindOf(id)));
     choiceBox.append(b);
     return;

@@ -108,8 +108,18 @@ export function renderMap(root, game, onWalk, override) {
   const all = [...shown, ...unknown];
   if (!all.length) { root.replaceChildren(); return; }
 
-  const xs = all.map((id) => pos.get(id)[0]);
-  const ys = all.map((id) => pos.get(id)[1]);
+  // 通往其他区域的出口：画成按钮（D-084），放在出口方向上一格；算进画布范围，不会被裁掉
+  const outs = new Map(); // 目标房间 → {from, dir, x, y}
+  for (const id of shown) {
+    for (const [dir, to] of Object.entries(game.exitsOf(id))) {
+      if (!game.db.room[to] || regionOf(to) === region || outs.has(to)) continue;
+      const [dx, dy] = VEC[dir] ?? [0, 1];
+      outs.set(to, { from: id, dir, x: pos.get(id)[0] + dx * 0.95, y: pos.get(id)[1] + dy * 0.95 });
+    }
+  }
+
+  const xs = [...all.map((id) => pos.get(id)[0]), ...[...outs.values()].map((o) => o.x)];
+  const ys = [...all.map((id) => pos.get(id)[1]), ...[...outs.values()].map((o) => o.y)];
   const minX = Math.min(...xs) - 0.7;
   const minY = Math.min(...ys) - 0.7;
   const w = (Math.max(...xs) - minX + 0.7) * CW;
@@ -128,17 +138,28 @@ export function renderMap(root, game, onWalk, override) {
         if (drawn.has(k)) continue;
         drawn.add(k);
         svg.append(svgEl('line', { x1: cx(id), y1: cy(id), x2: cx(to), y2: cy(to), class: 'map-link' + (shown.has(to) ? '' : ' unknown') }));
-      } else if (game.db.room[to] && regionOf(to) !== region) {
-        // 通往其他区域：画一个指向该方向的小箭头和区域名
-        const [dx, dy] = VEC[dir] ?? [0, 1];
-        const x = cx(id) + dx * (BW / 2 + 14);
-        const y = cy(id) + dy * (BH / 2 + 12);
-        svg.append(svgEl('line', { x1: cx(id) + dx * BW / 2, y1: cy(id) + dy * BH / 2, x2: x, y2: y, class: 'map-link out' }));
-        const t = svgEl('text', { x, y: y + (dy >= 0 ? 12 : -4), class: 'map-out', 'text-anchor': 'middle' });
-        t.textContent = visited[to] ? shortName(game.db.room[to].props.name) : '→';
-        svg.append(t);
       }
     }
+  }
+
+  // 其他区域的出口按钮：去过的写地名，点击自动走过去；没去过的写"？"
+  const ox = (o) => (o.x - minX) * CW;
+  const oy = (o) => (o.y - minY) * CH;
+  for (const [to, o] of outs) {
+    const known = !!visited[to];
+    svg.append(svgEl('line', { x1: cx(o.from), y1: cy(o.from), x2: ox(o), y2: oy(o), class: 'map-link out' }));
+    const g = svgEl('g', { class: 'map-room map-exit' + (known ? '' : ' unknown'), 'data-room': to });
+    g.append(svgEl('rect', { x: ox(o) - BW / 2, y: oy(o) - BH / 2, width: BW, height: BH, rx: 10 }));
+    const t = svgEl('text', { x: ox(o), y: oy(o) + 4, 'text-anchor': 'middle' });
+    // 跨区域的按钮写区域名（"牛家村·村口"写"牛家村"），没有区域前缀的写全名
+    const nm = game.db.room[to].props.name;
+    t.textContent = known ? `${nm.includes('·') ? nm.split('·')[0] : shortName(nm)} ›` : `${o.dir} ›`;
+    g.append(t);
+    const title = svgEl('title', {});
+    title.textContent = known ? `${game.db.room[to].props.name}（点击前往）` : '还没去过';
+    g.append(title);
+    if (known) g.addEventListener('click', () => onWalk(to));
+    svg.append(g);
   }
 
   // 房间

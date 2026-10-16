@@ -16,6 +16,7 @@ const EFFECT_TEXT = {
   吸内: '吸内：化去对手内力，自己回复一半',
   化内: '化内：化去对手内力',
   缴械: '缴械：有一定几率打飞对手的兵器（守招在化解巧招时触发）',
+  群攻: '群攻：打到所有对手，对手多于一个时每人受六成伤害',
 };
 
 export const views = {
@@ -69,7 +70,7 @@ export const views = {
       const ranks = sectRanks(sect);
       master = {
         sect: sect.props.name,
-        learnable: Object.values(this.db.skill).filter((s) => s.props.sect === masterSect).map((s) => {
+        learnable: Object.values(this.db.skill).filter((s) => s.props.sect === masterSect && s.props.secret !== 'true').map((s) => {
           const r = Number(s.props.rank ?? 0);
           return {
             id: s.id, name: s.props.name, kind: s.props.kind, stance: s.props.stance ?? '',
