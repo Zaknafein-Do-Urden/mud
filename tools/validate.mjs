@@ -42,7 +42,7 @@ function checkConds(b, conds) {
     else if (kind === 'rank' && Number.isNaN(Number(key))) err(b, `rank 条件需要数字: ${c}`);
     else if (kind === 'gender' && !['男', '女'].includes(key)) err(b, `gender 条件只能是 男 或 女: ${c}`);
     else if (kind === 'money' && Number.isNaN(Number(key))) err(b, `money 条件需要数字: ${c}`);
-    else if (!['flag', 'has', 'visited', 'sect', 'rank', 'gender', 'money'].includes(kind)) err(b, `未知条件: ${c}`);
+    else if (!['flag', 'has', 'visited', 'sect', 'rank', 'gender', 'money', 'today'].includes(kind)) err(b, `未知条件: ${c}`);
   }
 }
 
@@ -65,6 +65,7 @@ function checkEffects(b, effects) {
     else if (kind === 'heal') { /* 无参数 */ }
     else if (kind === 'money' || kind === 'pay') { if (Number.isNaN(Number(key))) err(b, `${kind} 需要数字: ${e}`); }
     else if (kind === 'travel') { if (!db.city[key]) err(b, `travel 目标城市不存在: ${key}`); }
+    else if (kind === 'today') { if (!key) err(b, 'today 需要一个键名'); }
     else err(b, `未知效果: ${e}`);
   }
 }
@@ -128,6 +129,9 @@ for (const b of all) {
     for (const k of ['power', 'mp', 'level']) if (Number.isNaN(Number(b.props[k] ?? 0))) err(b, `${k} 需要数字`);
     for (const e of parseList(b.props.effects)) if (!['内伤', '点穴', '破绽', '吸内', '化内'].includes(e.split(':')[0])) err(b, `未知招式效果: ${e}`);
   }
+  if ((b.type === 'enemy' || b.type === 'skill') && b.props.weapon && !['拳', '刀', '剑', '棍', '鞭', '匕首', '暗器'].includes(b.props.weapon)) err(b, `未知兵器: ${b.props.weapon}`);
+  if (b.type === 'enemy' && !b.props.weapon) warn(b, '敌人没有兵器标签（weapon），出招描述会用招式自带的文案');
+  if (b.type === 'enemy' && b.props.obscure && !(Number(b.props.obscure) >= 0 && Number(b.props.obscure) <= 100)) err(b, 'obscure 应为 0~100');
   if (b.type === 'enemy') {
     for (const part of parseList(b.props.skills)) {
       const id = part.split('=')[0].trim();
@@ -182,6 +186,14 @@ const start = db.meta.game?.props.start;
 if (!db.room[start]) errors.push(`起始房间不存在: ${start}`);
 for (const id of Object.keys(db.room)) {
   if (id !== start && !referenced.has(id)) warns.push(`房间没有任何入口: ${id}`);
+}
+
+// 待写占位：剧情推进后要回头删掉，清单见 docs/TODO-CONTENT.md
+const PLACEHOLDER = /尚未编写|待续|敬请期待|开发中/;
+for (const [f] of files) {
+  readFileSync(join(root, f), 'utf8').split(/\r?\n/).forEach((line, i) => {
+    if (PLACEHOLDER.test(line) && !line.startsWith('#')) warns.push(`待写占位 ${f}:${i + 1}　${line.trim()}（见 docs/TODO-CONTENT.md）`);
+  });
 }
 
 const count = Object.fromEntries(['room', 'npc', 'dialog', 'item', 'entry'].map((k) => [k, Object.keys(db[k]).length]));

@@ -3,7 +3,9 @@
 import { newPlayer } from './character.js';
 
 const PREFIX = 'wuxia-mud:'; // 同一 github.io 用户下所有项目共享 localStorage，必须加前缀
-const SLOT_KEY = PREFIX + 'save:1';
+// 存档位：默认 1；地址栏 ?slot=2 可以用另一个存档（同一浏览器开两个窗口联机时用）
+const SLOT = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('slot')) || '1';
+const SLOT_KEY = PREFIX + 'save:' + SLOT.replace(/[^\w-]/g, '');
 const EXPORT_TAG = 'WXMUD1';
 export const SAVE_VERSION = 6;
 

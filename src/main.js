@@ -10,6 +10,7 @@ import { renderCombat } from './ui/combat.js';
 import { renderMap, findPath, regionOf } from './ui/map.js';
 import { renderWorld } from './ui/worldmap.js';
 import { initPanels } from './ui/panels.js';
+import { initParty } from './ui/party.js';
 
 const $ = (id) => document.getElementById(id);
 const output = $('output');
@@ -61,7 +62,7 @@ function flush() {
 
 let choiceBox = null;
 
-function render({ cls, text, n }) {
+function render({ cls, text, n, cmd }) {
   if (cls === 'choice') {
     if (!choiceBox) {
       choiceBox = document.createElement('div');
@@ -91,25 +92,63 @@ function render({ cls, text, n }) {
   } else {
     p.append(renderText(text, (id) => game.kindOf(id)));
   }
+  // 房主收到客人的建议：一键采纳（MULTIPLAYER.md §3.2）
+  if (cls === 'suggest' && cmd) {
+    const b = document.createElement('button');
+    b.className = 'adopt';
+    b.textContent = '采纳';
+    b.dataset.adopt = cmd;
+    p.append(' ', b);
+  }
   output.append(p);
 }
 
 // ---- 执行命令 ----
 
+/** 联机相关的命令：在引擎之外处理 */
+function partyCommand(cmd) {
+  const [verb, ...rest] = cmd.trim().split(/\s+/);
+  const arg = rest.join(' ');
+  if (['开设队伍', '组队'].includes(verb)) { party.host(); return true; }
+  if (['加入队伍', '加入'].includes(verb)) { party.join(arg); return true; }
+  if (['离开队伍', '退出队伍', '解散队伍'].includes(verb)) {
+    if (!party.role()) print([{ cls: 'err', text: '你不在队伍中。' }]);
+    else party.leave();
+    return true;
+  }
+  if (verb === '队伍') {
+    const ms = party.members();
+    print([{ cls: 'party', text: party.role() ? `队伍成员：${ms.map((m) => m.name + (m.host ? '（队长）' : '')).join('、')}${party.code() ? `　暗号：${party.code()}` : ''}` : '你不在队伍中。在旅店或门派驻地可以 开设队伍 / 加入队伍 暗号。' }]);
+    return true;
+  }
+  return false;
+}
+
 async function run(cmd) {
   flush();
+  if (partyCommand(cmd)) { print([]); refreshQuick(); return []; }
   // 旧的对话选项失效
   output.querySelectorAll('.choices button').forEach((b) => { b.disabled = true; });
   choiceBox = null;
   const resolved = resolvePinyin(cmd, game.completions());
   // 对话中选数字时，引擎会回显选项文字，不再重复显示 "> 1"
   const ctx = game.context();
-  const isChoice = (/^\d+$/.test(cmd) && ctx.inDialog) || (/^\d+( \d+)?$/.test(cmd) && ctx.inCombat);
+  const isChoice = (/^\d+$/.test(cmd) && ctx.inDialog) || (/^\d+( \d+)?$/.test(cmd) && (ctx.inCombat || party.guestCombat()));
   // 点击链接产生的命令里带内部 id（talk shediao.qusan），回显时换成名字
   const shown = cmd.split(/\s+/).map((t) => db.npc[t]?.props.name ?? db.item[t]?.props.name ?? db.city[t]?.props.name ?? db.skill[t]?.props.name ?? t).join(' ');
   const echo = isChoice ? [] : [{ cls: 'cmd', text: '> ' + shown.replace(/\[\[/g, '［［') }];
+  // 客人：查看自己的命令在本地执行，其余发给房主（多数变成建议）
+  if (party.isGuest()) {
+    const out = party.guestRun(resolved);
+    print([...echo, ...out]);
+    saveLocal(game.state);
+    return out;
+  }
   const out = game.exec(resolved);
-  print([...echo, ...out]);
+  const verb = resolved.trim().split(/\s+/)[0].toLowerCase();
+  // 房主：按接收者分发（自己看自己的那份，客人各看各的）；单人时只显示给自己的条目
+  const shownOut = party.isHost() ? party.dispatch(out, verb) : out.filter((e) => !e.to || e.to === 'host');
+  print([...echo, ...shownOut]);
   await loadPending();
   if (!saveLocal(game.state)) print([{ cls: 'err', text: '（无法自动存档：浏览器禁用了本地存储。请记得手动导出。）' }]);
   return out; // 面板用它显示执行结果
@@ -134,11 +173,16 @@ function refreshQuick() {
   if (!game) return;
   refreshStatus();
   refreshMap();
+  refreshParty();
   const c = game.context();
-  // 战斗中用战斗面板代替情境按钮
-  combatBox.hidden = !c.inCombat;
-  quick.hidden = c.inCombat;
-  if (c.inCombat) { combatUi = renderCombat(combatBox, game.combatView(), (cmd) => { run(cmd); input.focus(); }); return; }
+  // 战斗中用战斗面板代替情境按钮；客人的战斗面板数据来自房主
+  const view = party.isGuest() ? party.guestCombat() : c.inCombat ? game.combatView() : null;
+  combatBox.hidden = !view;
+  quick.hidden = !!view;
+  if (view) {
+    combatUi = renderCombat(combatBox, view, (cmd) => { run(cmd); input.focus(); }, party.role() ? party.secondsLeft() : 0);
+    return;
+  }
   combatUi = null;
   quick.replaceChildren();
   const add = (label, cmd, cls = '') => {
@@ -149,6 +193,14 @@ function refreshQuick() {
     quick.append(b);
   };
   add('看', 'look');
+  if (party.isGuest()) {
+    // 客人：跟随队长，只留查看与队伍操作
+    add('说话', '@say');
+    add('离开队伍', '离开队伍');
+    add('背包', 'i');
+    add('帮助', 'help');
+    return;
+  }
   for (const d of c.exits) add(d, d, 'q-go');
   for (const n of c.npcs) if (n.talk) add(n.name, `talk ${n.id}`, 'q-npc');
   const r = game.room()?.props ?? {};
@@ -156,8 +208,20 @@ function refreshQuick() {
   if (r.market === 'true') add('市集', '@market');
   if (r.bank === 'true') add('钱庄', '@bank');
   if (r.inn === 'true') add('休息', '休息');
+  // 旅店、门派驻地可以组队（D-011、D-046）
+  if (!party.role() && r.inn === 'true') { add('开设队伍', '开设队伍'); add('加入队伍', '@join'); }
+  if (party.isHost()) { add('说话', '@say'); add('解散队伍', '解散队伍'); }
   add('背包', 'i');
   add('帮助', 'help');
+}
+
+/** 队伍栏：成员与暗号 */
+function refreshParty() {
+  const box = $('party');
+  if (!party.role() || party.role() === 'joining') { box.hidden = true; return; }
+  box.hidden = false;
+  const ms = party.members();
+  box.textContent = `${party.isHost() ? `队伍暗号「${party.code()}」　` : ''}队伍：${ms.map((m) => m.name + (m.host ? '（队长）' : '')).join('、')}`;
 }
 
 function refreshStatus() {
@@ -173,6 +237,13 @@ let walking = false;
 function refreshMap() {
   const room = game.room();
   $('map-title').textContent = room ? regionName(room.id) : '地图';
+  const ov = party.mapOverride();
+  if (ov) {
+    // 客人：地图显示队长所在的位置（客人自己的存档不记录这些地方）
+    $('map-title').textContent = db.room[ov.room] ? regionName(ov.room) : '地图';
+    renderMap($('map'), game, () => {}, ov);
+    return;
+  }
   renderMap($('map'), game, walkTo);
 }
 
@@ -287,7 +358,7 @@ input.addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowDown') input.value = history[++historyPos] ?? (historyPos = history.length, '');
   else if (e.key === ' ' && !input.value && queue.length) pump();
   else if (/^[1-9]$/.test(e.key) && !input.value && game?.context().inDialog && !queue.length) run(e.key);
-  else if (/^[0-9]$/.test(e.key) && !input.value && game?.context().inCombat && !queue.length) run(e.key === '0' ? '0' : e.key + (combatUi?.targetArg() ?? ''));
+  else if (/^[0-9]$/.test(e.key) && !input.value && (game?.context().inCombat || party.guestCombat()) && !queue.length) run(e.key === '0' ? '0' : e.key + (combatUi?.targetArg() ?? ''));
   else return;
   e.preventDefault();
 });
@@ -297,18 +368,35 @@ bindTab(input, () => game?.completions() ?? []);
 quick.addEventListener('click', (e) => {
   const cmd = e.target.dataset?.cmd;
   if (!cmd) return;
-  // @ 开头的是打开面板，不是命令
+  // @ 开头的是打开面板或输入框，不是命令
   if (cmd === '@market') panels.open('market');
   else if (cmd === '@bank') panels.open('bank');
+  else if (cmd === '@join') { const code = prompt('输入队长告诉你的队伍暗号（如 燕子-1234）：'); if (code) run(`加入队伍 ${code.trim()}`); }
+  else if (cmd === '@say') { const t = prompt('对队友说：'); if (t) run(`说 ${t}`); }
   else { run(cmd); input.focus(); }
 });
 
 // ---- 面板：人物、江湖、市集、钱庄（D-045）----
 const panels = initPanels({ game: () => game, run });
+
+// ---- 联机（D-048）----
+let contentHash = '';
+const party = initParty({
+  game: () => game,
+  db: () => db,
+  get contentHash() { return contentHash; },
+  print: (entries) => { print(entries); },
+  refresh: () => refreshQuick(),
+  save: () => saveLocal(game.state),
+  // 客人入队后加载所有主线内容，房主那边的剧情文字里的链接才能正常显示
+  onJoined: () => Promise.all(Object.keys(db.index.storylines ?? {}).map((id) => loadStoryline(db, id))),
+});
 $('char-toggle').addEventListener('click', () => panels.open('char'));
 $('journal-toggle').addEventListener('click', () => panels.open('journal'));
 
 output.addEventListener('click', (e) => {
+  const adopt = e.target.closest('button.adopt');
+  if (adopt) { run(adopt.dataset.adopt); adopt.disabled = true; return; }
   const b = e.target.closest('button.choice');
   if (b && !b.disabled) { run(b.dataset.choice); return; }
   if (queue.length && !e.target.closest('a.lk')) pump();
@@ -417,6 +505,7 @@ $('btn-new').addEventListener('click', async () => {
     print([{ cls: 'err', text: '内容加载失败：' + err.message }, { cls: 'sys', text: '如果是直接双击打开的 index.html，请改用本地服务器：python -m http.server 8000' }]);
     return;
   }
+  contentHash = hashText(JSON.stringify(db.index));
   const meta = db.meta.game;
   if (meta?.props.title) { document.title = meta.props.title; $('title').textContent = meta.props.title; }
   const valid = saved && db.room[saved.player.room];
@@ -425,3 +514,10 @@ $('btn-new').addEventListener('click', async () => {
   if (!state.player.surname) applyIdentity(state, await askIdentity());
   start(state, !valid);
 })();
+
+/** 内容版本指纹：联机时双方必须一致（MULTIPLAYER.md §7） */
+function hashText(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(36);
+}

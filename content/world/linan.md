@@ -220,11 +220,14 @@ talk: linan.officer.talk
 一个四十来岁的捕头，留着两撇八字胡，眼神精明。
 
 === dialog: linan.officer.talk
+ifnone: 张捕头：今天的差事都派完了，明天再来吧。
 ---
 张捕头：这位{男:兄弟|女:姑娘}，可是来领差事的？临安城里差事多，赏钱也痛快。
-* 有什么除害的差事？ -> linan.job.bandit ?!flag:world.job.bandit_linan
-* 有信要送去嘉兴吗？ -> linan.job.mail_jiaxing ?!flag:world.job.mail_jiaxing
-* 有信要送去襄阳吗？ -> linan.job.mail_xiangyang ?!flag:world.job.mail_xiangyang
+* 有什么除害的差事？ -> linan.job.bandit ?!flag:world.job.bandit_linan ?!today:world.job.bandit_linan
+* 听说城里闹飞贼？ -> linan.job.thief ?!flag:world.job.thief_linan ?!today:world.job.thief_linan
+* 要不要去客栈查查外乡人？ -> linan.job.patrol ?!flag:world.job.patrol_linan ?!today:world.job.patrol_linan
+* 有信要送去嘉兴吗？ -> linan.job.mail_jiaxing ?!flag:world.job.mail_jiaxing ?!today:world.job.mailday_linan_jiaxing
+* 有信要送去襄阳吗？ -> linan.job.mail_xiangyang ?!flag:world.job.mail_xiangyang ?!today:world.job.mailday_linan_xiangyang
 * 交上嘉兴衙门托付的书信 -> linan.job.deliver_jiaxing ?flag:world.job.mail_linan_from_jiaxing
 * 交上襄阳衙门托付的书信 -> linan.job.deliver_xiangyang ?flag:world.job.mail_linan_from_xiangyang
 * 离开
@@ -248,16 +251,17 @@ do: flag:world.job.mail_xiangyang flag:world.job.mail_xiangyang_from_linan
 （差事：把书信送到襄阳衙门。坐马车 7 日可到）
 
 === dialog: linan.job.deliver_jiaxing
-do: unflag:world.job.mail_linan unflag:world.job.mail_linan_from_jiaxing money:45
+do: unflag:world.job.mail_linan unflag:world.job.mail_linan_from_jiaxing money:45 potential:10 today:world.job.mailday_jiaxing_linan
 ---
 张捕头拆开火漆看了看，点点头，数了 45 文钱给你。
 
 === dialog: linan.job.deliver_xiangyang
-do: unflag:world.job.mail_linan unflag:world.job.mail_linan_from_xiangyang money:135
+do: unflag:world.job.mail_linan unflag:world.job.mail_linan_from_xiangyang money:135 potential:10 today:world.job.mailday_xiangyang_linan
 ---
 张捕头拆开火漆看了看，点点头，数了 135 文钱给你。
 
 === enemy: world.foe.linan_bandit
+weapon: 拳
 name: 拐子
 attrs: 根骨=12, 身法=16, 悟性=12
 skills: base.quan=6, base.zhang=8, base.zhaojia=4, base.tuna=5
@@ -283,13 +287,15 @@ talk: world.linan_bandit.talk
 * 走开
 
 === battle: world.b.linan_bandit
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 1.14
 enemies: world.foe.linan_bandit, world.foe.linan_bandit
 win: world.linan_bandit.win
 ---
 两个拐子对视一眼，一左一右扑了上来。
 
 === dialog: world.linan_bandit.win
-do: unflag:world.job.bandit_linan money:80
+do: unflag:world.job.bandit_linan today:world.job.bandit_linan money:80
 ---
 两个拐子被你打得抱头鼠窜。乡下客商连连作揖。（差事完成，赏钱八十文）
 
@@ -315,3 +321,79 @@ flag: world.job.mail_xiangyang_from_linan
 where: xiangyang.office
 ---
 把临安府的书信送到襄阳衙门，脚钱 135 文。坐马车 7 日。
+
+# ---------------- 每日差事：飞贼、查访客栈（D-054）----------------
+
+=== dialog: linan.job.thief
+do: flag:world.job.thief_linan
+---
+张捕头：市集上这几天丢东西的人多，是个手脚利落的飞贼干的。去把他揪出来，赏钱一百二十文。
+（差事：在临安市集缉拿飞贼）
+
+=== enemy: world.foe.linan_thief
+weapon: 匕首
+name: 飞贼
+attrs: 根骨=11, 身法=19, 悟性=12
+skills: base.zhang=14, base.quan=9, base.zhaojia=9, base.tuna=12
+ai: 巧=3, 刚=1, 守=1
+cunning: 25
+potential: 18
+---
+一个精瘦的汉子，眼珠滴溜溜乱转，袖子里鼓鼓囊囊的。
+
+=== npc: world.npc.linan_thief
+name: 飞贼
+brief: 在临安市集偷东西的飞贼。
+if: flag:world.job.thief_linan
+talk: world.linan_thief.talk
+---
+一个精瘦的汉子在人群里钻来钻去，手不太老实。
+
+=== dialog: world.linan_thief.talk
+---
+飞贼被你盯上，脸色一变，手已摸向腰间。
+* 拿下他 !fight:world.b.linan_thief
+* 算了
+
+=== battle: world.b.linan_thief
+# 难度调校（tools/tune.mjs）
+hpx: 1.8
+enemies: world.foe.linan_thief
+win: world.linan_thief.win
+---
+飞贼拔出一把匕首，寒光一闪。
+
+=== dialog: world.linan_thief.win
+do: unflag:world.job.thief_linan today:world.job.thief_linan money:120
+---
+飞贼被你按倒在地，偷来的钱袋散了一地。（差事完成，赏钱一百二十文）
+
+=== patch: linan.market
+npcs: world.npc.linan_thief
+
+=== dialog: linan.job.patrol
+do: flag:world.job.patrol_linan
+---
+张捕头：近来外乡人多，去望湖客栈查一查住店的有没有可疑之人。看一圈回来就行，赏钱四十文。
+（差事：去望湖客栈查访）
+
+=== trigger: world.t.linan_patrol
+room: linan.inn
+if: flag:world.job.patrol_linan
+do: unflag:world.job.patrol_linan today:world.job.patrol_linan money:40 potential:15
+---
+你跟掌柜要来住店的名簿翻了一遍，又在大堂里转了转，没发现什么可疑之人。（差事完成，赏钱四十文）
+
+=== quest: world.q.linan_thief
+name: 缉拿：临安飞贼
+flag: world.job.thief_linan
+where: linan.market
+---
+临安府张捕头的差事：去市集缉拿飞贼。赏钱 120 文。
+
+=== quest: world.q.linan_patrol
+name: 查访：望湖客栈
+flag: world.job.patrol_linan
+where: linan.inn
+---
+临安府张捕头的差事：去望湖客栈查访外乡人。赏钱 40 文。

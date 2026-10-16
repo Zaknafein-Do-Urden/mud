@@ -94,12 +94,12 @@ const svgEl = (tag, attrs) => {
  * @param {import('../game.js').Game} game
  * @param {(roomId: string) => void} onWalk 点击去过的房间
  */
-export function renderMap(root, game, onWalk) {
-  const here = game.state.player.room;
+export function renderMap(root, game, onWalk, override) {
+  const here = override?.room ?? game.state.player.room;
   const region = regionOf(here);
   // 每次重新布局：开销很小，而且出口可能随剧情标记变化（patch）
   const pos = layout(game, region);
-  const visited = game.state.visited;
+  const visited = override ? Object.fromEntries([...(override.visited ?? []), here].map((r) => [r, true])) : game.state.visited;
 
   // 要画的房间：去过的 + 与去过的相邻的（同区域）
   const shown = new Set([...pos.keys()].filter((id) => visited[id]));

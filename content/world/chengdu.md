@@ -64,14 +64,77 @@ talk: chengdu.officer.talk
 一个矮壮的川中汉子，嘴里叼着一根旱烟杆。
 
 === dialog: chengdu.officer.talk
+ifnone: 周捕头：今天的差事都派完了，明天再来吧。
 ---
 周捕头：这位{男:兄弟|女:姑娘}，可是来领差事的？赏钱不多，胜在实在。
-* 有什么除害的差事？ -> chengdu.job.bandit ?!flag:world.job.bandit_chengdu
-* 有信要送去长安吗？ -> chengdu.job.mail_changan ?!flag:world.job.mail_changan
-* 有信要送去襄阳吗？ -> chengdu.job.mail_xiangyang ?!flag:world.job.mail_xiangyang
+* 有什么除害的差事？ -> chengdu.job.bandit ?!flag:world.job.bandit_chengdu ?!today:world.job.bandit_chengdu
+* 听说城里闹飞贼？ -> chengdu.job.thief ?!flag:world.job.thief_chengdu ?!today:world.job.thief_chengdu
+* 要不要去客栈查查外乡人？ -> chengdu.job.patrol ?!flag:world.job.patrol_chengdu ?!today:world.job.patrol_chengdu
+* 有信要送去长安吗？ -> chengdu.job.mail_changan ?!flag:world.job.mail_changan ?!today:world.job.mailday_chengdu_changan
+* 有信要送去襄阳吗？ -> chengdu.job.mail_xiangyang ?!flag:world.job.mail_xiangyang ?!today:world.job.mailday_chengdu_xiangyang
 * 交上长安衙门托付的书信 -> chengdu.job.deliver_changan ?flag:world.job.mail_chengdu_from_changan
 * 交上襄阳衙门托付的书信 -> chengdu.job.deliver_xiangyang ?flag:world.job.mail_chengdu_from_xiangyang
 * 离开
+
+=== dialog: chengdu.job.thief
+do: flag:world.job.thief_chengdu
+---
+周捕头：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去市集把他揪出来，赏钱一百二十文。
+（差事：在成都市集缉拿飞贼）
+
+=== enemy: world.foe.chengdu_thief
+weapon: 匕首
+name: 飞贼
+attrs: 根骨=15, 身法=23, 悟性=12
+skills: base.zhang=38, base.quan=32, base.zhaojia=32, base.tuna=36
+ai: 巧=3, 刚=1, 守=1
+cunning: 25
+potential: 46
+---
+一个精瘦的汉子，眼珠滴溜溜乱转，袖子里鼓鼓囊囊的。
+
+=== npc: world.npc.chengdu_thief
+name: 飞贼
+brief: 在成都市集偷东西的飞贼。
+if: flag:world.job.thief_chengdu
+talk: world.chengdu_thief.talk
+---
+一个精瘦的汉子在人群里钻来钻去，手不太老实。
+
+=== dialog: world.chengdu_thief.talk
+---
+飞贼被你盯上，脸色一变，手已摸向腰间。
+* 拿下他 !fight:world.b.chengdu_thief
+* 算了
+
+=== battle: world.b.chengdu_thief
+enemies: world.foe.chengdu_thief
+# 难度调校（tools/tune.mjs）
+hpx: 2.21
+win: world.chengdu_thief.win
+---
+飞贼拔出一把匕首，寒光一闪。
+
+=== dialog: world.chengdu_thief.win
+do: unflag:world.job.thief_chengdu today:world.job.thief_chengdu money:120
+---
+飞贼被你按倒在地，偷来的钱袋散了一地。（差事完成，赏钱一百二十文）
+
+=== patch: chengdu.market
+npcs: world.npc.chengdu_thief
+
+=== dialog: chengdu.job.patrol
+do: flag:world.job.patrol_chengdu
+---
+周捕头：近来外乡人多，去客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。
+（差事：去成都客栈查访）
+
+=== trigger: world.t.chengdu_patrol
+room: chengdu.inn
+if: flag:world.job.patrol_chengdu
+do: unflag:world.job.patrol_chengdu today:world.job.patrol_chengdu money:40 potential:15
+---
+你跟掌柜要来住店的名簿翻了一遍，又在大堂里转了转，没发现什么可疑之人。（差事完成，赏钱四十文）
 
 === dialog: chengdu.job.bandit
 do: flag:world.job.bandit_chengdu
@@ -92,19 +155,21 @@ do: flag:world.job.mail_xiangyang flag:world.job.mail_xiangyang_from_chengdu
 （差事：把书信送到襄阳衙门。坐马车 8 日可到）
 
 === dialog: chengdu.job.deliver_changan
-do: unflag:world.job.mail_chengdu unflag:world.job.mail_chengdu_from_changan money:165
+do: unflag:world.job.mail_chengdu unflag:world.job.mail_chengdu_from_changan money:165 potential:10 today:world.job.mailday_changan_chengdu
 ---
 周捕头拆开火漆看了看，点点头，数了 165 文钱给你。
 周捕头：一路辛苦。
 
 === dialog: chengdu.job.deliver_xiangyang
-do: unflag:world.job.mail_chengdu unflag:world.job.mail_chengdu_from_xiangyang money:150
+do: unflag:world.job.mail_chengdu unflag:world.job.mail_chengdu_from_xiangyang money:150 potential:10 today:world.job.mailday_xiangyang_chengdu
 ---
 周捕头拆开火漆看了看，点点头，数了 150 文钱给你。
 周捕头：一路辛苦。
 
 === enemy: world.foe.chengdu_bandit
 name: 蜀道山贼
+weapon: 刀
+weaponName: 砍刀
 attrs: 根骨=17, 身法=16, 悟性=10
 skills: base.quan=20, base.zhang=16, base.zhaojia=16, base.tuna=20
 ai: 刚=3, 巧=2, 守=1
@@ -129,16 +194,32 @@ talk: world.chengdu_bandit.talk
 
 === battle: world.b.chengdu_bandit
 enemies: world.foe.chengdu_bandit, world.foe.chengdu_bandit
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 1.21
 win: world.chengdu_bandit.win
 ---
 两个蜀道山贼抽出兵刃围了上来。
 
 === dialog: world.chengdu_bandit.win
-do: unflag:world.job.bandit_chengdu money:80
+do: unflag:world.job.bandit_chengdu today:world.job.bandit_chengdu money:80
 ---
-蜀道山贼丢下兵刃，作鸟兽散。（差事完成，赏钱八十文。还可以再去衙门领差事）
+蜀道山贼丢下兵刃，作鸟兽散。（差事完成，赏钱八十文）
 
 # ---------------- 任务清单 ----------------
+
+=== quest: world.q.chengdu_thief
+name: 缉拿：成都飞贼
+flag: world.job.thief_chengdu
+where: chengdu.market
+---
+成都衙门的差事：去市集缉拿飞贼。赏钱 120 文。
+
+=== quest: world.q.chengdu_patrol
+name: 查访：成都客栈
+flag: world.job.patrol_chengdu
+where: chengdu.inn
+---
+成都衙门的差事：去客栈查访外乡人。赏钱 40 文。
 
 === quest: world.q.chengdu_bandit
 name: 除害：蜀道山贼

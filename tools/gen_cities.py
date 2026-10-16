@@ -20,6 +20,9 @@ CITIES = {
         officer='孙捕头', officer_desc='一个圆脸的捕头，说话慢条斯理，腰刀却擦得锃亮。',
         bandit='南湖水贼', bandit_desc='几个赤着脚的水贼，在码头上敲诈过往船家。', bandit_where='码头边',
         bandit_lv=10,
+        battle_hpx=0.49,
+        thief_hpx=1.19,
+        weapon='刀', weapon_name='鱼叉',
     ),
     'xiangyang': dict(
         name='襄阳', pos='300,240', routes='linan=7, luoyang=4, chengdu=8', areas='wudang',
@@ -34,6 +37,9 @@ CITIES = {
         officer='王捕头', officer_desc='一个黑脸膛的汉子，据说早年在军中当过伍长。',
         bandit='汉水水匪', bandit_desc='一伙驾着快船的水匪，专劫汉水上的货船。', bandit_where='汉水边',
         bandit_lv=15,
+        battle_hpx=0.62,
+        thief_hpx=1.3,
+        weapon='刀', weapon_name='分水刀',
     ),
     'luoyang': dict(
         name='洛阳', pos='300,140', routes='xiangyang=4, changan=4', areas='shaolin',
@@ -48,6 +54,10 @@ CITIES = {
         officer='李都头', officer_desc='一个汉人都头，夹在金国官府和百姓之间，满脸愁苦。',
         bandit='邙山盗墓贼', bandit_desc='几个鬼鬼祟祟的汉子，身上沾着泥土，腰里别着洛阳铲。', bandit_where='北邙山下',
         bandit_lv=18,
+        battle_hpx=1.84,
+        thief_hpx=2.44,
+        thief_bonus=8,
+        weapon='棍', weapon_name='洛阳铲',
     ),
     'changan': dict(
         name='长安', pos='190,130', routes='luoyang=4, chengdu=9', areas='huashan',
@@ -62,6 +72,10 @@ CITIES = {
         officer='赵捕快', officer_desc='一个瘦高个的捕快，脸被风沙吹得黝黑。',
         bandit='关中刀客', bandit_desc='几个背着长刀的汉子，在官道上拦路收"买路钱"。', bandit_where='灞桥边',
         bandit_lv=22,
+        battle_hpx=1.08,
+        thief_hpx=2.1,
+        thief_bonus=8,
+        weapon='刀', weapon_name='长刀',
     ),
     'chengdu': dict(
         name='成都', pos='90,262', routes='xiangyang=8, changan=9', areas='tangmen',
@@ -76,6 +90,10 @@ CITIES = {
         officer='周捕头', officer_desc='一个矮壮的川中汉子，嘴里叼着一根旱烟杆。',
         bandit='蜀道山贼', bandit_desc='一伙占山为王的山贼，在栈道上劫掠行人。', bandit_where='北门外的栈道',
         bandit_lv=20,
+        battle_hpx=1.21,
+        thief_hpx=2.21,
+        thief_bonus=8,
+        weapon='刀', weapon_name='砍刀',
     ),
 }
 
@@ -129,13 +147,40 @@ def gen(cid, c):
     o = c['officer']
     lines += [f'=== npc: {cid}.officer', f'name: {o}', f'brief: {n}衙门的公差，发放除害、送信之类的差事。',
               f'talk: {cid}.officer.talk', '---', c['officer_desc'], '']
-    lines += [f'=== dialog: {cid}.officer.talk', '---', f'{o}：这位{{男:兄弟|女:姑娘}}，可是来领差事的？赏钱不多，胜在实在。']
-    lines.append(f'* 有什么除害的差事？ -> {cid}.job.bandit ?!flag:world.job.bandit_{cid}')
+    # 城市差事每天各做一次（D-054）：today 键在完成时记下
+    lines += [f'=== dialog: {cid}.officer.talk', f'ifnone: {o}：今天的差事都派完了，明天再来吧。', '---',
+              f'{o}：这位{{男:兄弟|女:姑娘}}，可是来领差事的？赏钱不多，胜在实在。']
+    lines.append(f'* 有什么除害的差事？ -> {cid}.job.bandit ?!flag:world.job.bandit_{cid} ?!today:world.job.bandit_{cid}')
+    lines.append(f'* 听说城里闹飞贼？ -> {cid}.job.thief ?!flag:world.job.thief_{cid} ?!today:world.job.thief_{cid}')
+    lines.append(f'* 要不要去客栈查查外乡人？ -> {cid}.job.patrol ?!flag:world.job.patrol_{cid} ?!today:world.job.patrol_{cid}')
     for to in neighbors(cid):
-        lines.append(f'* 有信要送去{NAMES[to]}吗？ -> {cid}.job.mail_{to} ?!flag:world.job.mail_{to}')
+        lines.append(f'* 有信要送去{NAMES[to]}吗？ -> {cid}.job.mail_{to} ?!flag:world.job.mail_{to} ?!today:world.job.mailday_{cid}_{to}')
     for frm in neighbors(cid):
         lines.append(f'* 交上{NAMES[frm]}衙门托付的书信 -> {cid}.job.deliver_{frm} ?flag:world.job.mail_{cid}_from_{frm}')
     lines += ['* 离开', '']
+    # 飞贼（战斗）与巡查（走到客栈即完成）
+    lv = c['bandit_lv']
+    lines += [f'=== dialog: {cid}.job.thief', f'do: flag:world.job.thief_{cid}', '---',
+              f'{o}：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去市集把他揪出来，赏钱一百二十文。',
+              f'（差事：在{n}市集缉拿飞贼）', '']
+    lines += [f'=== enemy: world.foe.{cid}_thief', 'weapon: 匕首', f'name: 飞贼',
+              f'attrs: 根骨={10 + lv // 4}, 身法={18 + lv // 4}, 悟性=12',
+              f'skills: base.zhang={lv + 10 + c.get("thief_bonus", 0)}, base.quan={lv + 4 + c.get("thief_bonus", 0)}, base.zhaojia={lv + 4 + c.get("thief_bonus", 0)}, base.tuna={lv + 8 + c.get("thief_bonus", 0)}',
+              'ai: 巧=3, 刚=1, 守=1', 'cunning: 25', f'potential: {lv * 2 + 6}', '---', '一个精瘦的汉子，眼珠滴溜溜乱转，袖子里鼓鼓囊囊的。', '']
+    lines += [f'=== npc: world.npc.{cid}_thief', 'name: 飞贼', f'brief: 在{n}市集偷东西的飞贼。', f'if: flag:world.job.thief_{cid}',
+              f'talk: world.{cid}_thief.talk', '---', '一个精瘦的汉子在人群里钻来钻去，手不太老实。', '']
+    lines += [f'=== dialog: world.{cid}_thief.talk', '---', '飞贼被你盯上，脸色一变，手已摸向腰间。', f'* 拿下他 !fight:world.b.{cid}_thief', '* 算了', '']
+    lines += [f'=== battle: world.b.{cid}_thief', f'enemies: world.foe.{cid}_thief', '# 难度调校（tools/tune.mjs）', f'hpx: {c.get("thief_hpx", 1)}',
+              f'win: world.{cid}_thief.win', '---', '飞贼拔出一把匕首，寒光一闪。', '']
+    lines += [f'=== dialog: world.{cid}_thief.win', f'do: unflag:world.job.thief_{cid} today:world.job.thief_{cid} money:120', '---',
+              '飞贼被你按倒在地，偷来的钱袋散了一地。（差事完成，赏钱一百二十文）', '']
+    lines += [f'=== patch: {cid}.market', f'npcs: world.npc.{cid}_thief', '']
+    lines += [f'=== dialog: {cid}.job.patrol', f'do: flag:world.job.patrol_{cid}', '---',
+              f'{o}：近来外乡人多，去客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。',
+              f'（差事：去{n}客栈查访）', '']
+    lines += [f'=== trigger: world.t.{cid}_patrol', f'room: {cid}.inn', f'if: flag:world.job.patrol_{cid}',
+              f'do: unflag:world.job.patrol_{cid} today:world.job.patrol_{cid} money:40 potential:15', '---',
+              '你跟掌柜要来住店的名簿翻了一遍，又在大堂里转了转，没发现什么可疑之人。（差事完成，赏钱四十文）', '']
     lines += [f'=== dialog: {cid}.job.bandit', f'do: flag:world.job.bandit_{cid}', '---',
               f'{o}：{c["bandit_where"]}有一伙{c["bandit"]}作乱，去把他们打发了，赏钱八十文。',
               f'（差事：在{n}车马行外教训{c["bandit"]}）', '']
@@ -147,13 +192,13 @@ def gen(cid, c):
     for frm in neighbors(cid):
         r = mail_reward(frm, cid)
         lines += [f'=== dialog: {cid}.job.deliver_{frm}',
-                  f'do: unflag:world.job.mail_{cid} unflag:world.job.mail_{cid}_from_{frm} money:{r}', '---',
+                  f'do: unflag:world.job.mail_{cid} unflag:world.job.mail_{cid}_from_{frm} money:{r} potential:10 today:world.job.mailday_{frm}_{cid}', '---',
                   f'{o}拆开火漆看了看，点点头，数了 {r} 文钱给你。', f'{o}：一路辛苦。', '']
 
     # 本地匪患
     b = c['bandit']
     lv = c['bandit_lv']
-    lines += [f'=== enemy: world.foe.{cid}_bandit', f'name: {b}',
+    lines += [f'=== enemy: world.foe.{cid}_bandit', f'name: {b}', f'weapon: {c["weapon"]}', f'weaponName: {c["weapon_name"]}',
               f'attrs: 根骨={12 + lv // 4}, 身法={12 + lv // 5}, 悟性=10',
               f'skills: base.quan={lv}, base.zhang={max(1, lv - 4)}, base.zhaojia={max(1, lv - 4)}, base.tuna={lv}',
               'ai: 刚=3, 巧=2, 守=1', 'cunning: 15', f'potential: {lv * 2}', '---', c['bandit_desc'], '']
@@ -162,12 +207,17 @@ def gen(cid, c):
     lines += [f'=== dialog: world.{cid}_bandit.talk', '---', f'{b}：哟，又来一个送死的？',
               f'* 动手 !fight:world.b.{cid}_bandit', '* 走开', '']
     lines += [f'=== battle: world.b.{cid}_bandit', f'enemies: world.foe.{cid}_bandit, world.foe.{cid}_bandit',
+              '# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）', f'hpx: {c.get("battle_hpx", 1)}',
               f'win: world.{cid}_bandit.win', '---', f'两个{b}抽出兵刃围了上来。', '']
-    lines += [f'=== dialog: world.{cid}_bandit.win', f'do: unflag:world.job.bandit_{cid} money:80', '---',
-              f'{b}丢下兵刃，作鸟兽散。（差事完成，赏钱八十文。还可以再去衙门领差事）', '']
+    lines += [f'=== dialog: world.{cid}_bandit.win', f'do: unflag:world.job.bandit_{cid} today:world.job.bandit_{cid} money:80', '---',
+              f'{b}丢下兵刃，作鸟兽散。（差事完成，赏钱八十文）', '']
 
     # 任务清单（D-045）：flag 设着时显示在"江湖 → 任务"里
     lines += ['# ---------------- 任务清单 ----------------', '']
+    lines += [f'=== quest: world.q.{cid}_thief', f'name: 缉拿：{n}飞贼', f'flag: world.job.thief_{cid}', f'where: {cid}.market', '---',
+              f'{n}衙门的差事：去市集缉拿飞贼。赏钱 120 文。', '']
+    lines += [f'=== quest: world.q.{cid}_patrol', f'name: 查访：{n}客栈', f'flag: world.job.patrol_{cid}', f'where: {cid}.inn', '---',
+              f'{n}衙门的差事：去客栈查访外乡人。赏钱 40 文。', '']
     lines += [f'=== quest: world.q.{cid}_bandit', f'name: 除害：{b}', f'flag: world.job.bandit_{cid}',
               f'where: {cid}.station', '---', f'{n}衙门的差事：去{n}车马行教训{c["bandit_where"]}作乱的{b}。赏钱 80 文。', '']
     for to in neighbors(cid):

@@ -64,16 +64,79 @@ talk: xiangyang.officer.talk
 一个黑脸膛的汉子，据说早年在军中当过伍长。
 
 === dialog: xiangyang.officer.talk
+ifnone: 王捕头：今天的差事都派完了，明天再来吧。
 ---
 王捕头：这位{男:兄弟|女:姑娘}，可是来领差事的？赏钱不多，胜在实在。
-* 有什么除害的差事？ -> xiangyang.job.bandit ?!flag:world.job.bandit_xiangyang
-* 有信要送去成都吗？ -> xiangyang.job.mail_chengdu ?!flag:world.job.mail_chengdu
-* 有信要送去临安吗？ -> xiangyang.job.mail_linan ?!flag:world.job.mail_linan
-* 有信要送去洛阳吗？ -> xiangyang.job.mail_luoyang ?!flag:world.job.mail_luoyang
+* 有什么除害的差事？ -> xiangyang.job.bandit ?!flag:world.job.bandit_xiangyang ?!today:world.job.bandit_xiangyang
+* 听说城里闹飞贼？ -> xiangyang.job.thief ?!flag:world.job.thief_xiangyang ?!today:world.job.thief_xiangyang
+* 要不要去客栈查查外乡人？ -> xiangyang.job.patrol ?!flag:world.job.patrol_xiangyang ?!today:world.job.patrol_xiangyang
+* 有信要送去成都吗？ -> xiangyang.job.mail_chengdu ?!flag:world.job.mail_chengdu ?!today:world.job.mailday_xiangyang_chengdu
+* 有信要送去临安吗？ -> xiangyang.job.mail_linan ?!flag:world.job.mail_linan ?!today:world.job.mailday_xiangyang_linan
+* 有信要送去洛阳吗？ -> xiangyang.job.mail_luoyang ?!flag:world.job.mail_luoyang ?!today:world.job.mailday_xiangyang_luoyang
 * 交上成都衙门托付的书信 -> xiangyang.job.deliver_chengdu ?flag:world.job.mail_xiangyang_from_chengdu
 * 交上临安衙门托付的书信 -> xiangyang.job.deliver_linan ?flag:world.job.mail_xiangyang_from_linan
 * 交上洛阳衙门托付的书信 -> xiangyang.job.deliver_luoyang ?flag:world.job.mail_xiangyang_from_luoyang
 * 离开
+
+=== dialog: xiangyang.job.thief
+do: flag:world.job.thief_xiangyang
+---
+王捕头：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去市集把他揪出来，赏钱一百二十文。
+（差事：在襄阳市集缉拿飞贼）
+
+=== enemy: world.foe.xiangyang_thief
+weapon: 匕首
+name: 飞贼
+attrs: 根骨=13, 身法=21, 悟性=12
+skills: base.zhang=25, base.quan=19, base.zhaojia=19, base.tuna=23
+ai: 巧=3, 刚=1, 守=1
+cunning: 25
+potential: 36
+---
+一个精瘦的汉子，眼珠滴溜溜乱转，袖子里鼓鼓囊囊的。
+
+=== npc: world.npc.xiangyang_thief
+name: 飞贼
+brief: 在襄阳市集偷东西的飞贼。
+if: flag:world.job.thief_xiangyang
+talk: world.xiangyang_thief.talk
+---
+一个精瘦的汉子在人群里钻来钻去，手不太老实。
+
+=== dialog: world.xiangyang_thief.talk
+---
+飞贼被你盯上，脸色一变，手已摸向腰间。
+* 拿下他 !fight:world.b.xiangyang_thief
+* 算了
+
+=== battle: world.b.xiangyang_thief
+enemies: world.foe.xiangyang_thief
+# 难度调校（tools/tune.mjs）
+hpx: 1.3
+win: world.xiangyang_thief.win
+---
+飞贼拔出一把匕首，寒光一闪。
+
+=== dialog: world.xiangyang_thief.win
+do: unflag:world.job.thief_xiangyang today:world.job.thief_xiangyang money:120
+---
+飞贼被你按倒在地，偷来的钱袋散了一地。（差事完成，赏钱一百二十文）
+
+=== patch: xiangyang.market
+npcs: world.npc.xiangyang_thief
+
+=== dialog: xiangyang.job.patrol
+do: flag:world.job.patrol_xiangyang
+---
+王捕头：近来外乡人多，去客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。
+（差事：去襄阳客栈查访）
+
+=== trigger: world.t.xiangyang_patrol
+room: xiangyang.inn
+if: flag:world.job.patrol_xiangyang
+do: unflag:world.job.patrol_xiangyang today:world.job.patrol_xiangyang money:40 potential:15
+---
+你跟掌柜要来住店的名簿翻了一遍，又在大堂里转了转，没发现什么可疑之人。（差事完成，赏钱四十文）
 
 === dialog: xiangyang.job.bandit
 do: flag:world.job.bandit_xiangyang
@@ -100,25 +163,27 @@ do: flag:world.job.mail_luoyang flag:world.job.mail_luoyang_from_xiangyang
 （差事：把书信送到洛阳衙门。坐马车 4 日可到）
 
 === dialog: xiangyang.job.deliver_chengdu
-do: unflag:world.job.mail_xiangyang unflag:world.job.mail_xiangyang_from_chengdu money:150
+do: unflag:world.job.mail_xiangyang unflag:world.job.mail_xiangyang_from_chengdu money:150 potential:10 today:world.job.mailday_chengdu_xiangyang
 ---
 王捕头拆开火漆看了看，点点头，数了 150 文钱给你。
 王捕头：一路辛苦。
 
 === dialog: xiangyang.job.deliver_linan
-do: unflag:world.job.mail_xiangyang unflag:world.job.mail_xiangyang_from_linan money:135
+do: unflag:world.job.mail_xiangyang unflag:world.job.mail_xiangyang_from_linan money:135 potential:10 today:world.job.mailday_linan_xiangyang
 ---
 王捕头拆开火漆看了看，点点头，数了 135 文钱给你。
 王捕头：一路辛苦。
 
 === dialog: xiangyang.job.deliver_luoyang
-do: unflag:world.job.mail_xiangyang unflag:world.job.mail_xiangyang_from_luoyang money:90
+do: unflag:world.job.mail_xiangyang unflag:world.job.mail_xiangyang_from_luoyang money:90 potential:10 today:world.job.mailday_luoyang_xiangyang
 ---
 王捕头拆开火漆看了看，点点头，数了 90 文钱给你。
 王捕头：一路辛苦。
 
 === enemy: world.foe.xiangyang_bandit
 name: 汉水水匪
+weapon: 刀
+weaponName: 分水刀
 attrs: 根骨=15, 身法=15, 悟性=10
 skills: base.quan=15, base.zhang=11, base.zhaojia=11, base.tuna=15
 ai: 刚=3, 巧=2, 守=1
@@ -143,16 +208,32 @@ talk: world.xiangyang_bandit.talk
 
 === battle: world.b.xiangyang_bandit
 enemies: world.foe.xiangyang_bandit, world.foe.xiangyang_bandit
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 0.62
 win: world.xiangyang_bandit.win
 ---
 两个汉水水匪抽出兵刃围了上来。
 
 === dialog: world.xiangyang_bandit.win
-do: unflag:world.job.bandit_xiangyang money:80
+do: unflag:world.job.bandit_xiangyang today:world.job.bandit_xiangyang money:80
 ---
-汉水水匪丢下兵刃，作鸟兽散。（差事完成，赏钱八十文。还可以再去衙门领差事）
+汉水水匪丢下兵刃，作鸟兽散。（差事完成，赏钱八十文）
 
 # ---------------- 任务清单 ----------------
+
+=== quest: world.q.xiangyang_thief
+name: 缉拿：襄阳飞贼
+flag: world.job.thief_xiangyang
+where: xiangyang.market
+---
+襄阳衙门的差事：去市集缉拿飞贼。赏钱 120 文。
+
+=== quest: world.q.xiangyang_patrol
+name: 查访：襄阳客栈
+flag: world.job.patrol_xiangyang
+where: xiangyang.inn
+---
+襄阳衙门的差事：去客栈查访外乡人。赏钱 40 文。
 
 === quest: world.q.xiangyang_bandit
 name: 除害：汉水水匪

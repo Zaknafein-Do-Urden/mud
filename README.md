@@ -22,11 +22,20 @@ python -m http.server 8000
 node tools/validate.mjs
 ```
 
-调整战斗数值后，可以跑平衡模拟：
+调整战斗数值后，可以跑平衡模拟（按猜对率列胜率），以及按"猜对 80%"的标准调校固定难度的战斗：
 
 ```bash
 node tools/balance.mjs
 ```
+
+```bash
+node tools/tune.mjs
+```
+
+## 联机
+
+在旅店或门派驻地点"开设队伍"，把暗号告诉朋友；朋友在旅店或门派驻地点"加入队伍"输入暗号即可。
+一台电脑上测试：开两个标签页 `/?net=local` 和 `/?net=local&slot=2`。
 
 ## 部署
 

@@ -2,7 +2,7 @@
 
 === sect: huashan
 name: 华山
-ranks: 外门弟子=0, 入门弟子=100, 亲传弟子=300, 华山剑客=700, 华山长老=1500
+ranks: 外门弟子=0, 入门弟子=100, 亲传弟子=250, 华山剑客=450, 华山长老=700
 caps: 40, 70, 100, 140, 180
 examiner: 梁师兄
 ---
@@ -20,6 +20,7 @@ affinity: 巧
 华山入门内功，内息轻灵，与本门剑法相辅相成。
 
 === skill: huashan.jianfa
+weapon: 剑
 name: 华山剑法
 kind: 外功
 stance: 巧
@@ -128,6 +129,7 @@ rank: 1
 华山弟子在险峰绝壁间练就的步法，轻灵迅捷。
 
 === skill: huashan.dugu
+weapon: 剑
 name: 独孤九剑
 kind: 外功
 stance: 巧
@@ -168,13 +170,16 @@ exits: 东=huashan.gate
 === room: huashan.gate
 name: 华山·玉泉院
 exits: 西=changan.station, 北=huashan.hall, 东=huashan.cliff
+# 门派大门兼作旅店：休息、修炼、战败后回到这里、组队（D-046）
+inn: true
+restmsg: 你在玉泉院的厢房里睡了一觉，泉声叮咚，醒来神清气爽。
 ---
 华山脚下的道观，泉水叮咚。抬头望去，千仞绝壁直插云霄。
 
 === room: huashan.hall
 name: 华山·正气堂
 exits: 南=huashan.gate
-npcs: huashan.mu
+npcs: huashan.mu, huashan.sparring
 train: true
 ---
 正气堂建在山腰的平台上，堂前一块空地，十几个弟子正在对练剑法，剑光闪闪。
@@ -217,9 +222,14 @@ talk: huashan.mu.talk
 穆清风：{姓名}，先从华山剑法、混元掌和华山心法练起。剑法不在多，在于精。
 
 === dialog: huashan.mu.task
+ifnone: 穆清风：今天的差事都办完了，目前没有门派任务。明日再来吧。
 ---
-* 山上可有贼人？ -> huashan.task.bandit ?!flag:world.huashan.task_bandit
-* 可有更难的差事？ -> huashan.task.spy ?rank:1 ?!flag:world.huashan.task_spy
+* 山上可有贼人？ -> huashan.task.bandit ?!flag:world.huashan.task_bandit ?!today:world.huashan.task_bandit
+* 附近可有人滋事？ -> huashan.task.b2 ?!flag:world.huashan.task_b2 ?!today:world.huashan.task_b2
+* 要不要去苍龙岭巡视？ -> huashan.task.patrol ?!flag:world.huashan.task_patrol ?!today:world.huashan.task_patrol
+* 可有书信要送去长安？ -> huashan.task.deliver ?!flag:world.huashan.task_deliver ?!today:world.huashan.task_deliver
+* 可有更难的差事？ -> huashan.task.spy ?rank:1 ?!flag:world.huashan.task_spy ?!today:world.huashan.task_spy
+* 可有最难办的差事？ -> huashan.task.b3 ?rank:2 ?!flag:world.huashan.task_b3 ?!today:world.huashan.task_b3
 * 告辞
 
 === dialog: huashan.task.bandit
@@ -235,12 +245,14 @@ do: flag:world.huashan.task_spy
 （门派任务：击败苍龙岭上叫阵的剑客）
 
 === enemy: huashan.foe.bandit
+weapon: 匕首
+weaponName: 短刀
 name: 苍龙岭毛贼
 attrs: 根骨=13, 身法=15, 悟性=8
-skills: base.quan=9, base.zhang=8, base.zhaojia=5
+skills: base.quan=8, base.zhang=7, base.zhaojia=5
 ai: 刚=2, 巧=2, 守=1
 potential: 20
-hpx: 0.75
+hpx: 0.7
 ---
 两个衣衫破烂的毛贼，手里拿着短刀。
 
@@ -259,23 +271,28 @@ talk: huashan.bandit.talk
 * 走开
 
 === battle: world.b.huashan_bandit
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 1.39
 enemies: huashan.foe.bandit, huashan.foe.bandit
 win: huashan.bandit.win
 ---
 两个毛贼拔出短刀，在窄窄的山脊上向你逼来。
 
 === dialog: huashan.bandit.win
-do: unflag:world.huashan.task_bandit rep:huashan:30
+do: unflag:world.huashan.task_bandit rep:huashan:30 today:world.huashan.task_bandit
 ---
 两个毛贼连滚带爬地逃下山去。（门派任务完成）
 
 === enemy: huashan.foe.swordsman
+weapon: 剑
 name: 叫阵剑客
 attrs: 根骨=16, 身法=20, 悟性=16
 skills: base.zhang=20, base.quan=18, base.zhaojia=16, base.tuna=18
 ai: 巧=2, 刚=2, 守=1
 cunning: 30
 potential: 60
+# 藏招：15% 的回合不露预兆，靠悟性、慧眼看穿
+obscure: 15
 ---
 一个锦衣剑客，神色倨傲，腰间长剑的剑鞘上镶着宝石。
 
@@ -294,13 +311,15 @@ talk: huashan.spy.talk
 * 走开
 
 === battle: world.b.huashan_spy
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 1.87
 enemies: huashan.foe.swordsman
 win: huashan.spy.win
 ---
 剑客长剑出鞘，剑光如水。
 
 === dialog: huashan.spy.win
-do: unflag:world.huashan.task_spy rep:huashan:80
+do: unflag:world.huashan.task_spy rep:huashan:60 today:world.huashan.task_spy
 ---
 剑客的长剑被你震脱了手，他脸色铁青，拾起剑一言不发地下山去了。（门派任务完成）
 
@@ -319,3 +338,193 @@ flag: world.huashan.task_spy
 where: huashan.cliff
 ---
 穆清风的吩咐：有别派剑客在苍龙岭叫阵。
+
+# ---------------- 陪练（随时可以切磋，打输也无妨；D-049）----------------
+
+=== npc: huashan.sparring
+name: 陪练弟子
+brief: 本门的陪练，可以随时切磋练功。
+talk: huashan.sparring.talk
+---
+一个刚入门的华山弟子，手里握着木剑，跃跃欲试。
+
+=== dialog: huashan.sparring.talk
+---
+陪练弟子：来过两招？用木剑，伤不着人。
+* 好，切磋几招 !fight:world.b.huashan_spar
+* 下次吧
+
+=== enemy: world.foe.huashan_spar
+weapon: 剑
+weaponName: 木剑
+name: 陪练弟子
+attrs: 根骨=12, 身法=16, 悟性=12
+skills: huashan.jianfa=6, huashan.hunyuan=6, base.tuna=5
+ai: 巧=3, 守=1
+cunning: 10
+potential: 12
+hpx: 0.7
+---
+一个刚入门的华山弟子，手里握着木剑，跃跃欲试。
+
+=== battle: world.b.huashan_spar
+enemies: world.foe.huashan_spar
+---
+陪练弟子摆开了架势。
+
+# ================= 新增门派任务（D-054）：每天每个任务各做一次 =================
+
+# ---- 巡视（走到地方就算完成）----
+=== dialog: huashan.task.patrol
+do: flag:world.huashan.task_patrol
+---
+穆清风：去苍龙岭巡一遍，看看山道上的铁链是否牢靠。
+（门派任务：巡视苍龙岭）
+
+=== trigger: world.t.huashan_patrol
+room: huashan.cliff
+if: flag:world.huashan.task_patrol
+do: unflag:world.huashan.task_patrol today:world.huashan.task_patrol rep:huashan:30 potential:10
+---
+你一手扶着铁链，一步步走过苍龙岭，铁链都还结实。山风吹得你衣袂翻飞。（门派任务完成）
+
+# ---- 送信（走到对方衙门就算完成）----
+=== dialog: huashan.task.deliver
+do: flag:world.huashan.task_deliver
+---
+穆清风：这封信交给长安衙门的赵捕快，华山下几个村子遭了狼，请官府派人帮忙。
+（门派任务：把书信送到长安衙门，交给赵捕快）
+
+=== trigger: world.t.huashan_deliver
+room: changan.office
+if: flag:world.huashan.task_deliver
+do: unflag:world.huashan.task_deliver today:world.huashan.task_deliver rep:huashan:30 potential:10
+---
+你把书信交给了赵捕快。赵捕快看了一眼封皮，郑重地收了起来。（门派任务完成）
+
+# ---- 一阶：药贩 ----
+=== dialog: huashan.task.b2
+do: flag:world.huashan.task_b2
+---
+穆清风：玉泉院外有人偷挖山上的灵芝，去把东西追回来。
+（门派任务：教训药贩）
+
+=== enemy: world.foe.huashan_b2
+weapon: 棍
+weaponName: 药锄
+name: 药贩
+attrs: 根骨=12, 身法=13, 悟性=8
+skills: base.quan=9, base.zhang=8, base.zhaojia=7
+ai: 刚=2, 巧=2, 守=1
+potential: 20
+---
+一个背着药篓的汉子，偷挖了山上的珍稀草药，被发现了还想动手。
+
+=== npc: world.npc.huashan_b2
+name: 药贩
+brief: 在附近滋事的药贩。
+if: flag:world.huashan.task_b2
+talk: world.huashan_b2.talk
+---
+一个背着药篓的汉子，偷挖了山上的珍稀草药，被发现了还想动手。
+
+=== dialog: world.huashan_b2.talk
+---
+药贩：看什么看？
+* 动手 !fight:world.b.huashan_b2
+* 走开
+
+=== battle: world.b.huashan_b2
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 0.98
+enemies: world.foe.huashan_b2, world.foe.huashan_b2
+win: world.huashan_b2.win
+---
+药贩和同伙骂骂咧咧地扑了上来。
+
+=== dialog: world.huashan_b2.win
+do: unflag:world.huashan.task_b2 today:world.huashan.task_b2 rep:huashan:30
+---
+药贩灰头土脸地走了。（门派任务完成）
+
+=== patch: huashan.gate
+npcs: world.npc.huashan_b2
+
+# ---- 二阶：嵩山派高手 ----
+=== dialog: huashan.task.b3
+do: flag:world.huashan.task_b3
+---
+穆清风：嵩山派派了个高手来，说要"指点"华山剑法。去让他知道华山剑法的厉害。
+（门派任务：击败嵩山派高手）
+
+=== enemy: world.foe.huashan_b3
+weapon: 剑
+name: 嵩山派高手
+attrs: 根骨=18, 身法=18, 悟性=16
+skills: huashan.jianfa=40, base.quan=36, base.zhaojia=38, base.tuna=40
+ai: 巧=2, 刚=2, 守=1
+cunning: 30
+# 藏招：20% 的回合不露预兆
+obscure: 20
+potential: 90
+---
+一个中年剑客，剑法沉稳老辣，自称是嵩山派门下。
+
+=== npc: world.npc.huashan_b3
+name: 嵩山派高手
+brief: 本门的强敌。
+if: flag:world.huashan.task_b3
+talk: world.huashan_b3.talk
+---
+一个中年剑客，剑法沉稳老辣，自称是嵩山派门下。
+
+=== dialog: world.huashan_b3.talk
+---
+嵩山派高手冷冷地看着你：“就凭你？”
+* 请赐教 !fight:world.b.huashan_b3
+* 退开
+
+=== battle: world.b.huashan_b3
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 1.32
+enemies: world.foe.huashan_b3
+win: world.huashan_b3.win
+---
+嵩山派高手一言不发，出手便是杀招。
+
+=== dialog: world.huashan_b3.win
+do: unflag:world.huashan.task_b3 today:world.huashan.task_b3 rep:huashan:90
+---
+嵩山派高手败退而去。这一战传回门中，同门都对你刮目相看。（门派任务完成）
+
+=== patch: huashan.cliff
+npcs: world.npc.huashan_b3
+
+# ---- 任务清单 ----
+=== quest: world.q.huashan_patrol
+name: 穆清风的差遣：巡视苍龙岭
+flag: world.huashan.task_patrol
+where: huashan.cliff
+---
+去苍龙岭巡一遍，看看山道上的铁链是否牢靠。
+
+=== quest: world.q.huashan_deliver
+name: 穆清风的差遣：送信到长安
+flag: world.huashan.task_deliver
+where: changan.office
+---
+这封信交给长安衙门的赵捕快，华山下几个村子遭了狼，请官府派人帮忙。
+
+=== quest: world.q.huashan_b2
+name: 穆清风的差遣：教训药贩
+flag: world.huashan.task_b2
+where: huashan.gate
+---
+玉泉院外有人偷挖山上的灵芝，去把东西追回来。
+
+=== quest: world.q.huashan_b3
+name: 穆清风的差遣：击败嵩山派高手
+flag: world.huashan.task_b3
+where: huashan.cliff
+---
+嵩山派派了个高手来，说要"指点"华山剑法。去让他知道华山剑法的厉害。

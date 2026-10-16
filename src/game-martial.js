@@ -2,7 +2,9 @@
 
 import { maxHp, maxMp, skillCap, trainCost, sectRanks, bestInnerLv, MAX_OUTER, movesOf, expNeed, expPerUse, gainExp } from './character.js';
 import { TALENT_TREE, talentPointsTotal, talentPointsSpent, canAddTalent, findTalent, xiuwei, xiuweiToNext, tal } from './talents.js';
-import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, enemiesOf, hpText } from './combat.js';
+import { adaptEnemyHp } from './combat.js';
+import { todayStr } from './game.js';
+import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, playersOf, enemiesOf, hpText, moveInfo } from './combat.js';
 
 const KIND_LABEL = { 外功: '外功', 内功: '内功', 轻功: '轻功' };
 
@@ -110,11 +112,12 @@ export const martial = {
   },
 
   rest() {
-    if (this.room()?.props.inn !== 'true') { this.emit('err', '这里没法好好休息。去旅店吧。'); return; }
+    if (this.room()?.props.inn !== 'true') { this.emit('err', '这里没法好好休息。去旅店或本门驻地吧。'); return; }
     const p = this.state.player;
     p.hp = this.hpMax();
     this.state.day = (this.state.day ?? 1) + 1;
-    this.emit('sys', `你要了一间客房，美美睡了一觉。醒来时神清气爽。（气血全满，第 ${this.state.day} 日）`);
+    const msg = this.room().props.restmsg ?? '你要了一间客房，美美睡了一觉。醒来时神清气爽。';
+    this.emit('sys', `${msg}（气血全满，第 ${this.state.day} 日）`);
   },
 
   // ---- 天赋（D-044）----
@@ -197,6 +200,8 @@ export const martial = {
     const next = ranks[p.sect.rank + 1];
     if (!next) { this.emit('sys', '你已是本门最高阶位。'); return; }
     if (p.sect.rep < next.rep) { this.emit('err', `声望不足：晋升${next.name}需要 ${next.rep}，你现有 ${p.sect.rep}。`); return; }
+    // 每天最多晋阶一次（D-054）
+    if (this.state.daily?.[`promote.${sectId}`] === todayStr()) { this.emit('err', '你今天已经晋阶过了，根基未稳，明天再来吧。'); return; }
     // 晋阶考核：与一位势均力敌的同门过招（D-036）
     const sect = this.db.sect[sectId];
     const examiner = sect.props.examiner ?? '同门师兄';
@@ -257,30 +262,40 @@ export const martial = {
     if (!block) { this.emit('err', `[内容错误] 战斗不存在: ${id}`); return; }
     this.endDialog();
     this.normalizeHp();
-    const b = createBattle(this.db, block, this.state.player, (Date.now() ^ (Math.random() * 1e9)) | 0);
+    // 组队时全队参战（MULTIPLAYER.md）
+    const b = createBattle(this.db, block, this.partyPlayers(), (Date.now() ^ (Math.random() * 1e9)) | 0);
+    // 必须打赢的主线战斗（以及标了 adapt 的战斗）：敌人气血按玩家当前功力调整，
+    // 使猜对 80% 以上的招式能赢、以下会输（D-051）
+    const storyMustWin = !!this.db.storyline[id.split('.')[0]] && !block.props.lose;
+    if (storyMustWin || block.props.adapt === 'true') adaptEnemyHp(this.db, b);
     this.state.battle = b;
     this.emitLines(block.lines, 'desc');
     this.emit('combat', `——与${enemiesOf(b).map((e) => e.name).join('、')}交手！——`);
     beginRound(this.db, b, (cls, text, extra) => this.emit(cls, text, extra));
   },
 
-  combatInput(line) {
+  combatInput(line, pid = 'host') {
     const b = this.state.battle;
     const v = line.split(/\s+/)[0].toLowerCase();
     const emit = (cls, text, extra) => this.emit(cls, text, extra);
+    const to = { to: pid };
     if (['逃', '逃跑', 'flee'].includes(v)) {
-      if (b.noFlee || this.db.battle[b.id]?.props.flee === 'false') { this.emit('err', '此战无路可退！'); return; }
-      this.emit('fx', '你虚晃一招，抽身退出了战圈。');
+      if (pid !== 'host') { this.emit('err', '只有队长能下令撤退。', to); return; }
+      if (b.noFlee || this.db.battle[b.id]?.props.flee === 'false') { this.emit('err', '此战无路可退！', to); return; }
+      this.emit('fx', this.party ? '队长一声招呼，众人虚晃一招，抽身退出了战圈。' : '你虚晃一招，抽身退出了战圈。');
       this.endBattle('flee');
       return;
     }
     if (['h', 'help', '帮助', '?'].includes(v)) {
-      this.emit('sys', '【战斗】输入招式编号出招，如 2；多个对手时 2 1 表示对第 1 个对手出第 2 招。0 = 调息。逃跑 = 撤出战斗。');
-      this.emit('sys', '刚克守、巧克刚、守克巧。看清对手的预兆再出手。');
+      this.emit('sys', '【战斗】输入招式编号出招，如 2；多个对手时 2 1 表示对第 1 个对手出第 2 招。0 = 调息。逃跑 = 撤出战斗（组队时只有队长能下令）。', to);
+      this.emit('sys', '刚克守、巧克刚、守克巧。看清对手的预兆再出手。', to);
       return;
     }
-    const errMsg = setPlayerIntent(this.db, b, line);
-    if (errMsg) { this.emit('err', errMsg); return; }
+    const me = playerUnitOf(b, pid);
+    if (me?.intent && this.party) { this.emit('err', '你这回合已经出过招了。', to); return; }
+    const errMsg = setPlayerIntent(this.db, b, line, pid);
+    if (errMsg) { this.emit('err', errMsg, to); return; }
+    if (this.party && playersOf(b).length > 1) { this.partyIntent(pid); return; }
     resolveRound(this.db, b, emit);
     if (b.over) this.endBattle(b.over);
     else beginRound(this.db, b, emit);
@@ -294,6 +309,10 @@ export const martial = {
     p.hp = Math.max(0, me.hp);
     delete this.state.battle;
     this.awardExp(b, me);
+    // 组队：给客人结算（实战经验胜负都给，潜能只在胜利时给）
+    if (this.party && playersOf(b).length > 1) {
+      this.settleGuests(b, result, enemiesOf(b).reduce((s, e) => s + e.potential, 0));
+    }
     if (b.exam) { this.endExam(b, result); return; }
     if (b.robbery) { this.endRobbery(b, result); return; }
     // 主线战斗默认必须打赢，输了回到章节开始；写了 lose 分支的是"必败剧情战"，输了剧情照常继续（D-042）
@@ -326,23 +345,8 @@ export const martial = {
 
   /** 实战经验：本场用过的武功按使用次数长经验；内功、轻功按运功回合数长经验。胜负都给（练了就是练了） */
   awardExp(b, me) {
-    const p = this.state.player;
-    const gains = [];
-    const add = (id, times) => {
-      if (!id || !times || p.skills[id] === undefined) return;
-      let total = 0;
-      let ups = 0;
-      for (let i = 0; i < times; i++) {
-        const g = expPerUse(b.foeLv, p.skills[id]);
-        total += g;
-        ups += gainExp(this.db, p, id, g);
-      }
-      if (total) gains.push(`${this.db.skill[id].props.name} +${total}${ups ? `（升到 ${p.skills[id]} 级！）` : ''}`);
-    };
-    for (const [id, n] of Object.entries(me.used ?? {})) add(id, n);
-    add(p.loadout.inner, me.rounds);
-    add(p.loadout.light, me.rounds);
-    if (gains.length) this.emit('sys', '实战经验：' + gains.join('，'));
+    const { texts } = this.gainFromBattle(b, me, this.state.player);
+    if (texts.length) this.emit('sys', '实战经验：' + texts.join('，'), { to: 'host' });
     this.normalizeHp();
   },
 
@@ -351,6 +355,8 @@ export const martial = {
     const ranks = sectRanks(this.db.sect[b.exam.sect]);
     if (result === 'win' && p.sect?.id === b.exam.sect) {
       p.sect.rank = b.exam.rank;
+      this.state.daily ??= {};
+      this.state.daily[`promote.${b.exam.sect}`] = todayStr();
       p.hp = Math.max(p.hp, 1);
       this.emit('combat', '——考核通过！——');
       this.emit('story', `师父点了点头：“好，从今日起，你便是本门${ranks[b.exam.rank]?.name}了。”`);
@@ -362,17 +368,25 @@ export const martial = {
   },
 
   /** UI 用：战斗面板数据 */
-  combatView() {
+  combatView(pid = 'host') {
     const b = this.state.battle;
     if (!b) return null;
-    const me = playerUnitOf(b);
+    const me = playerUnitOf(b, pid);
+    if (!me) return null;
     return {
+      // 队友的状态与本回合已选的招式（D-019：队友出招实时可见）
+      team: playersOf(b).filter((u) => u !== me).map((u) => ({
+        name: u.name, hp: u.hp, maxHp: u.maxHp,
+        chosen: !u.intent ? null : u.intent.type === 'rest' ? '调息' : u.intent.type === 'move' ? `${moveInfo(this.db, u.intent.move).name}（${u.intent.stance}）` : '……',
+      })),
+      chosen: !!me.intent,
+      isHost: pid === 'host',
       round: b.round,
       me: { hp: me.hp, maxHp: me.maxHp, mp: me.mp, maxMp: me.maxMp, status: Object.keys(me.status).filter((k) => !k.endsWith('dot')) },
       enemies: enemiesOf(b).map((e, i) => ({ n: i + 1, key: e.key, name: e.name, hp: e.hp, maxHp: e.maxHp, hpText: hpText(e), status: Object.keys(e.status).filter((k) => !k.endsWith('dot')), dead: e.hp <= 0 })),
       moves: unitMoves(this.db, me).map((m, i) => ({ n: i + 1, name: m.name, skillName: m.skillName, stance: m.stance, mp: m.mp, effects: m.effects, usable: m.mp <= me.mp })),
-      target: b.lastTarget,
-      canFlee: b.exam ? true : !b.noFlee && this.db.battle[b.id]?.props.flee !== 'false',
+      target: me.lastTarget,
+      canFlee: pid === 'host' && (b.exam ? true : !b.noFlee && this.db.battle[b.id]?.props.flee !== 'false'),
     };
   },
 

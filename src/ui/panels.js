@@ -132,7 +132,17 @@ export function initPanels(api) {
           head.append(btns);
           r.append(head);
           if (!s.frozen && s.lv < s.cap) r.append(row(el('span', 'pn-k', '经验'), bar(s.exp, s.need, 'mp'), el('span', 'pn-v', `${s.exp}/${s.need}`)));
-          if (s.moves.length) r.append(el('div', 'pn-moves', s.moves.map((m) => (m.unlocked ? m.name : `${m.name}（${m.level}级）`)).join('　')));
+          if (s.moves.length) {
+            // 每个招式悬停显示威力、内力、估算伤害、效果（D-053）
+            const mv = el('div', 'pn-moves');
+            s.moves.forEach((m, i) => {
+              const span = el('span', 'pn-move' + (m.unlocked ? '' : ' locked'), m.unlocked ? `${m.name}（约${m.est}）` : `${m.name}（${m.level}级）`);
+              span.title = m.tip;
+              if (i) mv.append('　');
+              mv.append(span);
+            });
+            r.append(mv);
+          }
           body.append(r);
         }
       }

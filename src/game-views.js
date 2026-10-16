@@ -1,11 +1,21 @@
 // 引擎给界面面板用的只读数据（D-045）。面板上的按钮一律通过发送命令来操作，
 // 这样界面和命令行永远等价，联机时客人也只需要发命令。
 
-import { maxMp, skillCap, trainCost, sectRanks, expNeed, MAX_OUTER, movesOf } from './character.js';
+import { maxMp, skillCap, trainCost, sectRanks, expNeed, MAX_OUTER, movesOf, innerOf, innerBonus } from './character.js';
+import { parseList } from './content.js';
 import { TALENT_TREE, talentPointsTotal, talentPointsSpent, canAddTalent, xiuwei, xiuweiToNext, tal } from './talents.js';
 import { cargoUnits, CARGO_CAP } from './economy.js';
 
 const words = (s = '') => s.split(/[\s,]+/).filter(Boolean);
+
+// 招式附加效果的说明（COMBAT.md §11）
+const EFFECT_TEXT = {
+  内伤: '内伤：之后 3 回合每回合扣血',
+  点穴: '点穴：对手下一回合动弹不得',
+  破绽: '破绽：对手下一次受到的伤害 +30%',
+  吸内: '吸内：化去对手内力，自己回复一半',
+  化内: '化内：化去对手内力',
+};
 
 export const views = {
   charView() {
@@ -39,7 +49,7 @@ export const views = {
         exp: p.exp?.[id] ?? 0, need: expNeed(lv), frozen: !!p.frozen?.[id],
         equipped: lo.outer.includes(id) || lo.inner === id || lo.light === id,
         trainCost: trainCost(p, lv), canTrain: canTrain && lv < cap && !p.frozen?.[id],
-        moves: movesOf(this.db, id, 999).map((m) => ({ name: m.props.name, level: Number(m.props.level ?? 0), unlocked: Number(m.props.level ?? 0) <= lv })),
+        moves: movesOf(this.db, id, 999).map((m) => this.moveTip(sk, m, lv)),
         sectName: sk.props.sect ? this.db.sect[sk.props.sect]?.props.name : '',
       };
     }).filter(Boolean);
@@ -67,6 +77,26 @@ export const views = {
       outerCount: lo.outer.length, maxOuter: MAX_OUTER,
       inSect: !!p.sect,
     };
+  },
+
+  /**
+   * 招式说明（D-053）：威力、内力、按当前等级估算的伤害、效果。
+   * 估算对象是"没有内功护体、不克不被克"的普通对手，只用于比较招式强弱。
+   */
+  moveTip(sk, m, lv) {
+    const p = this.state.player;
+    const inner = innerOf(this.db, p);
+    const stance = sk.props.stance;
+    const power = Number(m.props.power ?? 0);
+    const talent = 1 + 0.04 * (stance === '刚' ? tal(p, 'manli') : stance === '巧' ? tal(p, 'ruili') : 0);
+    const est = Math.round(power * (1 + lv * 0.02) * innerBonus(inner.lv, inner.skill, stance) * talent);
+    const level = Number(m.props.level ?? 0);
+    const effects = parseList(m.props.effects).map((e) => EFFECT_TEXT[e.split(':')[0]] ?? e);
+    const lines = [`${m.props.name}（${stance}）　${level <= lv ? '已领悟' : `${level} 级领悟`}`, `威力 ${power}　耗内力 ${m.props.mp ?? 0}`];
+    if (stance === '守') lines.push(`守势：化解巧招（对方伤害减半），并反震约 ${est} 点；被刚招破防时受伤 ×1.5`);
+    else lines.push(`按你现在的等级，约造成 ${est} 点伤害；克制对手时约 ${Math.round(est * 1.5)}，被克制时约 ${Math.round(est * 0.5)}`);
+    if (effects.length) lines.push('效果：' + effects.join('；'));
+    return { name: m.props.name, level, unlocked: level <= lv, power, mp: Number(m.props.mp ?? 0), est, tip: lines.join('\n') };
   },
 
   talentView() {

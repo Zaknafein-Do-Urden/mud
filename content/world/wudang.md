@@ -2,7 +2,7 @@
 
 === sect: wudang
 name: 武当
-ranks: 记名弟子=0, 入门弟子=100, 三代弟子=300, 二代弟子=700, 真武护法=1500
+ranks: 记名弟子=0, 入门弟子=100, 三代弟子=250, 二代弟子=450, 真武护法=700
 caps: 40, 70, 100, 140, 180
 examiner: 明月
 ---
@@ -79,6 +79,7 @@ omen: $N掌心向下，指尖微微翘起……
 $N掌势绵软，「$招」，掌底却暗藏一缕指力，直透$n$部位的穴道！
 
 === skill: wudang.rouyun
+weapon: 剑
 name: 柔云剑法
 kind: 外功
 stance: 巧
@@ -136,6 +137,7 @@ rank: 1
 武当轻功，左脚踏右脚背，借力上纵，如踏云梯。
 
 === skill: wudang.taijijian
+weapon: 剑
 name: 太极剑
 kind: 外功
 stance: 巧
@@ -176,13 +178,16 @@ exits: 西=wudang.gate
 === room: wudang.gate
 name: 武当山·玄岳门
 exits: 东=xiangyang.station, 北=wudang.hall, 西=wudang.forest
+# 门派大门兼作旅店：休息、修炼、战败后回到这里、组队（D-046）
+inn: true
+restmsg: 你在玄岳门旁的道观里借宿一夜，山间清气入肺，神清气爽。
 ---
 一座石牌坊立在山脚，上书"治世玄岳"四个大字。山道蜿蜒向上，隐没在云雾里。
 
 === room: wudang.hall
 name: 武当山·紫霄宫
 exits: 南=wudang.gate
-npcs: wudang.qingxu
+npcs: wudang.qingxu, wudang.sparring
 train: true
 ---
 宫观依山而建，红墙绿瓦。殿前的广场上，一群道童正在练太极拳，动作缓慢如在水中。
@@ -225,9 +230,14 @@ talk: wudang.qingxu.talk
 清虚道长：{姓名}，从今往后你便是武当记名弟子。先学太极拳、绵掌和纯阳无极功吧。
 
 === dialog: wudang.qingxu.task
+ifnone: 清虚道长：今天的差事都办完了，目前没有门派任务。明日再来吧。
 ---
-* 山下可有不太平的事？ -> wudang.task.bandit ?!flag:world.wudang.task_bandit
-* 可有更难的差事？ -> wudang.task.spy ?rank:1 ?!flag:world.wudang.task_spy
+* 山下可有不太平的事？ -> wudang.task.bandit ?!flag:world.wudang.task_bandit ?!today:world.wudang.task_bandit
+* 附近可有人滋事？ -> wudang.task.b2 ?!flag:world.wudang.task_b2 ?!today:world.wudang.task_b2
+* 要不要去西边密林巡视？ -> wudang.task.patrol ?!flag:world.wudang.task_patrol ?!today:world.wudang.task_patrol
+* 可有书信要送去襄阳？ -> wudang.task.deliver ?!flag:world.wudang.task_deliver ?!today:world.wudang.task_deliver
+* 可有更难的差事？ -> wudang.task.spy ?rank:1 ?!flag:world.wudang.task_spy ?!today:world.wudang.task_spy
+* 可有最难办的差事？ -> wudang.task.b3 ?rank:2 ?!flag:world.wudang.task_b3 ?!today:world.wudang.task_b3
 * 告辞
 
 === dialog: wudang.task.bandit
@@ -243,12 +253,14 @@ do: flag:world.wudang.task_spy
 （门派任务：拿下密林里的探子）
 
 === enemy: wudang.foe.bandit
+weapon: 刀
+weaponName: 朴刀
 name: 剪径强人
 attrs: 根骨=14, 身法=13, 悟性=8
-skills: base.quan=10, base.zhang=6, base.zhaojia=6
+skills: base.quan=8, base.zhang=5, base.zhaojia=5
 ai: 刚=3, 巧=1, 守=1
 potential: 20
-hpx: 0.75
+hpx: 0.65
 ---
 手持朴刀的强人，脸上横着一道疤。
 
@@ -267,23 +279,28 @@ talk: wudang.bandit.talk
 * 走开
 
 === battle: world.b.wudang_bandit
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 1.49
 enemies: wudang.foe.bandit, wudang.foe.bandit
 win: wudang.bandit.win
 ---
 两个强人举刀扑了上来。
 
 === dialog: wudang.bandit.win
-do: unflag:world.wudang.task_bandit rep:wudang:30
+do: unflag:world.wudang.task_bandit rep:wudang:30 today:world.wudang.task_bandit
 ---
 两个强人捂着手腕，灰溜溜地下山去了。（门派任务完成）
 
 === enemy: wudang.foe.spy
+weapon: 拳
 name: 黑衣探子
 attrs: 根骨=16, 身法=22, 悟性=16
 skills: base.zhang=20, base.quan=16, base.zhaojia=14, base.tuna=18
 ai: 巧=3, 刚=1, 守=1
 cunning: 35
 potential: 60
+# 藏招：15% 的回合不露预兆，靠悟性、慧眼看穿
+obscure: 15
 ---
 一个蒙面的黑衣人，腰间挂着一块铁牌。
 
@@ -302,13 +319,15 @@ talk: wudang.spy.talk
 * 退开
 
 === battle: world.b.wudang_spy
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 2.08
 enemies: wudang.foe.spy
 win: wudang.spy.win
 ---
 黑衣人一言不发，掌风已到面前。
 
 === dialog: wudang.spy.win
-do: unflag:world.wudang.task_spy rep:wudang:80
+do: unflag:world.wudang.task_spy rep:wudang:60 today:world.wudang.task_spy
 ---
 黑衣人负伤逃走，慌乱中掉下了那块铁牌。你捡起来带回山上交给清虚道长。（门派任务完成）
 
@@ -327,3 +346,192 @@ flag: world.wudang.task_spy
 where: wudang.forest
 ---
 清虚道长的吩咐：密林里有人窥探本门练功。
+
+# ---------------- 陪练（随时可以切磋，打输也无妨；D-049）----------------
+
+=== npc: wudang.sparring
+name: 小道童
+brief: 本门的陪练，可以随时切磋练功。
+talk: wudang.sparring.talk
+---
+一个十来岁的道童，正一板一眼地练着太极拳。
+
+=== dialog: wudang.sparring.talk
+---
+小道童：师兄师姐，陪我推推手吧？
+* 好，切磋几招 !fight:world.b.wudang_spar
+* 下次吧
+
+=== enemy: world.foe.wudang_spar
+weapon: 拳
+name: 小道童
+attrs: 根骨=12, 身法=16, 悟性=12
+skills: wudang.taiji=6, wudang.mianzhang=6, base.tuna=5
+ai: 守=2, 巧=2
+cunning: 10
+potential: 12
+hpx: 0.7
+---
+一个十来岁的道童，正一板一眼地练着太极拳。
+
+=== battle: world.b.wudang_spar
+enemies: world.foe.wudang_spar
+---
+小道童摆开了架势。
+
+# ================= 新增门派任务（D-054）：每天每个任务各做一次 =================
+
+# ---- 巡视（走到地方就算完成）----
+=== dialog: wudang.task.patrol
+do: flag:world.wudang.task_patrol
+---
+清虚道长：去西边密林里巡视一遍，看看有没有人偷伐林木。
+（门派任务：巡视西边密林）
+
+=== trigger: world.t.wudang_patrol
+room: wudang.forest
+if: flag:world.wudang.task_patrol
+do: unflag:world.wudang.task_patrol today:world.wudang.task_patrol rep:wudang:30 potential:10
+---
+林中鸟鸣啾啾，树木都好好的。你在一棵老松下歇了口气，便往回走。（门派任务完成）
+
+# ---- 送信（走到对方衙门就算完成）----
+=== dialog: wudang.task.deliver
+do: flag:world.wudang.task_deliver
+---
+清虚道长：这封信是给襄阳衙门王捕头的，山上新收的几个弟子要去城里落户，得托他照应。
+（门派任务：把书信送到襄阳衙门，交给王捕头）
+
+=== trigger: world.t.wudang_deliver
+room: xiangyang.office
+if: flag:world.wudang.task_deliver
+do: unflag:world.wudang.task_deliver today:world.wudang.task_deliver rep:wudang:30 potential:10
+---
+你把书信交给了王捕头。王捕头看了一眼封皮，郑重地收了起来。（门派任务完成）
+
+# ---- 一阶：恶霸樵夫 ----
+=== dialog: wudang.task.b2
+do: flag:world.wudang.task_b2
+---
+清虚道长：玄岳门外有个恶霸樵夫，强砍山上的古树，还打伤了劝阻的道童。
+（门派任务：教训恶霸樵夫）
+
+=== enemy: world.foe.wudang_b2
+weapon: 刀
+weaponName: 斧头
+name: 恶霸樵夫
+attrs: 根骨=12, 身法=13, 悟性=8
+skills: base.quan=9, base.zhaojia=7
+ai: 刚=3, 守=1
+potential: 20
+---
+一个满脸横肉的樵夫，扛着一把大斧头，说山上的树都是他家的。
+
+=== npc: world.npc.wudang_b2
+name: 恶霸樵夫
+brief: 在附近滋事的恶霸樵夫。
+if: flag:world.wudang.task_b2
+talk: world.wudang_b2.talk
+---
+一个满脸横肉的樵夫，扛着一把大斧头，说山上的树都是他家的。
+
+=== dialog: world.wudang_b2.talk
+---
+恶霸樵夫：看什么看？
+* 动手 !fight:world.b.wudang_b2
+* 走开
+
+=== battle: world.b.wudang_b2
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 1.27
+enemies: world.foe.wudang_b2, world.foe.wudang_b2
+win: world.wudang_b2.win
+---
+恶霸樵夫和同伙骂骂咧咧地扑了上来。
+
+=== dialog: world.wudang_b2.win
+do: unflag:world.wudang.task_b2 today:world.wudang.task_b2 rep:wudang:30
+---
+恶霸樵夫灰头土脸地走了。（门派任务完成）
+
+=== patch: wudang.gate
+npcs: world.npc.wudang_b2
+
+# ---- 二阶：西域番僧 ----
+=== dialog: wudang.task.b3
+do: flag:world.wudang.task_b3
+---
+清虚道长：有个西域番僧上山挑衅，说要领教武当的太极。他掌上有毒，不可轻敌。
+（门派任务：击败西域番僧）
+
+=== enemy: world.foe.wudang_b3
+weapon: 拳
+name: 西域番僧
+attrs: 根骨=18, 身法=18, 悟性=16
+skills: base.quan=38, base.zhang=40, base.zhaojia=36, base.tuna=40
+ai: 巧=2, 刚=2, 守=1
+cunning: 30
+# 藏招：25% 的回合不露预兆
+obscure: 25
+potential: 90
+---
+一个高鼻深目的番僧，赤着双臂，掌心隐隐发黑。
+
+=== npc: world.npc.wudang_b3
+name: 西域番僧
+brief: 本门的强敌。
+if: flag:world.wudang.task_b3
+talk: world.wudang_b3.talk
+---
+一个高鼻深目的番僧，赤着双臂，掌心隐隐发黑。
+
+=== dialog: world.wudang_b3.talk
+---
+西域番僧冷冷地看着你：“就凭你？”
+* 请赐教 !fight:world.b.wudang_b3
+* 退开
+
+=== battle: world.b.wudang_b3
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 2.11
+enemies: world.foe.wudang_b3
+win: world.wudang_b3.win
+---
+西域番僧一言不发，出手便是杀招。
+
+=== dialog: world.wudang_b3.win
+do: unflag:world.wudang.task_b3 today:world.wudang.task_b3 rep:wudang:90
+---
+西域番僧败退而去。这一战传回门中，同门都对你刮目相看。（门派任务完成）
+
+=== patch: wudang.forest
+npcs: world.npc.wudang_b3
+
+# ---- 任务清单 ----
+=== quest: world.q.wudang_patrol
+name: 清虚道长的差遣：巡视西边密林
+flag: world.wudang.task_patrol
+where: wudang.forest
+---
+去西边密林里巡视一遍，看看有没有人偷伐林木。
+
+=== quest: world.q.wudang_deliver
+name: 清虚道长的差遣：送信到襄阳
+flag: world.wudang.task_deliver
+where: xiangyang.office
+---
+这封信是给襄阳衙门王捕头的，山上新收的几个弟子要去城里落户，得托他照应。
+
+=== quest: world.q.wudang_b2
+name: 清虚道长的差遣：教训恶霸樵夫
+flag: world.wudang.task_b2
+where: wudang.gate
+---
+玄岳门外有个恶霸樵夫，强砍山上的古树，还打伤了劝阻的道童。
+
+=== quest: world.q.wudang_b3
+name: 清虚道长的差遣：击败西域番僧
+flag: world.wudang.task_b3
+where: wudang.forest
+---
+有个西域番僧上山挑衅，说要领教武当的太极。他掌上有毒，不可轻敌。

@@ -54,6 +54,8 @@ price: 90
 # robber: true 的敌人是劫匪模板，武功等级会按货物和现钱的总值调整（D-040）。
 
 === enemy: world.foe.robber
+weapon: 刀
+weaponName: 钢刀
 name: 劫匪
 robber: true
 attrs: 根骨=12, 身法=12, 悟性=10

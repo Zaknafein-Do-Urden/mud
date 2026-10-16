@@ -1,6 +1,6 @@
 // 引擎的经济部分：金钱、市场、钱庄、马车。以方法的形式并入 Game（见 game.js 末尾）。
 
-import { goodsPrice, cargoUnits, cargoValue, fare, robberyChance, robbers, routesOf, cityOfRoom, CARGO_CAP, SELL_RATE } from './economy.js';
+import { goodsPrice, cargoUnits, cargoValue, robberyChance, robbers, routesOf, cityOfRoom, CARGO_CAP, SELL_RATE } from './economy.js';
 import { createScaledBattle, beginRound, enemiesOf } from './combat.js';
 
 const ALL = ['全部', 'all'];
@@ -145,7 +145,7 @@ export const trade = {
     }
     this.emit('sys', `车把式：客官要去哪里？（身上 ${this.state.player.money ?? 0} 文，车上货物 ${units} 件）`);
     const choices = Object.entries(routes).map(([id, days]) => ({
-      text: `${this.db.city[id].props.name}　${days} 日路程，车资 ${fare(days, units)} 文`,
+      text: `${this.db.city[id].props.name}　${days} 日路程`,
       target: null, cond: [], effects: [`travel:${id}`],
     }));
     choices.push({ text: '不坐了', target: null, cond: [], effects: [] });
@@ -160,12 +160,9 @@ export const trade = {
     const from = this.cityHere();
     const days = routesOf(this.db, from)[to];
     if (!this.atStation() || !days) { this.emit('err', '从这里去不了那里。'); return; }
-    const cost = fare(days, cargoUnits(p.cargo));
-    if ((p.money ?? 0) < cost) { this.emit('err', `车资要 ${cost} 文，你身上只有 ${p.money ?? 0} 文。`); return; }
-    p.money -= cost;
     this.state.day = (this.state.day ?? 1) + days;
     const dest = this.db.city[to];
-    this.emit('story', `你付了 ${cost} 文车资，坐上马车，往${dest.props.name}去了。`);
+    this.emit('story', `你坐上马车，往${dest.props.name}去了。`);
 
     // 劫道：货越值钱越容易被盯上；劫匪的强弱看货物加身上现钱（D-040）
     const value = cargoValue(this.db, p.cargo);
@@ -175,7 +172,7 @@ export const trade = {
       if (foe) {
         this.normalizeHp();
         this.state.battle = createScaledBattle(this.db, Array(count).fill(foe), level,
-          { player: p, robbery: { to }, noFlee: true }, (Date.now() ^ (Math.random() * 1e9)) | 0);
+          { players: this.partyPlayers(), robbery: { to }, noFlee: true }, (Date.now() ^ (Math.random() * 1e9)) | 0);
         this.emit('desc', '走到半路，前面林子里一声呼哨，几条汉子拦住了马车。');
         this.emit('combat', `——遭遇劫道！${enemiesOf(this.state.battle).map((e) => e.name).join('、')}——`);
         beginRound(this.db, this.state.battle, (cls, text, extra) => this.emit(cls, text, extra));

@@ -21,7 +21,7 @@ function bar(value, max, cls) {
  * @param {ReturnType<import('../game.js').Game['combatView']>} view
  * @param {(cmd: string) => void} run
  */
-export function renderCombat(root, view, run) {
+export function renderCombat(root, view, run, secondsLeft = 0) {
   root.replaceChildren();
   const alive = view.enemies.filter((e) => !e.dead);
   let target = alive.find((e) => e.key === view.target) ?? alive[0];
@@ -78,6 +78,18 @@ export function renderCombat(root, view, run) {
     foot.append(flee);
   }
 
-  root.append(foes, me, cards, foot);
+  // 组队：队友状态和本回合已选的招式（D-019），出招倒计时
+  const team = el('div', 'cb-team');
+  if (view.team?.length) {
+    for (const t of view.team) {
+      team.append(el('div', 'cb-mate', `${t.name}　${t.hp}/${t.maxHp}　${t.hp <= 0 ? '已倒下' : t.chosen ? `已出招：${t.chosen}` : '思考中……'}`));
+    }
+  }
+  if (secondsLeft) foot.prepend(el('span', 'cb-timer', `⏳ ${secondsLeft} 秒`));
+  if (view.chosen) {
+    cards.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+    team.prepend(el('div', 'cb-wait', '你已出招，等待队友……'));
+  }
+  root.append(foes, me, team, cards, foot);
   return { targetArg };
 }

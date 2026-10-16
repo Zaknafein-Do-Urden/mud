@@ -3,7 +3,7 @@
 
 === sect: gaibang
 name: 丐帮
-ranks: 一袋弟子=0, 二袋弟子=100, 三袋弟子=300, 四袋弟子=700, 五袋弟子=1500
+ranks: 一袋弟子=0, 二袋弟子=100, 三袋弟子=250, 四袋弟子=450, 五袋弟子=700
 caps: 40, 70, 100, 140, 180
 # 晋阶考核时与之过招的同门（照搬玩家当前的功夫，势均力敌）
 examiner: 黎生
@@ -180,7 +180,9 @@ $N凌空跃起，居高临下一招「$招」，掌力自上而下压向$n！
 name: 城隍庙（丐帮临安分舵）
 exits: 东=linan.street
 npcs: gaibang.lu, gaibang.shitou
-train: true
+# 门派驻地兼作旅店（D-046）
+inn: true
+restmsg: 你在破庙的稻草堆上睡了一觉，叫花子们的鼾声此起彼伏，醒来倒也神清气爽。
 ---
 一座破败的城隍庙，神像的漆早已剥落。殿里横七竖八躺着些乞丐，看似懒散，眼睛却都亮得很。
 墙角堆着几根磨得光滑的竹棍，地上用炭画着一些奇怪的记号。
@@ -217,12 +219,15 @@ talk: gaibang.lu.talk
 鲁有脚：好！从今往后，你就是我丐帮的人了。先跟我学几手入门功夫——莲花掌、缠丝擒拿手、混天气功，说“学 莲花掌”便是。
 
 === dialog: gaibang.lu.task
+ifnone: 鲁有脚：今天的差事都办完了，目前没有门派任务。明日再来吧。
 ---
-?flag:world.gb.task_pipi 鲁有脚：城外官道上那几个泼皮还没收拾？快去快去。
-?flag:world.gb.task_snake 鲁有脚：地头蛇的事办得怎样了？他就在城外官道上。
-* 城外有人欺压百姓吗？ -> gaibang.lu.task1 ?!flag:world.gb.task_pipi ?!flag:world.gb.task_snake
-* 有没有难一些的差事？ -> gaibang.lu.task2 ?rank:1 ?!flag:world.gb.task_pipi ?!flag:world.gb.task_snake
-* 离开
+* 城外有人欺压百姓吗？ -> gaibang.lu.task1 ?!flag:world.gb.task_pipi ?!today:world.gb.task_pipi
+* 附近可有人滋事？ -> gaibang.task.b2 ?!flag:world.gaibang.task_b2 ?!today:world.gaibang.task_b2
+* 要不要去西湖断桥巡视？ -> gaibang.task.patrol ?!flag:world.gaibang.task_patrol ?!today:world.gaibang.task_patrol
+* 可有书信要送去嘉兴？ -> gaibang.task.deliver ?!flag:world.gaibang.task_deliver ?!today:world.gaibang.task_deliver
+* 有没有难一些的差事？ -> gaibang.lu.task2 ?rank:1 ?!flag:world.gb.task_snake ?!today:world.gb.task_snake
+* 可有最难办的差事？ -> gaibang.task.b3 ?rank:2 ?!flag:world.gaibang.task_b3 ?!today:world.gaibang.task_b3
+* 告辞
 
 === dialog: gaibang.lu.task1
 do: flag:world.gb.task_pipi
@@ -253,6 +258,7 @@ talk: gaibang.shitou.talk
 # 敌人的 skills 写 武功id=等级；ai 是各势的出招权重；cunning 是诡诈（虚招概率 %）。
 
 === enemy: world.foe.shitou
+weapon: 拳
 name: 小石头
 attrs: 根骨=12, 身法=22, 悟性=15
 skills: base.zhang=12, base.zhaojia=8, base.tuna=5
@@ -269,6 +275,7 @@ enemies: world.foe.shitou
 小石头把破碗往地上一扔，摆了个歪歪扭扭的架势。
 
 === enemy: world.foe.pipi
+weapon: 拳
 name: 泼皮
 attrs: 根骨=10, 身法=12, 悟性=8
 skills: base.quan=8, base.zhaojia=5
@@ -279,6 +286,7 @@ hpx: 0.7
 满脸横肉的泼皮，只会些乱拳。
 
 === enemy: world.foe.snake
+weapon: 匕首
 name: 地头蛇
 attrs: 根骨=18, 身法=16, 悟性=14
 skills: base.quan=18, base.zhang=14, base.zhaojia=14, base.tuna=15
@@ -286,6 +294,8 @@ ai: 刚=2, 巧=2, 守=1
 cunning: 30
 potential: 70
 hpx: 1.2
+# 藏招：20% 的回合不露预兆，靠悟性、慧眼看穿
+obscure: 20
 ---
 一个精瘦的汉子，脸上一道刀疤从眉角拉到嘴边，眼神阴鸷。
 
@@ -304,13 +314,15 @@ talk: world.pipi.talk
 * 走开
 
 === battle: world.b.pipi
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 2.09
 enemies: world.foe.pipi, world.foe.pipi
 win: world.pipi.win
 ---
 两个泼皮把老汉一推，捋起袖子围了上来。
 
 === dialog: world.pipi.win
-do: unflag:world.gb.task_pipi rep:gaibang:30
+do: unflag:world.gb.task_pipi rep:gaibang:30 today:world.gb.task_pipi
 ---
 两个泼皮爬起来，连滚带爬地跑了。挑菜的老汉千恩万谢。
 （门派任务完成。回分舵还能再领任务。）
@@ -330,13 +342,15 @@ talk: world.snake.talk
 * 走开
 
 === battle: world.b.snake
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 0.8
 enemies: world.foe.snake, world.foe.pipi
 win: world.snake.win
 ---
 地头蛇匕首一收，打了个呼哨，旁边一个泼皮也抄着木棍围了上来。
 
 === dialog: world.snake.win
-do: unflag:world.gb.task_snake rep:gaibang:80
+do: unflag:world.gb.task_snake rep:gaibang:60 today:world.gb.task_snake
 ---
 地头蛇捂着胸口，恶狠狠地瞪了你一眼，带着手下逃进了田野。
 （门派任务完成。）
@@ -356,3 +370,161 @@ flag: world.gb.task_snake
 where: linan.road
 ---
 鲁有脚长老的差遣：城外官道上的地头蛇有几分功夫，小心应付。
+
+# ================= 新增门派任务（D-054）：每天每个任务各做一次 =================
+
+# ---- 巡视（走到地方就算完成）----
+=== dialog: gaibang.task.patrol
+do: flag:world.gaibang.task_patrol
+---
+鲁有脚：近来西湖一带不太平，去断桥巡视一圈，看看有没有可疑的人。
+（门派任务：巡视西湖断桥）
+
+=== trigger: world.t.gaibang_patrol
+room: linan.lake
+if: flag:world.gaibang.task_patrol
+do: unflag:world.gaibang.task_patrol today:world.gaibang.task_patrol rep:gaibang:30 potential:10
+---
+你在断桥上来回走了几趟，只见几个渔夫在收网，没什么可疑的。回去复命吧——不，鲁长老说过，巡完就算数。（门派任务完成）
+
+# ---- 送信（走到对方衙门就算完成）----
+=== dialog: gaibang.task.deliver
+do: flag:world.gaibang.task_deliver
+---
+鲁有脚：这封信送到嘉兴衙门的孙捕头手里。丐帮跟官府打交道不多，可这件事得让他知道。
+（门派任务：把书信送到嘉兴衙门，交给孙捕头）
+
+=== trigger: world.t.gaibang_deliver
+room: jiaxing.office
+if: flag:world.gaibang.task_deliver
+do: unflag:world.gaibang.task_deliver today:world.gaibang.task_deliver rep:gaibang:30 potential:10
+---
+你把书信交给了孙捕头。孙捕头看了一眼封皮，郑重地收了起来。（门派任务完成）
+
+# ---- 一阶：地痞 ----
+=== dialog: gaibang.task.b2
+do: flag:world.gaibang.task_b2
+---
+鲁有脚：御街上有个地痞抢小贩的吃食，去教训教训他。
+（门派任务：教训地痞）
+
+=== enemy: world.foe.gaibang_b2
+weapon: 棍
+weaponName: 扁担
+name: 地痞
+attrs: 根骨=12, 身法=13, 悟性=8
+skills: base.quan=9, base.zhaojia=7
+ai: 刚=3, 守=1
+potential: 20
+---
+一个膀大腰圆的地痞，抡着一根扁担，正抢小贩的包子。
+
+=== npc: world.npc.gaibang_b2
+name: 地痞
+brief: 在附近滋事的地痞。
+if: flag:world.gaibang.task_b2
+talk: world.gaibang_b2.talk
+---
+一个膀大腰圆的地痞，抡着一根扁担，正抢小贩的包子。
+
+=== dialog: world.gaibang_b2.talk
+---
+地痞：看什么看？
+* 动手 !fight:world.b.gaibang_b2
+* 走开
+
+=== battle: world.b.gaibang_b2
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 1.27
+enemies: world.foe.gaibang_b2, world.foe.gaibang_b2
+win: world.gaibang_b2.win
+---
+地痞和同伙骂骂咧咧地扑了上来。
+
+=== dialog: world.gaibang_b2.win
+do: unflag:world.gaibang.task_b2 today:world.gaibang.task_b2 rep:gaibang:30
+---
+地痞灰头土脸地走了。（门派任务完成）
+
+=== patch: linan.street
+npcs: world.npc.gaibang_b2
+
+# ---- 二阶：金国细作 ----
+=== dialog: gaibang.task.b3
+do: flag:world.gaibang.task_b3
+---
+鲁有脚：有金国细作混进了临安，在城外官道一带打探军情。拿下他！
+（门派任务：击败金国细作）
+
+=== enemy: world.foe.gaibang_b3
+weapon: 刀
+weaponName: 弯刀
+name: 金国细作
+attrs: 根骨=18, 身法=18, 悟性=16
+skills: base.quan=40, base.zhang=38, base.zhaojia=36, base.tuna=38
+ai: 刚=2, 巧=2, 守=1
+cunning: 30
+# 藏招：25% 的回合不露预兆
+obscure: 25
+potential: 90
+---
+一个穿着宋人衣裳、却说着生硬官话的汉子，腰间藏着一把弯刀。
+
+=== npc: world.npc.gaibang_b3
+name: 金国细作
+brief: 本门的强敌。
+if: flag:world.gaibang.task_b3
+talk: world.gaibang_b3.talk
+---
+一个穿着宋人衣裳、却说着生硬官话的汉子，腰间藏着一把弯刀。
+
+=== dialog: world.gaibang_b3.talk
+---
+金国细作冷冷地看着你：“就凭你？”
+* 请赐教 !fight:world.b.gaibang_b3
+* 退开
+
+=== battle: world.b.gaibang_b3
+# 难度调校：面向的玩家猜对 80% 时胜率约 75%（tools/tune.mjs）
+hpx: 1.9
+enemies: world.foe.gaibang_b3
+win: world.gaibang_b3.win
+---
+金国细作一言不发，出手便是杀招。
+
+=== dialog: world.gaibang_b3.win
+do: unflag:world.gaibang.task_b3 today:world.gaibang.task_b3 rep:gaibang:90
+---
+金国细作败退而去。这一战传回门中，同门都对你刮目相看。（门派任务完成）
+
+=== patch: linan.road
+npcs: world.npc.gaibang_b3
+
+# ---- 任务清单 ----
+=== quest: world.q.gaibang_patrol
+name: 鲁有脚的差遣：巡视西湖断桥
+flag: world.gaibang.task_patrol
+where: linan.lake
+---
+近来西湖一带不太平，去断桥巡视一圈，看看有没有可疑的人。
+
+=== quest: world.q.gaibang_deliver
+name: 鲁有脚的差遣：送信到嘉兴
+flag: world.gaibang.task_deliver
+where: jiaxing.office
+---
+这封信送到嘉兴衙门的孙捕头手里。丐帮跟官府打交道不多，可这件事得让他知道。
+
+=== quest: world.q.gaibang_b2
+name: 鲁有脚的差遣：教训地痞
+flag: world.gaibang.task_b2
+where: linan.street
+---
+御街上有个地痞抢小贩的吃食，去教训教训他。
+
+=== quest: world.q.gaibang_b3
+name: 鲁有脚的差遣：击败金国细作
+flag: world.gaibang.task_b3
+where: linan.road
+---
+有金国细作混进了临安，在城外官道一带打探军情。拿下他！

@@ -34,9 +34,9 @@ export function cargoValue(db, cargo) {
   return Object.entries(cargo ?? {}).reduce((a, [id, n]) => a + n * Number(db.goods[id]?.props.price ?? 0), 0);
 }
 
-/** 车资：每日 10 文，另加每件货每日 2 文 */
-export function fare(days, units) {
-  return days * 10 + units * days * 2;
+/** 车资：马车免费（D-047，用户决定）。保留函数，便于以后调整 */
+export function fare() {
+  return 0;
 }
 
 /** 被劫的概率：路途越远、货越值钱，越容易被盯上 */

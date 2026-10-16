@@ -6,6 +6,7 @@ import { parseMap, parseList } from './content.js';
 import { martial } from './game-martial.js';
 import { trade } from './game-trade.js';
 import { views } from './game-views.js';
+import { party } from './game-party.js';
 import { skillCap } from './character.js';
 
 const DIR_ALIAS = {
@@ -114,6 +115,9 @@ export class Game {
         this.leaveSect(arg); break;
       case '天赋': case 'talent':
         this.talentCmd(arg); break;
+      case '说': case 'say':
+        if (this.party) this.emit('chat', `【队】${this.state.player.name}：${arg}`);
+        else this.emit('err', '你不在队伍中。'); break;
       case 'rest': case '休息': case 'sleep':
         this.rest(); break;
       case '行情': case '市场': case 'market':
@@ -154,6 +158,7 @@ export class Game {
       else if (kind === 'rank') ok = (player.sect?.rank ?? -1) >= Number(key);
       else if (kind === 'gender') ok = player.gender === key;
       else if (kind === 'money') ok = (player.money ?? 0) >= Number(key);
+      else if (kind === 'today') ok = this.state.daily?.[key] === todayStr();
       else { console.warn('未知条件', c); ok = false; }
       return neg ? !ok : ok;
     });
@@ -188,6 +193,7 @@ export class Game {
       else if (kind === 'rep') { const [sect, n] = splitOnce(key); this.addRep(sect, Number(n)); }
       else if (kind === 'potential') { player.potential += Number(key); this.emit('sys', `潜能 +${key}`); }
       else if (kind === 'heal') { player.hp = this.hpMax(); this.emit('sys', '你的气血恢复了。'); }
+      else if (kind === 'today') { this.state.daily ??= {}; this.state.daily[key] = todayStr(); }
       else if (kind === 'money') this.addMoney(Number(key));
       else if (kind === 'pay') this.addMoney(-Number(key));
       else if (kind === 'travel') this.travel(key);
@@ -442,6 +448,8 @@ export class Game {
     this.emitLines(m.lines, 'say', pace);
     if (d.props.do && !resume) this.apply(words(d.props.do)); // 进入该对话即生效的效果（恢复时不重复）
     const choices = m.choices.filter((c) => this.check(c.cond));
+    // ifnone：除"离开"类选项外一个都没有时显示的话（如"目前没有门派任务"，D-054）
+    if (d.props.ifnone && !choices.some((c) => c.target || c.effects.length)) this.emit('say', d.props.ifnone);
     if (!choices.length) { this.endDialog(); return; }
     this.dialog = choices;
     this.state.dialog = { id, locked: this.locked };
@@ -590,6 +598,12 @@ export class Game {
   }
 }
 
+/** 现实中的今天（本地日期）。门派任务每天只能做一次（D-049） */
+export function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
 /** 属性里的条件 / 效果列表：空格或逗号分隔 */
 function words(s = '') {
   return s.split(/[\s,]+/).filter(Boolean);
@@ -600,4 +614,4 @@ function splitOnce(s) {
   return i < 0 ? [s, ''] : [s.slice(0, i), s.slice(i + 1)];
 }
 
-Object.assign(Game.prototype, martial, trade, views);
+Object.assign(Game.prototype, martial, trade, views, party);

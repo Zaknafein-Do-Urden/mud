@@ -48,6 +48,8 @@ src/
   game-trade.js     引擎的经济部分：金钱、市场、钱庄、马车
   game-views.js     给界面面板的只读数据
   talents.js        天赋树
+  game-party.js     引擎的联机部分（房主一侧）
+  net/transport.js  联机传输层
   economy.js        价格、车资、劫道概率（纯函数）
   ui/
     text.js         [[链接]] 渲染
@@ -57,6 +59,7 @@ src/
     map.js          区域地图
     worldmap.js     大地图
     panels.js       人物、江湖、市集、钱庄面板
+    party.js        联机控制
 content/
   index.json        内容清单（静态站点无法列目录，需要清单）
   world/            共享世界
@@ -65,6 +68,7 @@ tools/
   validate.mjs      内容校验：node tools/validate.mjs
   balance.mjs       战斗平衡模拟：node tools/balance.mjs
   gen_cities.py     城市内容骨架生成器
+  tune.mjs          固定难度战斗的调校：node tools/tune.mjs
 docs/               设计文档与开发日志
 ```
 
@@ -126,8 +130,8 @@ talk: linan.beggar.start
 - 正文行首 `?条件 `：条件满足才显示该行，`?!` 为取反，可以连写多个。
 - 对话选项 `* 文字 -> 目标 ?条件 !效果`。没有目标也没有效果的选项（如"离开"）总是排在最后。
 - 属性中的条件、效果列表（`if:`、`do:`）用空格或逗号分隔，取反写 `!flag:x`。
-- 条件：`flag:x`、`has:物品`、`visited:房间`、`sect:门派`（`sect:none` 为无门派）、`rank:数字`（门派阶位不低于）、`gender:男/女`、`money:数字`（身上现钱不少于）。
-- 效果：`flag:x`、`unflag:x`、`give:物品`、`take:物品`、`goto:房间`、`start:主线`、`chapter:章节`、`fight:战斗`、`join:门派`、`rep:门派:数值`、`potential:数值`、`learn:武功`、`heal`、`money:数值`（得钱）、`pay:数值`（付钱）、`travel:城市`。
+- 条件：`flag:x`、`has:物品`、`visited:房间`、`sect:门派`（`sect:none` 为无门派）、`rank:数字`（门派阶位不低于）、`gender:男/女`、`money:数字`（身上现钱不少于）、`today:键`（这个键今天已经记过，现实日期）。
+- 效果：`flag:x`、`unflag:x`、`give:物品`、`take:物品`、`goto:房间`、`start:主线`、`chapter:章节`、`fight:战斗`、`join:门派`、`rep:门派:数值`、`potential:数值`、`learn:武功`、`heal`、`money:数值`（得钱）、`pay:数值`（付钱）、`travel:城市`、`today:键`（记下今天，用于每天一次的任务）。
 - **称呼**：正文中 `{姓名}`、`{姓}`、`{名}` 替换为玩家名字；`{男:兄台|女:姑娘}` 按性别选择。
 - **链接**：正文中写 `[[显示名|id]]`，id 可以是人物、物品、房间、百科条目。在场人物的名字会被自动加上链接。
 - **命名空间**：world 文件只写 `world.*` 标记，主线文件只写 `<主线>.*` 标记；主线中的 id 以主线名开头。由校验脚本检查。
@@ -137,19 +141,19 @@ talk: linan.beggar.start
 | 类型 | 用途 | 主要属性 |
 |---|---|---|
 | `meta` | 游戏标题、起点、开场白 | `title`、`start` |
-| `room` | 房间 | `name`、`exits`、`npcs`、`inn: true`（旅店：休息、修炼、战败复活点）、`train: true`（可修炼，如门派驻地）、`station: true`（车马行）、`market: true`（市集）、`bank: true`（钱庄） |
+| `room` | 房间 | `name`、`exits`、`npcs`、`inn: true`（旅店：休息、修炼、战败复活点、组队）、`restmsg`（休息时的描述）、`train: true`（可修炼，如门派驻地）、`station: true`（车马行）、`market: true`（市集）、`bank: true`（钱庄） |
 | `npc` | 人物 | `name`、`brief`、`talk`、`if`（出现条件）、`teaches: 门派`（门派师父：学艺、晋阶） |
 | `item` | 物品 | `name`、`verb`（专用动词，如"吹"）、`usefail`（用了但没效果时的文字） |
-| `dialog` | 对话节点 | `pace: slow`（重场戏逐段出现）、`lock: true`（剧情对话，必须做出选择才能离开，锁定一直延续到这条对话链结束）、`do`（进入即生效的效果） |
+| `dialog` | 对话节点 | `ifnone`（除离开外没有任何选项时显示的话）、`pace: slow`（重场戏逐段出现）、`lock: true`（剧情对话，必须做出选择才能离开，锁定一直延续到这条对话链结束）、`do`（进入即生效的效果） |
 | `entry` | 百科条目，供信息卡逐层查阅 | `name` |
 | `storyline` | 主线 | `name`、`level`、`hint`（未开始时给玩家的线索） |
 | `chapter` | 章节标题页与检查点 | `storyline`、`name`、`done`（完成条件，用于主线进度）、`start`（重来时回到的房间）、`retry`（重来提示） |
 | `trigger` | 进入房间时触发 | `room`、`if`、`once: true`、`do`、`dialog` |
 | `use` | 在某处（或任何地方）使用某物品时发生的事 | `item`、`room`（可省略）、`if`、`once: true`、`do`、`dialog` |
-| `skill` | 武功 | `kind`（外功/内功/轻功）、`stance`（外功：刚/巧/守）、`sect`、`rank`（需要的门派阶位）、`cap`（门派外武功的典籍上限）；内功另有 `hp`、`mp`、`affinity` |
-| `move` | 招式 | `skill`、`name`、`level`（解锁等级）、`power`、`mp`、`effects`（内伤、点穴、破绽、吸内:系数、化内:系数）、`omen`（预兆）；正文是出招描述，可用 $N $n $招 $部位 |
-| `enemy` | 敌人 | `name`、`attrs`、`skills`（武功id=等级）、`ai`（各势权重）、`pattern`（固定出势顺序）、`cunning`（虚招概率%）、`potential`、`hpx`（气血倍率）、`robber: true`（劫匪模板） |
-| `battle` | 一场战斗 | `enemies`、`win` / `lose`（胜负后的对话）、`flee: false`（不可逃跑）。没有 lose 时：世界战斗战败回旅店，主线战斗回到章节开始 |
+| `skill` | 武功 | `kind`（外功/内功/轻功）、`stance`（外功：刚/巧/守）、`weapon`（用的兵器，默认拳）、`sect`、`rank`（需要的门派阶位）、`cap`（门派外武功的典籍上限）；内功另有 `hp`、`mp`、`affinity` |
+| `move` | 招式 | `skill`、`name`、`level`（解锁等级）、`power`、`mp`、`effects`（内伤、点穴、破绽、吸内:系数、化内:系数）、`omen`（预兆，可用 | 分隔多种）；正文是出招描述，可用 $N $n $招 $部位 |
+| `enemy` | 敌人 | `name`、`attrs`、`skills`（武功id=等级）、`ai`（各势权重）、`pattern`（固定出势顺序）、`cunning`（虚招概率%）、`potential`、`hpx`（气血倍率）、`weapon` / `weaponName`（兵器标签）、`obscure`（藏招概率%）、`robber: true`（劫匪模板） |
+| `battle` | 一场战斗 | `enemies`、`win` / `lose`（胜负后的对话）、`flee: false`（不可逃跑）、`hpx`（这一场的敌人气血倍率，调校用）、`adapt: true`（按玩家功力自适应）。没有 lose 时：世界战斗战败回旅店，主线战斗回到章节开始 |
 | `sect` | 门派 | `ranks`（阶位名=所需声望）、`caps`（各阶武功上限）、`examiner`（晋阶考核者） |
 | `city` | 城市 | `name`、`pos`（大地图坐标）、`station`、`routes`（城市=天数）、`goods`（货物=倍率）、`areas`（属于本城的其他区域，如 shaolin） |
 | `goods` | 货物 | `name`、`price`（基准价） |
@@ -185,5 +189,5 @@ talk: linan.beggar.start
 
 1. **骨架**（已完成）：房间移动、查看、对话、剧情标记、物品、存档导入导出。
 2. **战斗**（第一版已完成）：单机战斗，引擎仍是纯逻辑。门派系统第一版（丐帮）。
-3. **联机**：Trystero 接入，主机权威同步，组队战斗、合击。
+3. **联机**（第一版已完成）：Trystero 接入，主机权威同步，组队战斗。合击待做。
 4. **内容工具**：校验脚本 + CI，按需拆分/懒加载区域文件。
