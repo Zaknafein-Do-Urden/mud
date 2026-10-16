@@ -16,7 +16,7 @@
     </nav>
   </header>
 
-  <div id="status"><span id="status-text"></span><button id="map-toggle" title="显示 / 收起地图">地图</button></div>
+  <div id="status"><span id="status-text"></span><span class="status-btns"><button id="char-toggle" title="状态、武功、天赋、背包">人物</button><button id="journal-toggle" title="主线进度、任务清单">江湖</button><button id="world-toggle" title="查看城市与马车路线">大地图</button><button id="map-toggle" title="显示 / 收起地图">地图</button></span></div>
 
   <main id="output" aria-live="polite"></main>
 
@@ -33,6 +33,37 @@
     <div id="map"></div>
     <p class="side-tip">点击去过的地方可以自动走过去</p>
   </aside>
+
+  <dialog id="create-dialog">
+    <form id="create-form">
+      <h2>行走江湖，报上名来</h2>
+      <div class="create-row">
+        <label>姓 <input id="cr-surname" maxlength="2" required placeholder="如 林"></label>
+        <label>名 <input id="cr-given" maxlength="3" required placeholder="如 平之"></label>
+      </div>
+      <div class="create-row">
+        <span>性别</span>
+        <label><input type="radio" name="cr-gender" value="男" checked> 男</label>
+        <label><input type="radio" name="cr-gender" value="女"> 女</label>
+      </div>
+      <p class="create-hint">江湖中人会用这个名字称呼你，部分场景和台词会因性别略有不同。</p>
+      <p id="cr-error" class="err"></p>
+      <div class="row"><button type="submit">踏入江湖</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="panel">
+    <div class="world-head"><h2 id="panel-title"></h2><button id="panel-close" title="关闭">×</button></div>
+    <div id="panel-tabs"></div>
+    <div id="panel-body"></div>
+    <p id="panel-feedback"></p>
+  </dialog>
+
+  <dialog id="world-dialog">
+    <div class="world-head"><h2>大地图</h2><button id="world-close" title="关闭">×</button></div>
+    <div id="world-map"></div>
+    <p id="world-info" class="world-info"></p>
+  </dialog>
 
   <dialog id="save-dialog">
     <form method="dialog">

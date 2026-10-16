@@ -1,6 +1,6 @@
 # 武侠 MUD 设计文档
 
-> 本文描述"现在的设计是什么"。分册：[COMBAT.md](COMBAT.md) 战斗与武学 · [MULTIPLAYER.md](MULTIPLAYER.md) 联机 · [UX.md](UX.md) 交互与界面 · [STORY.md](STORY.md) 剧情结构。
+> 本文描述"现在的设计是什么"。分册：[COMBAT.md](COMBAT.md) 战斗与武学 · [SECT.md](SECT.md) 门派 · [ECONOMY.md](ECONOMY.md) 经济与旅行 · [MULTIPLAYER.md](MULTIPLAYER.md) 联机 · [UX.md](UX.md) 交互与界面 · [STORY.md](STORY.md) 剧情结构。
 >"为什么这样设计、放弃了什么"记录在 [DEVLOG.md](DEVLOG.md)。
 
 ## 1. 核心约束
@@ -45,11 +45,18 @@ src/
   character.js      角色数值：派生属性、武功上限
   combat.js         战斗引擎（纯逻辑，战斗状态可存档）
   game-martial.js   引擎的武学部分：战斗流程、门派、修炼、旅店
+  game-trade.js     引擎的经济部分：金钱、市场、钱庄、马车
+  game-views.js     给界面面板的只读数据
+  talents.js        天赋树
+  economy.js        价格、车资、劫道概率（纯函数）
   ui/
     text.js         [[链接]] 渲染
     cards.js        悬停信息卡、右键固定
     complete.js     Tab 补全、拼音匹配
     combat.js       战斗面板
+    map.js          区域地图
+    worldmap.js     大地图
+    panels.js       人物、江湖、市集、钱庄面板
 content/
   index.json        内容清单（静态站点无法列目录，需要清单）
   world/            共享世界
@@ -57,6 +64,7 @@ content/
 tools/
   validate.mjs      内容校验：node tools/validate.mjs
   balance.mjs       战斗平衡模拟：node tools/balance.mjs
+  gen_cities.py     城市内容骨架生成器
 docs/               设计文档与开发日志
 ```
 
@@ -118,8 +126,9 @@ talk: linan.beggar.start
 - 正文行首 `?条件 `：条件满足才显示该行，`?!` 为取反，可以连写多个。
 - 对话选项 `* 文字 -> 目标 ?条件 !效果`。没有目标也没有效果的选项（如"离开"）总是排在最后。
 - 属性中的条件、效果列表（`if:`、`do:`）用空格或逗号分隔，取反写 `!flag:x`。
-- 条件：`flag:x`、`has:物品`、`visited:房间`、`sect:门派`（`sect:none` 为无门派）、`rank:数字`（门派阶位不低于）。
-- 效果：`flag:x`、`unflag:x`、`give:物品`、`take:物品`、`goto:房间`、`start:主线`、`chapter:章节`、`fight:战斗`、`join:门派`、`rep:门派:数值`、`potential:数值`、`learn:武功`、`heal`。
+- 条件：`flag:x`、`has:物品`、`visited:房间`、`sect:门派`（`sect:none` 为无门派）、`rank:数字`（门派阶位不低于）、`gender:男/女`、`money:数字`（身上现钱不少于）。
+- 效果：`flag:x`、`unflag:x`、`give:物品`、`take:物品`、`goto:房间`、`start:主线`、`chapter:章节`、`fight:战斗`、`join:门派`、`rep:门派:数值`、`potential:数值`、`learn:武功`、`heal`、`money:数值`（得钱）、`pay:数值`（付钱）、`travel:城市`。
+- **称呼**：正文中 `{姓名}`、`{姓}`、`{名}` 替换为玩家名字；`{男:兄台|女:姑娘}` 按性别选择。
 - **链接**：正文中写 `[[显示名|id]]`，id 可以是人物、物品、房间、百科条目。在场人物的名字会被自动加上链接。
 - **命名空间**：world 文件只写 `world.*` 标记，主线文件只写 `<主线>.*` 标记；主线中的 id 以主线名开头。由校验脚本检查。
 
@@ -128,20 +137,24 @@ talk: linan.beggar.start
 | 类型 | 用途 | 主要属性 |
 |---|---|---|
 | `meta` | 游戏标题、起点、开场白 | `title`、`start` |
-| `room` | 房间 | `name`、`exits`、`npcs`、`inn: true`（旅店：休息、修炼、战败复活点）、`train: true`（可修炼，如门派驻地） |
+| `room` | 房间 | `name`、`exits`、`npcs`、`inn: true`（旅店：休息、修炼、战败复活点）、`train: true`（可修炼，如门派驻地）、`station: true`（车马行）、`market: true`（市集）、`bank: true`（钱庄） |
 | `npc` | 人物 | `name`、`brief`、`talk`、`if`（出现条件）、`teaches: 门派`（门派师父：学艺、晋阶） |
 | `item` | 物品 | `name`、`verb`（专用动词，如"吹"）、`usefail`（用了但没效果时的文字） |
 | `dialog` | 对话节点 | `pace: slow`（重场戏逐段出现）、`lock: true`（剧情对话，必须做出选择才能离开，锁定一直延续到这条对话链结束）、`do`（进入即生效的效果） |
 | `entry` | 百科条目，供信息卡逐层查阅 | `name` |
-| `storyline` | 主线 | `name`、`level` |
-| `chapter` | 章节标题页 | `storyline`、`name` |
+| `storyline` | 主线 | `name`、`level`、`hint`（未开始时给玩家的线索） |
+| `chapter` | 章节标题页与检查点 | `storyline`、`name`、`done`（完成条件，用于主线进度）、`start`（重来时回到的房间）、`retry`（重来提示） |
 | `trigger` | 进入房间时触发 | `room`、`if`、`once: true`、`do`、`dialog` |
 | `use` | 在某处（或任何地方）使用某物品时发生的事 | `item`、`room`（可省略）、`if`、`once: true`、`do`、`dialog` |
 | `skill` | 武功 | `kind`（外功/内功/轻功）、`stance`（外功：刚/巧/守）、`sect`、`rank`（需要的门派阶位）、`cap`（门派外武功的典籍上限）；内功另有 `hp`、`mp`、`affinity` |
 | `move` | 招式 | `skill`、`name`、`level`（解锁等级）、`power`、`mp`、`effects`（内伤、点穴、破绽、吸内:系数、化内:系数）、`omen`（预兆）；正文是出招描述，可用 $N $n $招 $部位 |
-| `enemy` | 敌人 | `name`、`attrs`、`skills`（武功id=等级）、`ai`（各势权重）、`pattern`（固定出势顺序）、`cunning`（虚招概率%）、`potential`、`hpx`（气血倍率） |
-| `battle` | 一场战斗 | `enemies`、`win` / `lose`（胜负后的对话；没有 lose 时战败回旅店）、`flee: false`（不可逃跑） |
-| `sect` | 门派 | `ranks`（阶位名=所需声望）、`caps`（各阶武功上限） |
+| `enemy` | 敌人 | `name`、`attrs`、`skills`（武功id=等级）、`ai`（各势权重）、`pattern`（固定出势顺序）、`cunning`（虚招概率%）、`potential`、`hpx`（气血倍率）、`robber: true`（劫匪模板） |
+| `battle` | 一场战斗 | `enemies`、`win` / `lose`（胜负后的对话）、`flee: false`（不可逃跑）。没有 lose 时：世界战斗战败回旅店，主线战斗回到章节开始 |
+| `sect` | 门派 | `ranks`（阶位名=所需声望）、`caps`（各阶武功上限）、`examiner`（晋阶考核者） |
+| `city` | 城市 | `name`、`pos`（大地图坐标）、`station`、`routes`（城市=天数）、`goods`（货物=倍率）、`areas`（属于本城的其他区域，如 shaolin） |
+| `goods` | 货物 | `name`、`price`（基准价） |
+| `quest` | 任务清单条目 | `name`、`flag`（这个标记设着时显示在任务清单里）、`where`（地点房间）；正文是说明 |
+| `goal` | 主线当前目标 | `storyline`、`if`（条件）；按文件顺序取第一个条件满足的；正文是目标说明 |
 | `patch` | 往别处定义的房间或对话里追加内容（STORY.md §5.1） | `if`、`exits`、`npcs`，正文和选项会被追加 |
 
 ### 5.3 校验

@@ -103,7 +103,7 @@ export function addBlocks(db, blocks, file = '?') {
 }
 
 export function emptyDb() {
-  return { room: {}, npc: {}, item: {}, dialog: {}, entry: {}, storyline: {}, chapter: {}, trigger: {}, use: {}, skill: {}, move: {}, enemy: {}, battle: {}, sect: {}, meta: {}, patch: {}, loaded: new Set() };
+  return { room: {}, npc: {}, item: {}, dialog: {}, entry: {}, storyline: {}, chapter: {}, trigger: {}, use: {}, skill: {}, move: {}, enemy: {}, battle: {}, sect: {}, city: {}, goods: {}, quest: {}, goal: {}, meta: {}, patch: {}, loaded: new Set() };
 }
 
 async function loadFiles(db, base, files) {

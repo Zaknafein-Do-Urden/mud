@@ -278,3 +278,77 @@ body.map-open #side { display: flex; }
 .map-room.unknown rect { fill: none; stroke-dasharray: 3 3; }
 .map-room.unknown text { fill: var(--muted); }
 .side-tip { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+
+/* ---- 创建角色 ---- */
+#create-dialog h2 { text-align: center; color: var(--accent); letter-spacing: 0.15em; }
+.create-row { display: flex; gap: 16px; align-items: center; margin: 10px 0; flex-wrap: wrap; }
+.create-row input[type="text"], .create-row input:not([type]) {
+  width: 6em; font: inherit; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--panel); color: var(--fg);
+}
+.create-hint { color: var(--muted); }
+.status-btns { display: inline-flex; gap: 6px; }
+#world-toggle { font-size: 12px; padding: 0 8px; }
+
+/* ---- 大地图 ---- */
+#world-dialog { width: min(720px, calc(100vw - 24px)); }
+.world-head { display: flex; justify-content: space-between; align-items: center; }
+.world-head h2 { margin: 0; color: var(--accent); }
+.world-svg { width: 100%; height: auto; background: var(--panel); border-radius: 6px; }
+.w-route { stroke: var(--border); stroke-width: 3; }
+.w-route.reach { stroke: var(--lk-go); stroke-dasharray: 6 4; }
+.w-days { font-size: 12px; fill: var(--muted); }
+.w-city circle { fill: var(--bg); stroke: var(--fg); stroke-width: 2; }
+.w-city text { font-size: 15px; fill: var(--fg); font-weight: bold; }
+.w-city.unvisited text { fill: var(--muted); font-weight: normal; }
+.w-city.here circle { fill: var(--accent); stroke: var(--accent); }
+.w-city.reach { cursor: pointer; }
+.w-city.reach circle { stroke: var(--lk-go); stroke-width: 3; }
+.w-city.reach:hover circle { fill: var(--lk-go); }
+.world-info { color: var(--muted); font-size: 14px; min-height: 1.5em; }
+
+/* ---- 面板（D-045）---- */
+#char-toggle, #journal-toggle { font-size: 12px; padding: 0 8px; }
+#panel { width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 40px); }
+#panel-tabs { display: flex; gap: 4px; margin: 8px 0; flex-wrap: wrap; }
+.pn-tab.on { border-color: var(--accent); color: var(--accent); font-weight: bold; }
+#panel-body { max-height: 62vh; overflow-y: auto; font-size: 14px; line-height: 1.6; }
+#panel-feedback { min-height: 1.4em; margin: 8px 0 0; font-size: 13px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 6px; }
+#panel-feedback.err { color: var(--err); }
+.pn-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; flex-wrap: wrap; }
+.pn-kv { display: flex; gap: 8px; margin: 2px 0; }
+.pn-k { color: var(--muted); min-width: 4.5em; }
+.pn-v { color: var(--muted); font-size: 13px; }
+.pn-name { margin: 4px 0 8px; color: var(--accent); font-size: 17px; }
+.pn-sub { margin: 12px 0 4px; color: var(--accent); border-bottom: 1px solid var(--border); }
+.pn-hint { color: var(--muted); margin: 4px 0; }
+.pn-skill, .pn-item, .pn-story { border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; margin: 6px 0; }
+.pn-skill.on { border-left: 4px solid var(--accent); }
+.pn-skill-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pn-skill-name { font-weight: bold; }
+.pn-btns { display: inline-flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+.pn-btns button, .pn-row button { font-size: 12px; padding: 2px 8px; }
+.pn-moves { color: var(--muted); font-size: 12px; }
+.pn-stance { font-size: 11px; padding: 0 5px; border-radius: 3px; border: 1px solid currentColor; color: var(--muted); }
+.pn-stance.st-刚 { color: var(--st-gang); }
+.pn-stance.st-巧 { color: var(--st-qiao); }
+.pn-stance.st-守 { color: var(--st-shou); }
+.pn-danger { color: var(--err); }
+.pn-tree { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.pn-branch .pn-sub { border-bottom-width: 2px; }
+.pn-branch.st-刚 .pn-sub { color: var(--st-gang); }
+.pn-branch.st-巧 .pn-sub { color: var(--st-qiao); }
+.pn-branch.st-守 .pn-sub { color: var(--st-shou); }
+.pn-node { display: flex; flex-direction: column; align-items: flex-start; width: 100%; margin: 4px 0; text-align: left; }
+.pn-node.on { border-color: var(--accent); }
+.pn-node:disabled { opacity: 0.55; cursor: not-allowed; }
+.pn-node-name { font-weight: bold; }
+.pn-node-desc { font-size: 12px; color: var(--muted); }
+.pn-chapters { margin: 4px 0; padding-left: 1.5em; }
+.pn-chapters .ch-done { color: var(--muted); }
+.pn-chapters .ch-current { color: var(--accent); font-weight: bold; }
+.pn-chapters .ch-locked { color: var(--muted); opacity: 0.6; }
+.pn-goal { color: var(--fg); }
+.pn-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.pn-table th, .pn-table td { padding: 3px 6px; border-bottom: 1px solid var(--border); text-align: left; }
+.pn-input { width: 7em; font: inherit; padding: 2px 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel); color: var(--fg); }

@@ -4,6 +4,7 @@
 
 import { STANCES, parseNums, innerOf, maxHp, maxMp, speed, innerBonus, movesOf } from './character.js';
 import { parseList } from './content.js';
+import { tal } from './talents.js';
 
 // 攻方势 × 受方姿态 → 伤害倍率（COMBAT.md §4.2，D-017：先用 1.5 / 0.5）
 const MULT = {
@@ -73,6 +74,7 @@ function playerUnit(db, p) {
     hp: p.hp ?? mhp, maxHp: mhp, mp: maxMp(db, p), maxMp: maxMp(db, p),
     speed: speed(db, p), innerLv: inner.lv, innerId: inner.id, wuxing: p.attrs.悟性,
     skills: { ...p.skills }, outer: [...p.loadout.outer], light: p.loadout.light,
+    talents: { ...(p.talents ?? {}) },
     status: {}, intent: null,
     used: {}, // 各武功本场使用次数（战后折算实战经验）
     rounds: 0, // 本场运功回合数（内功、轻功的经验）
@@ -173,7 +175,7 @@ export function beginRound(db, b, emit) {
     const sample = unitMoves(db, u).find((m) => m.stance === shown && m.omen);
     emit('omen', fill(sample?.omen ?? OMEN[shown], { N: u.name }));
     // 看破：只给看破的人看（D-017）
-    if (feint && rand(b) * 100 < me.wuxing * 2) emit('hint', `你察觉${u.name}的气息与架势并不相合……`);
+    if (feint && rand(b) * 100 < me.wuxing * 2 + 10 * tal(me, 'huiyan')) emit('hint', `你察觉${u.name}的气息与架势并不相合……`);
   }
 }
 
@@ -220,7 +222,7 @@ export function resolveRound(db, b, emit) {
       if (u.isPlayer) emit('fx', '你穴道受制，动弹不得！');
       posture[u.key] = '无';
     } else if (u.intent?.type === 'rest') {
-      const gain = Math.min(u.maxMp - u.mp, Math.round(u.maxMp * REST_RATE));
+      const gain = Math.min(u.maxMp - u.mp, Math.round(u.maxMp * (REST_RATE + 0.03 * tal(u, 'tuna'))));
       u.mp += gain;
       posture[u.key] = '无';
       emit('fx', `${sayN(u)}盘膝调息，内力略有恢复。（内力 +${gain}）`);
@@ -289,8 +291,16 @@ function attack(db, b, u, target, m, tPosture, emit) {
   emit('act', fill(m.text || '$N使出一招「$招」，攻向$n$部位。', ctx));
 
   const innerSk = u.innerId ? db.skill[u.innerId] : null;
-  const value = m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, m.stance);
-  const mult = MULT[m.stance][tPosture] ?? 1;
+  const talentPower = 1 + 0.04 * (m.stance === '刚' ? tal(u, 'manli') : tal(u, 'ruili'));
+  const value = m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, m.stance) * talentPower;
+  let mult = MULT[m.stance][tPosture] ?? 1;
+  // 天赋对克制倍率的修正（D-044）
+  if (m.stance === '刚' && tPosture === '守') {
+    if (tal(u, 'pojia')) mult = 1.8;
+    if (tal(target, 'taishan')) mult *= 1.3 / 1.5;
+  }
+  if (m.stance === '刚' && tPosture === '巧' && tal(u, 'wangqian')) mult = 0.65;
+  if (m.stance === '巧' && tPosture === '守' && tal(u, 'youren')) mult = 0.65;
   const armor = 100 / (100 + target.innerLv);
   const flaw = target.status.破绽 ? 1.3 : 1;
   if (flaw > 1) delete target.status.破绽;
@@ -306,7 +316,7 @@ function attack(db, b, u, target, m, tPosture, emit) {
   if (mult >= 1 && alive(target)) {
     for (const e of m.effects) {
       const [kind, k] = e.split(':');
-      if (kind === '内伤') { target.status.内伤 = 3; target.status.内伤dot = Math.max(3, Math.round(dmg * 0.2)); emit('fx', `${target.name}受了内伤。`); }
+      if (kind === '内伤') { target.status.内伤 = 3; target.status.内伤dot = Math.max(3, Math.round(dmg * 0.2 * (1 + 0.25 * tal(u, 'zhongchuang')))); emit('fx', `${target.name}受了内伤。`); }
       else if (kind === '点穴') { target.status.点穴 = 1; emit('fx', `${target.name}被点中穴道，下一回合动弹不得！`); }
       else if (kind === '破绽') { target.status.破绽 = 1; emit('fx', `${target.name}露出了破绽。`); }
       else if (kind === '吸内' || kind === '化内') {
@@ -324,7 +334,7 @@ function attack(db, b, u, target, m, tPosture, emit) {
     if (gm) {
       const tInner = target.innerId ? db.skill[target.innerId] : null;
       const counter = gm.power * (1 + (target.skills[gm.skill] ?? 0) * 0.02) * innerBonus(target.innerLv, tInner, '守');
-      const cd = Math.max(1, Math.round(counter * (100 / (100 + u.innerLv))));
+      const cd = Math.max(1, Math.round(counter * (100 / (100 + u.innerLv)) * (1 + 0.25 * tal(target, 'fanzhen')) * (tal(u, 'youren') ? 0.5 : 1)));
       u.hp = Math.max(0, u.hp - cd);
       emit('tag', `反震之力直透${u.name}臂膀！（气血 -${cd}）`);
       if (!alive(u)) emit('fx', `${u.name}倒在地上。`);
@@ -363,4 +373,30 @@ export function createExamBattle(db, player, examinerName, exam, seed) {
     level: avgLevel(Object.fromEntries(me.outer.map((id) => [id, me.skills[id] ?? 1]))),
   };
   return { id: '__exam__', exam, seed: seed | 0, round: 0, foeLv: mirror.level, units: [me, mirror], over: null, lastTarget: null };
+}
+
+/**
+ * 按水平生成敌人的战斗（如劫匪）：以 enemy 模板为蓝本，武功等级都换成 level。
+ * meta 会挂在战斗对象上（如 {robbery: {...}}），供战后处理。
+ */
+export function createScaledBattle(db, foeIds, level, meta, seed) {
+  const lv = Math.max(1, Math.round(level));
+  const units = foeIds.map((id, i) => {
+    const foe = db.enemy[id];
+    const scaled = {
+      ...foe,
+      props: {
+        ...foe.props,
+        skills: Object.keys(parseNums(foe.props.skills)).map((s) => `${s}=${lv}`).join(', '),
+        attrs: `根骨=${12 + Math.floor(lv / 4)}, 身法=${12 + Math.floor(lv / 5)}, 悟性=10`,
+        potential: String(Math.round(lv * 2.5)),
+      },
+    };
+    return enemyUnit(db, scaled, i);
+  });
+  const LABEL = '甲乙丙丁';
+  if (units.length > 1) units.forEach((u, i) => { u.name += LABEL[i]; });
+  const player = meta.player;
+  delete meta.player;
+  return { id: '__scaled__', ...meta, seed: seed | 0, round: 0, foeLv: lv, units: [playerUnit(db, player), ...units], over: null, lastTarget: null };
 }

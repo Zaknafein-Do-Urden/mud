@@ -1,5 +1,7 @@
 // 角色数值：派生属性、武功上限、装备栏。纯函数，供引擎和战斗使用。见 COMBAT.md §2、SECT.md §4。
 
+import { tal } from './talents.js';
+
 export const STANCES = ['刚', '巧', '守'];
 export const MAX_OUTER = 4;
 export const BASE_CAP = 50; // 基础武功上限
@@ -19,11 +21,17 @@ export function parseNums(s = '') {
 export function newPlayer(startRoom) {
   return {
     name: '无名氏',
+    surname: '',
+    given: '',
+    gender: '男',
     room: startRoom,
     attrs: { 根骨: 20, 身法: 20, 悟性: 20 },
     hp: null, // null 表示满血（首次计算时填入）
     potential: 0,
-    inventory: { coin: 3 },
+    inventory: {},
+    money: 200, // 身上的现钱（文）
+    bank: 0, // 钱庄存款
+    cargo: {}, // 马车上的货物 {goodsId: 件数}
     skills: { 'base.quan': 10, 'base.zhang': 10, 'base.zhaojia': 10, 'base.tuna': 10 },
     loadout: { outer: ['base.quan', 'base.zhang', 'base.zhaojia'], inner: 'base.tuna', light: null },
     exp: {}, // 武功实战经验 {skillId: exp}
@@ -31,6 +39,7 @@ export function newPlayer(startRoom) {
     formerSects: [], // 叛出过的门派（不能再回去）
     frozen: {}, // 叛师后被冻结的武功 {skillId: true}：不能再提升
     lastInn: null,
+    talents: {}, // 天赋 {天赋id: 等级}（D-044）
   };
 }
 
@@ -51,7 +60,7 @@ function innerSum(db, p, prop, dflt) {
 }
 
 export function maxHp(db, p) {
-  return Math.round(100 + p.attrs.根骨 * 5 + innerSum(db, p, 'hp', 6));
+  return Math.round((100 + p.attrs.根骨 * 5 + innerSum(db, p, 'hp', 6)) * (1 + 0.05 * tal(p, 'tiegu')));
 }
 
 export function maxMp(db, p) {
@@ -66,7 +75,7 @@ export function bestInnerLv(db, p) {
 /** 身法：先天身法 + 轻功等级 / 4 */
 export function speed(db, p) {
   const id = p.loadout.light;
-  return p.attrs.身法 + (id ? Math.floor((p.skills[id] ?? 0) / 4) : 0);
+  return p.attrs.身法 + (id ? Math.floor((p.skills[id] ?? 0) / 4) : 0) + 2 * tal(p, 'xunjie');
 }
 
 /** 内功威力加成（含亲和势） */

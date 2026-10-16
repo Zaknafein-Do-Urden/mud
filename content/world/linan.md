@@ -24,6 +24,15 @@ usefail: 你把竹哨凑到嘴边吹了一声。哨音尖细，在风里传出�
 ---
 一支短短的竹哨，哨身刻着一只歪歪扭扭的燕子。
 
+=== city: linan
+name: 临安
+pos: 520,318
+station: linan.station
+routes: jiaxing=1, xiangyang=7
+goods: silk=0.8, tea=0.85, porcelain=1.0, salt=1.1, herbs=1.2, iron=1.25, fur=1.4, shujin=1.4
+---
+南宋行在，天下最繁华的地方。丝绸、茶叶便宜，北方的皮货、铁器贵。
+
 # ---------------- 百科 ----------------
 
 === entry: linan.e.linan
@@ -49,7 +58,7 @@ npcs: linan.beggar
 
 === room: linan.road
 name: 城外官道
-exits: 北=linan.gate
+exits: 北=linan.gate, 西=linan.station
 npcs: world.npc.pipi, world.npc.snake
 ---
 出了城门，官道向东南延伸，两旁是收割过的稻田，田埂上积着薄薄一层残雪。
@@ -66,15 +75,17 @@ exits: 南=linan.gate, 东=linan.teahouse, 北=linan.yamen, 西=linan.temple
 
 === room: linan.teahouse
 name: 清风茶楼
-exits: 西=linan.street
+exits: 西=linan.street, 北=linan.market
 npcs: linan.storyteller
 ---
 茶楼里人声鼎沸，跑堂的提着长嘴铜壶在桌间穿梭。
 正中一张高桌上，一个说书先生正拍着醒木，讲得唾沫横飞。
+后门通往茶楼背后的市集。
 
 === room: linan.yamen
 name: 临安府衙
 exits: 南=linan.street
+npcs: linan.officer
 ---
 府衙大门紧闭，门前两座石狮子在暮色里显得格外威严。
 墙上贴着一张告示，墨迹尚新：“近日西湖一带屡有命案，入夜后百姓勿近断桥。”
@@ -100,9 +111,9 @@ talk: linan.beggar.start
 
 === dialog: linan.beggar.start
 ---
-?!flag:world.beggar_friend 老乞丐：这位客官，行行好，赏口饭吃吧……
+?!flag:world.beggar_friend 老乞丐：{男:这位小哥|女:这位姑娘}，行行好，赏口饭吃吧……
 ?flag:world.beggar_friend 老乞丐：嘿嘿，又是你。东西收好了没有？
-* 给他一文钱 -> linan.beggar.give ?has:coin ?!flag:world.beggar_friend !take:coin !flag:world.beggar_friend
+* 给他一文钱 -> linan.beggar.give ?money:1 ?!flag:world.beggar_friend !pay:1 !flag:world.beggar_friend
 * 打听会吹竹哨的人 -> linan.beggar.whistle
 * 打听丐帮 -> linan.beggar.gaibang
 * 离开
@@ -171,3 +182,136 @@ do: flag:world.whistle_answered
 戴斗笠的人：今夜耳目太多，不是说话的时候。你先在临安住下，等时候到了，我自会来找你。
 不等你开口，小船已经掉转船头，重新没入了雾中。
 （这条线索的后续尚未编写。）
+
+# ---------------- 市集、钱庄、车马行（D-040）----------------
+
+=== room: linan.market
+name: 临安·市集
+exits: 南=linan.teahouse, 东=linan.bank
+market: true
+---
+茶楼背后是一片热闹的市集。绸缎庄、茶叶铺、瓷器摊挤得满满当当，北方来的皮货商操着一口生硬的官话。
+在这里可以 行情、买、卖。
+
+=== room: linan.bank
+name: 临安·通宝钱庄
+exits: 西=linan.market
+bank: true
+---
+临安城里最大的钱庄，黑漆柜台足有一人高。在这里存的钱，各地分号都能兑取。
+在这里可以 存、取、存款。
+
+=== room: linan.station
+name: 临安·城南车马行
+exits: 东=linan.road
+station: true
+npcs: world.npc.linan_bandit
+---
+官道边一个大院子，停着十几辆马车，骡马嚼着草料。车把式们蹲在墙根下晒太阳，等着拉客。
+在这里可以 乘车 去别的城市。
+
+# ---------------- 衙门差事 ----------------
+
+=== npc: linan.officer
+name: 张捕头
+brief: 临安府的捕头，发放除害、送信之类的差事。
+talk: linan.officer.talk
+---
+一个四十来岁的捕头，留着两撇八字胡，眼神精明。
+
+=== dialog: linan.officer.talk
+---
+张捕头：这位{男:兄弟|女:姑娘}，可是来领差事的？临安城里差事多，赏钱也痛快。
+* 有什么除害的差事？ -> linan.job.bandit ?!flag:world.job.bandit_linan
+* 有信要送去嘉兴吗？ -> linan.job.mail_jiaxing ?!flag:world.job.mail_jiaxing
+* 有信要送去襄阳吗？ -> linan.job.mail_xiangyang ?!flag:world.job.mail_xiangyang
+* 交上嘉兴衙门托付的书信 -> linan.job.deliver_jiaxing ?flag:world.job.mail_linan_from_jiaxing
+* 交上襄阳衙门托付的书信 -> linan.job.deliver_xiangyang ?flag:world.job.mail_linan_from_xiangyang
+* 离开
+
+=== dialog: linan.job.bandit
+do: flag:world.job.bandit_linan
+---
+张捕头：城南车马行一带有几个拐子，专骗外地来的客商。去把他们拿了，赏钱八十文。
+（差事：在临安城南车马行教训拐子）
+
+=== dialog: linan.job.mail_jiaxing
+do: flag:world.job.mail_jiaxing flag:world.job.mail_jiaxing_from_linan
+---
+张捕头递给你一个封了火漆的信封：“送到嘉兴衙门，那边自会付你 45 文脚钱。”
+（差事：把书信送到嘉兴衙门。坐马车 1 日可到）
+
+=== dialog: linan.job.mail_xiangyang
+do: flag:world.job.mail_xiangyang flag:world.job.mail_xiangyang_from_linan
+---
+张捕头递给你一个封了火漆的信封：“送到襄阳的安抚使司，那边自会付你 135 文脚钱。”
+（差事：把书信送到襄阳衙门。坐马车 7 日可到）
+
+=== dialog: linan.job.deliver_jiaxing
+do: unflag:world.job.mail_linan unflag:world.job.mail_linan_from_jiaxing money:45
+---
+张捕头拆开火漆看了看，点点头，数了 45 文钱给你。
+
+=== dialog: linan.job.deliver_xiangyang
+do: unflag:world.job.mail_linan unflag:world.job.mail_linan_from_xiangyang money:135
+---
+张捕头拆开火漆看了看，点点头，数了 135 文钱给你。
+
+=== enemy: world.foe.linan_bandit
+name: 拐子
+attrs: 根骨=12, 身法=16, 悟性=12
+skills: base.quan=6, base.zhang=8, base.zhaojia=4, base.tuna=5
+ai: 刚=1, 巧=3, 守=1
+cunning: 20
+potential: 14
+hpx: 0.7
+---
+两个贼眉鼠眼的汉子，一个装成落难的书生，一个在旁边帮腔。
+
+=== npc: world.npc.linan_bandit
+name: 拐子
+brief: 在车马行骗外地客商的拐子。
+if: flag:world.job.bandit_linan
+talk: world.linan_bandit.talk
+---
+两个贼眉鼠眼的汉子，正围着一个刚下车的乡下客商说个不停。
+
+=== dialog: world.linan_bandit.talk
+---
+拐子：哟，又来一个管闲事的？
+* 动手 !fight:world.b.linan_bandit
+* 走开
+
+=== battle: world.b.linan_bandit
+enemies: world.foe.linan_bandit, world.foe.linan_bandit
+win: world.linan_bandit.win
+---
+两个拐子对视一眼，一左一右扑了上来。
+
+=== dialog: world.linan_bandit.win
+do: unflag:world.job.bandit_linan money:80
+---
+两个拐子被你打得抱头鼠窜。乡下客商连连作揖。（差事完成，赏钱八十文）
+
+# ---------------- 任务清单（D-045）----------------
+
+=== quest: world.q.linan_bandit
+name: 除害：拐子
+flag: world.job.bandit_linan
+where: linan.station
+---
+临安府张捕头的差事：去城南车马行教训骗外地客商的拐子。赏钱 80 文。
+
+=== quest: world.q.mail_linan_jiaxing
+name: 送信：临安 → 嘉兴
+flag: world.job.mail_jiaxing_from_linan
+where: jiaxing.office
+---
+把临安府的书信送到嘉兴衙门，脚钱 45 文。坐马车 1 日。
+
+=== quest: world.q.mail_linan_xiangyang
+name: 送信：临安 → 襄阳
+flag: world.job.mail_xiangyang_from_linan
+where: xiangyang.office
+---
+把临安府的书信送到襄阳衙门，脚钱 135 文。坐马车 7 日。

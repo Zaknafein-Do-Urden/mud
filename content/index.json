@@ -2,7 +2,17 @@
   "world": [
     "world/linan.md",
     "world/base.md",
-    "world/gaibang.md"
+    "world/goods.md",
+    "world/gaibang.md",
+    "world/jiaxing.md",
+    "world/xiangyang.md",
+    "world/luoyang.md",
+    "world/changan.md",
+    "world/chengdu.md",
+    "world/shaolin.md",
+    "world/wudang.md",
+    "world/huashan.md",
+    "world/tangmen.md"
   ],
   "storylines": {
     "shediao": {
@@ -11,7 +21,8 @@
       ],
       "files": [
         "shediao/ch01.md",
-        "shediao/ch02.md"
+        "shediao/ch02.md",
+        "shediao/ch03.md"
       ]
     }
   }

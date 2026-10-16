@@ -8,6 +8,8 @@ import { initCards } from './ui/cards.js';
 import { bindTab, resolvePinyin } from './ui/complete.js';
 import { renderCombat } from './ui/combat.js';
 import { renderMap, findPath, regionOf } from './ui/map.js';
+import { renderWorld } from './ui/worldmap.js';
+import { initPanels } from './ui/panels.js';
 
 const $ = (id) => document.getElementById(id);
 const output = $('output');
@@ -104,11 +106,13 @@ async function run(cmd) {
   const ctx = game.context();
   const isChoice = (/^\d+$/.test(cmd) && ctx.inDialog) || (/^\d+( \d+)?$/.test(cmd) && ctx.inCombat);
   // 点击链接产生的命令里带内部 id（talk shediao.qusan），回显时换成名字
-  const shown = cmd.split(/\s+/).map((t) => db.npc[t]?.props.name ?? db.item[t]?.props.name ?? t).join(' ');
+  const shown = cmd.split(/\s+/).map((t) => db.npc[t]?.props.name ?? db.item[t]?.props.name ?? db.city[t]?.props.name ?? db.skill[t]?.props.name ?? t).join(' ');
   const echo = isChoice ? [] : [{ cls: 'cmd', text: '> ' + shown.replace(/\[\[/g, '［［') }];
-  print([...echo, ...game.exec(resolved)]);
+  const out = game.exec(resolved);
+  print([...echo, ...out]);
   await loadPending();
   if (!saveLocal(game.state)) print([{ cls: 'err', text: '（无法自动存档：浏览器禁用了本地存储。请记得手动导出。）' }]);
+  return out; // 面板用它显示执行结果
 }
 
 /** 引擎请求加载的主线（如对话里触发了 start:shediao） */
@@ -147,13 +151,18 @@ function refreshQuick() {
   add('看', 'look');
   for (const d of c.exits) add(d, d, 'q-go');
   for (const n of c.npcs) if (n.talk) add(n.name, `talk ${n.id}`, 'q-npc');
+  const r = game.room()?.props ?? {};
+  if (r.station === 'true') add('乘车', '乘车');
+  if (r.market === 'true') add('市集', '@market');
+  if (r.bank === 'true') add('钱庄', '@bank');
+  if (r.inn === 'true') add('休息', '休息');
   add('背包', 'i');
   add('帮助', 'help');
 }
 
 function refreshStatus() {
   const st = game.statusView();
-  $('status-text').textContent = `气血 ${st.hp}/${st.maxHp}　内力 ${st.mp}　潜能 ${st.potential}`;
+  $('status-text').textContent = `${game.state.player.name}　气血 ${st.hp}/${st.maxHp}　内力 ${st.mp}　潜能 ${st.potential}　${st.money} 文　第 ${st.day} 日`;
   statusBox.classList.toggle('low', st.hp < st.maxHp * 0.3);
 }
 
@@ -190,6 +199,19 @@ async function walkTo(roomId) {
   walking = false;
 }
 
+// ---- 大地图（D-040）----
+
+function openWorld() {
+  if (!game) return;
+  renderWorld($('world-map'), $('world-info'), game.worldView(), (cityId) => {
+    $('world-dialog').close();
+    run(`乘车 ${cityId}`);
+  });
+  $('world-dialog').showModal();
+}
+$('world-toggle').addEventListener('click', openWorld);
+$('world-close').addEventListener('click', () => $('world-dialog').close());
+
 function setMapOpen(open) {
   document.body.classList.toggle('map-open', open);
   try { localStorage.setItem('wuxia-mud:ui:map', open ? '1' : '0'); } catch { /* 忽略 */ }
@@ -201,6 +223,36 @@ $('map-close').addEventListener('click', () => setMapOpen(false));
   try { saved = localStorage.getItem('wuxia-mud:ui:map'); } catch { /* 忽略 */ }
   // 默认：宽屏打开，窄屏收起
   setMapOpen(saved === null ? window.innerWidth >= 900 : saved === '1');
+}
+
+// ---- 创建角色：姓、名、性别（D-041）----
+
+/** 弹出创建角色对话框；返回 Promise<{surname, given, gender}> */
+function askIdentity(prefill) {
+  const dlg = $('create-dialog');
+  $('cr-surname').value = prefill?.surname ?? '';
+  $('cr-given').value = prefill?.given ?? '';
+  $('cr-error').textContent = '';
+  document.querySelectorAll('input[name="cr-gender"]').forEach((r) => { r.checked = r.value === (prefill?.gender ?? '男'); });
+  dlg.showModal();
+  return new Promise((resolve) => {
+    $('create-form').onsubmit = (e) => {
+      e.preventDefault();
+      const surname = $('cr-surname').value.trim();
+      const given = $('cr-given').value.trim();
+      const gender = document.querySelector('input[name="cr-gender"]:checked').value;
+      const han = /^[\u4e00-\u9fff]+$/;
+      if (!han.test(surname) || !han.test(given)) { $('cr-error').textContent = '姓和名请填写汉字。'; return; }
+      dlg.close();
+      resolve({ surname, given, gender });
+    };
+  });
+}
+// 必须填写，不能按 Esc 跳过
+$('create-dialog').addEventListener('cancel', (e) => e.preventDefault());
+
+function applyIdentity(state, id) {
+  Object.assign(state.player, id, { name: id.surname + id.given });
 }
 
 // ---- 启动一局 ----
@@ -244,8 +296,17 @@ bindTab(input, () => game?.completions() ?? []);
 
 quick.addEventListener('click', (e) => {
   const cmd = e.target.dataset?.cmd;
-  if (cmd) { run(cmd); input.focus(); }
+  if (!cmd) return;
+  // @ 开头的是打开面板，不是命令
+  if (cmd === '@market') panels.open('market');
+  else if (cmd === '@bank') panels.open('bank');
+  else { run(cmd); input.focus(); }
 });
+
+// ---- 面板：人物、江湖、市集、钱庄（D-045）----
+const panels = initPanels({ game: () => game, run });
+$('char-toggle').addEventListener('click', () => panels.open('char'));
+$('journal-toggle').addEventListener('click', () => panels.open('journal'));
 
 output.addEventListener('click', (e) => {
   const b = e.target.closest('button.choice');
@@ -338,10 +399,12 @@ $('btn-do-import').addEventListener('click', async () => {
   }
 });
 
-$('btn-new').addEventListener('click', () => {
+$('btn-new').addEventListener('click', async () => {
   if (!confirm('确定放弃当前进度、重新开始吗？（建议先导出存档）')) return;
   clearLocal();
-  start(newState(db.meta.game.props.start), true);
+  const state = newState(db.meta.game.props.start);
+  applyIdentity(state, await askIdentity());
+  start(state, true);
 });
 
 // ---- 启动 ----
@@ -357,5 +420,8 @@ $('btn-new').addEventListener('click', () => {
   const meta = db.meta.game;
   if (meta?.props.title) { document.title = meta.props.title; $('title').textContent = meta.props.title; }
   const valid = saved && db.room[saved.player.room];
-  start(valid ? saved : newState(meta.props.start), !valid);
+  const state = valid ? saved : newState(meta.props.start);
+  // 新游戏，或旧存档还没有姓名：先报上名来
+  if (!state.player.surname) applyIdentity(state, await askIdentity());
+  start(state, !valid);
 })();

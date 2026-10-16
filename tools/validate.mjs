@@ -29,7 +29,7 @@ for (const [f, ns] of files) {
 }
 console.warn = origWarn;
 
-const KNOWN = new Set(['meta', 'room', 'npc', 'item', 'dialog', 'entry', 'storyline', 'chapter', 'trigger', 'use', 'patch', 'skill', 'move', 'enemy', 'battle', 'sect']);
+const KNOWN = new Set(['meta', 'room', 'npc', 'item', 'dialog', 'entry', 'storyline', 'chapter', 'trigger', 'use', 'patch', 'skill', 'move', 'enemy', 'battle', 'sect', 'city', 'goods', 'quest', 'goal']);
 const words = (s = '') => s.split(/[\s,]+/).filter(Boolean);
 const linkTarget = (id) => id.startsWith('go:') || ['npc', 'item', 'room', 'entry', 'storyline', 'skill', 'sect'].some((k) => db[k][id]);
 
@@ -40,7 +40,9 @@ function checkConds(b, conds) {
     else if (kind === 'visited' && !db.room[key]) err(b, `条件引用了不存在的房间: ${key}`);
     else if (kind === 'sect' && key !== 'none' && !db.sect[key]) err(b, `条件引用了不存在的门派: ${key}`);
     else if (kind === 'rank' && Number.isNaN(Number(key))) err(b, `rank 条件需要数字: ${c}`);
-    else if (!['flag', 'has', 'visited', 'sect', 'rank'].includes(kind)) err(b, `未知条件: ${c}`);
+    else if (kind === 'gender' && !['男', '女'].includes(key)) err(b, `gender 条件只能是 男 或 女: ${c}`);
+    else if (kind === 'money' && Number.isNaN(Number(key))) err(b, `money 条件需要数字: ${c}`);
+    else if (!['flag', 'has', 'visited', 'sect', 'rank', 'gender', 'money'].includes(kind)) err(b, `未知条件: ${c}`);
   }
 }
 
@@ -61,6 +63,8 @@ function checkEffects(b, effects) {
     else if (kind === 'rep') { const [sect, n] = key.split(':'); if (!db.sect[sect] || Number.isNaN(Number(n))) err(b, `rep 格式应为 rep:门派:数值，却是: ${e}`); }
     else if (kind === 'potential') { if (Number.isNaN(Number(key))) err(b, `potential 需要数字: ${e}`); }
     else if (kind === 'heal') { /* 无参数 */ }
+    else if (kind === 'money' || kind === 'pay') { if (Number.isNaN(Number(key))) err(b, `${kind} 需要数字: ${e}`); }
+    else if (kind === 'travel') { if (!db.city[key]) err(b, `travel 目标城市不存在: ${key}`); }
     else err(b, `未知效果: ${e}`);
   }
 }
@@ -142,6 +146,30 @@ for (const b of all) {
     const ranks = (b.props.ranks ?? '').split(',').filter(Boolean).length;
     const caps = (b.props.caps ?? '').split(',').filter(Boolean).length;
     if (!ranks || ranks !== caps) err(b, `ranks（${ranks} 阶）与 caps（${caps} 个）数量必须一致`);
+  }
+  if (b.type === 'city') {
+    if (!db.room[b.props.station]) err(b, `车马行房间不存在: ${b.props.station}`);
+    else if (db.room[b.props.station].props.station !== 'true') err(b, `车马行房间缺少 station: true`);
+    for (const part of parseList(b.props.routes)) {
+      const to = part.split('=')[0].trim();
+      if (!db.city[to]) err(b, `路线目的地城市不存在: ${to}`);
+    }
+    for (const part of parseList(b.props.goods)) {
+      const g = part.split('=')[0].trim();
+      if (!db.goods[g]) err(b, `货物不存在: ${g}`);
+    }
+    if (!/^\d+,\d+$/.test(b.props.pos ?? '')) err(b, 'pos 应为 "x,y"（大地图坐标）');
+  }
+  if (b.type === 'goods' && !(Number(b.props.price) > 0)) err(b, 'price 需要正数');
+  if (b.type === 'quest') {
+    if (!b.props.flag || !b.props.name) err(b, 'quest 需要 name 和 flag');
+    if (b.props.where && !db.room[b.props.where]) err(b, `where 房间不存在: ${b.props.where}`);
+  }
+  if (b.type === 'goal' && !db.storyline[b.props.storyline]) err(b, `所属主线不存在: ${b.props.storyline}`);
+  if (b.type === 'chapter' && b.props.done) checkConds(b, words(b.props.done));
+  if (b.type === 'battle' && owner.get(b.file) !== 'world' && !b.props.lose) {
+    // 主线战斗默认必须打赢（输了回到章节开始），确认所在文件有章节（D-042）
+    if (!Object.values(db.chapter).some((ch) => ch.props.storyline === owner.get(b.file))) err(b, '主线战斗需要章节检查点');
   }
   if (b.type === 'npc' && b.props.teaches && !db.sect[b.props.teaches]) err(b, `teaches 门派不存在: ${b.props.teaches}`);
   if (b.type === 'chapter' && !db.storyline[b.props.storyline]) err(b, `所属主线不存在: ${b.props.storyline}`);

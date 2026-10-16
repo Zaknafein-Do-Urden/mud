@@ -1,0 +1,183 @@
+# 襄阳（城市）。由 tools/gen_cities.py 生成，可以手改。
+
+=== city: xiangyang
+name: 襄阳
+pos: 300,240
+station: xiangyang.station
+routes: linan=7, luoyang=4, chengdu=8
+goods: iron=0.85, salt=1.0, herbs=1.0, silk=1.2, tea=1.15, fur=1.1, porcelain=1.05
+areas: wudang
+---
+汉水之滨的雄城，南宋北方的门户，城墙高厚，铁器出名。往西是武当山。
+
+=== room: xiangyang.center
+name: 襄阳·十字街
+exits: 北=xiangyang.office, 南=xiangyang.station, 东=xiangyang.market, 西=xiangyang.inn
+---
+城墙又高又厚，街上随处可见披甲的军士。汉水的腥风从城外吹来，带着几分肃杀。
+
+=== room: xiangyang.market
+name: 襄阳·市集
+exits: 西=xiangyang.center, 北=xiangyang.bank
+market: true
+---
+市集上铁匠铺的叮当声不绝于耳，刀枪锄犁都有，价钱比江南便宜得多。
+在这里可以 行情、买、卖。
+
+=== room: xiangyang.bank
+name: 襄阳·钱庄
+exits: 南=xiangyang.market
+bank: true
+---
+钱庄门口站着两个护院，柜台上的算盘珠子拨得飞快。
+在这里可以 存、取、存款。
+
+=== room: xiangyang.inn
+name: 襄阳·客栈
+exits: 东=xiangyang.center
+inn: true
+---
+一间宽敞的客栈，大堂里坐满了南来北往的商旅和军汉。
+在这里可以 休息、修炼。
+
+=== room: xiangyang.office
+name: 襄阳·衙门
+exits: 南=xiangyang.center
+npcs: xiangyang.officer
+---
+京西南路安抚使司的衙门，门前石狮威严，进出的多是军官。
+
+=== room: xiangyang.station
+name: 襄阳·车马行
+exits: 北=xiangyang.center
+npcs: world.npc.xiangyang_bandit
+station: true
+---
+城南的车马行，往临安、洛阳、成都的车都有。车把式说话都带着湖北腔。
+在这里可以 乘车 去别的城市。
+
+=== npc: xiangyang.officer
+name: 王捕头
+brief: 襄阳衙门的公差，发放除害、送信之类的差事。
+talk: xiangyang.officer.talk
+---
+一个黑脸膛的汉子，据说早年在军中当过伍长。
+
+=== dialog: xiangyang.officer.talk
+---
+王捕头：这位{男:兄弟|女:姑娘}，可是来领差事的？赏钱不多，胜在实在。
+* 有什么除害的差事？ -> xiangyang.job.bandit ?!flag:world.job.bandit_xiangyang
+* 有信要送去成都吗？ -> xiangyang.job.mail_chengdu ?!flag:world.job.mail_chengdu
+* 有信要送去临安吗？ -> xiangyang.job.mail_linan ?!flag:world.job.mail_linan
+* 有信要送去洛阳吗？ -> xiangyang.job.mail_luoyang ?!flag:world.job.mail_luoyang
+* 交上成都衙门托付的书信 -> xiangyang.job.deliver_chengdu ?flag:world.job.mail_xiangyang_from_chengdu
+* 交上临安衙门托付的书信 -> xiangyang.job.deliver_linan ?flag:world.job.mail_xiangyang_from_linan
+* 交上洛阳衙门托付的书信 -> xiangyang.job.deliver_luoyang ?flag:world.job.mail_xiangyang_from_luoyang
+* 离开
+
+=== dialog: xiangyang.job.bandit
+do: flag:world.job.bandit_xiangyang
+---
+王捕头：汉水边有一伙汉水水匪作乱，去把他们打发了，赏钱八十文。
+（差事：在襄阳车马行外教训汉水水匪）
+
+=== dialog: xiangyang.job.mail_chengdu
+do: flag:world.job.mail_chengdu flag:world.job.mail_chengdu_from_xiangyang
+---
+王捕头递给你一个封了火漆的信封：“送到成都衙门，那边自会付你 150 文脚钱。”
+（差事：把书信送到成都衙门。坐马车 8 日可到）
+
+=== dialog: xiangyang.job.mail_linan
+do: flag:world.job.mail_linan flag:world.job.mail_linan_from_xiangyang
+---
+王捕头递给你一个封了火漆的信封：“送到临安衙门，那边自会付你 135 文脚钱。”
+（差事：把书信送到临安衙门。坐马车 7 日可到）
+
+=== dialog: xiangyang.job.mail_luoyang
+do: flag:world.job.mail_luoyang flag:world.job.mail_luoyang_from_xiangyang
+---
+王捕头递给你一个封了火漆的信封：“送到洛阳衙门，那边自会付你 90 文脚钱。”
+（差事：把书信送到洛阳衙门。坐马车 4 日可到）
+
+=== dialog: xiangyang.job.deliver_chengdu
+do: unflag:world.job.mail_xiangyang unflag:world.job.mail_xiangyang_from_chengdu money:150
+---
+王捕头拆开火漆看了看，点点头，数了 150 文钱给你。
+王捕头：一路辛苦。
+
+=== dialog: xiangyang.job.deliver_linan
+do: unflag:world.job.mail_xiangyang unflag:world.job.mail_xiangyang_from_linan money:135
+---
+王捕头拆开火漆看了看，点点头，数了 135 文钱给你。
+王捕头：一路辛苦。
+
+=== dialog: xiangyang.job.deliver_luoyang
+do: unflag:world.job.mail_xiangyang unflag:world.job.mail_xiangyang_from_luoyang money:90
+---
+王捕头拆开火漆看了看，点点头，数了 90 文钱给你。
+王捕头：一路辛苦。
+
+=== enemy: world.foe.xiangyang_bandit
+name: 汉水水匪
+attrs: 根骨=15, 身法=15, 悟性=10
+skills: base.quan=15, base.zhang=11, base.zhaojia=11, base.tuna=15
+ai: 刚=3, 巧=2, 守=1
+cunning: 15
+potential: 30
+---
+一伙驾着快船的水匪，专劫汉水上的货船。
+
+=== npc: world.npc.xiangyang_bandit
+name: 汉水水匪
+brief: 在襄阳一带作乱的汉水水匪。
+if: flag:world.job.bandit_xiangyang
+talk: world.xiangyang_bandit.talk
+---
+一伙驾着快船的水匪，专劫汉水上的货船。
+
+=== dialog: world.xiangyang_bandit.talk
+---
+汉水水匪：哟，又来一个送死的？
+* 动手 !fight:world.b.xiangyang_bandit
+* 走开
+
+=== battle: world.b.xiangyang_bandit
+enemies: world.foe.xiangyang_bandit, world.foe.xiangyang_bandit
+win: world.xiangyang_bandit.win
+---
+两个汉水水匪抽出兵刃围了上来。
+
+=== dialog: world.xiangyang_bandit.win
+do: unflag:world.job.bandit_xiangyang money:80
+---
+汉水水匪丢下兵刃，作鸟兽散。（差事完成，赏钱八十文。还可以再去衙门领差事）
+
+# ---------------- 任务清单 ----------------
+
+=== quest: world.q.xiangyang_bandit
+name: 除害：汉水水匪
+flag: world.job.bandit_xiangyang
+where: xiangyang.station
+---
+襄阳衙门的差事：去襄阳车马行教训汉水边作乱的汉水水匪。赏钱 80 文。
+
+=== quest: world.q.mail_xiangyang_chengdu
+name: 送信：襄阳 → 成都
+flag: world.job.mail_chengdu_from_xiangyang
+where: chengdu.office
+---
+把襄阳衙门的书信送到成都衙门，脚钱 150 文。坐马车 8 日。
+
+=== quest: world.q.mail_xiangyang_linan
+name: 送信：襄阳 → 临安
+flag: world.job.mail_linan_from_xiangyang
+where: linan.yamen
+---
+把襄阳衙门的书信送到临安衙门，脚钱 135 文。坐马车 7 日。
+
+=== quest: world.q.mail_xiangyang_luoyang
+name: 送信：襄阳 → 洛阳
+flag: world.job.mail_luoyang_from_xiangyang
+where: luoyang.office
+---
+把襄阳衙门的书信送到洛阳衙门，脚钱 90 文。坐马车 4 日。

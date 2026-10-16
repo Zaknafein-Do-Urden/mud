@@ -5,7 +5,7 @@ import { newPlayer } from './character.js';
 const PREFIX = 'wuxia-mud:'; // 同一 github.io 用户下所有项目共享 localStorage，必须加前缀
 const SLOT_KEY = PREFIX + 'save:1';
 const EXPORT_TAG = 'WXMUD1';
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 6;
 
 export function newState(startRoom) {
   const now = Date.now();
@@ -16,6 +16,8 @@ export function newState(startRoom) {
     player: newPlayer(startRoom),
     flags: {},
     visited: {},
+    day: 1, // 第几日：坐车、住店会过日子；市集行情按日子波动
+    claimed: {}, // 已领取的一次性主线奖励
   };
 }
 
@@ -34,6 +36,18 @@ const migrations = {
   },
   // v4：实战经验、叛师记录、冻结武功（D-035、D-037）
   3: (s) => ({ ...s, player: { exp: {}, formerSects: [], frozen: {}, ...s.player } }),
+  // v5：金钱、钱庄、货物、日子；铜钱物品折成现钱；姓名性别留空，读档时请玩家补填（D-040、D-041）
+  4: (s) => {
+    const { coin = 0, ...inventory } = s.player.inventory;
+    return {
+      ...s,
+      day: 1,
+      claimed: {},
+      player: { surname: '', given: '', gender: '男', ...s.player, inventory, money: 200 + coin, bank: 0, cargo: {} },
+    };
+  },
+  // v6：天赋（D-044）
+  5: (s) => ({ ...s, player: { talents: {}, ...s.player } }),
 };
 
 /** 已开始的主线 id（用于决定加载哪些内容） */

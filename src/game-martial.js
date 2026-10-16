@@ -1,6 +1,7 @@
 // 引擎的武学部分：战斗、门派、修炼、旅店。以方法的形式并入 Game（见 game.js 末尾）。
 
 import { maxHp, maxMp, skillCap, trainCost, sectRanks, bestInnerLv, MAX_OUTER, movesOf, expNeed, expPerUse, gainExp } from './character.js';
+import { TALENT_TREE, talentPointsTotal, talentPointsSpent, canAddTalent, findTalent, xiuwei, xiuweiToNext, tal } from './talents.js';
 import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, enemiesOf, hpText } from './combat.js';
 
 const KIND_LABEL = { 外功: '外功', 内功: '内功', 轻功: '轻功' };
@@ -22,8 +23,9 @@ export const martial = {
     this.normalizeHp();
     const sect = p.sect ? this.db.sect[p.sect.id] : null;
     const rank = sect ? sectRanks(sect)[p.sect.rank]?.name : null;
-    this.emit('sys', `【${p.name}】`);
+    this.emit('sys', `【${p.name}】${p.gender ?? ''}`);
     this.emit('sys', `气血 ${p.hp}/${this.hpMax()}　内力 ${maxMp(this.db, p)}（战斗开始时回满）　潜能 ${p.potential}`);
+    this.emit('sys', `身上 ${p.money ?? 0} 文　存款 ${p.bank ?? 0} 文　第 ${this.state.day ?? 1} 日`);
     this.emit('sys', `根骨 ${p.attrs.根骨}　身法 ${p.attrs.身法}　悟性 ${p.attrs.悟性}`);
     this.emit('sys', sect ? `门派：[[${sect.props.name}|${sect.id}]]　${rank}　声望 ${p.sect.rep}` : '门派：无（江湖散人）');
   },
@@ -111,7 +113,38 @@ export const martial = {
     if (this.room()?.props.inn !== 'true') { this.emit('err', '这里没法好好休息。去旅店吧。'); return; }
     const p = this.state.player;
     p.hp = this.hpMax();
-    this.emit('sys', '你要了一间客房，美美睡了一觉。醒来时神清气爽。（气血全满）');
+    this.state.day = (this.state.day ?? 1) + 1;
+    this.emit('sys', `你要了一间客房，美美睡了一觉。醒来时神清气爽。（气血全满，第 ${this.state.day} 日）`);
+  },
+
+  // ---- 天赋（D-044）----
+
+  /** 天赋 / 天赋 加 蛮力 / 天赋 重置 */
+  talentCmd(arg) {
+    const p = this.state.player;
+    p.talents ??= {};
+    const [op, name] = arg.split(/\s+/);
+    if (op === '加' || op === 'add') {
+      const n = findTalent(name ?? '');
+      const why = n ? canAddTalent(p, n.id) : '没有这个天赋。';
+      if (why) { this.emit('err', why); return; }
+      p.talents[n.id] = tal(p, n.id) + 1;
+      this.normalizeHp();
+      this.emit('story', `你领悟了天赋「${n.name}」（${p.talents[n.id]}/${n.max}）：${n.desc}`);
+      return;
+    }
+    if (op === '重置' || op === 'reset') {
+      p.talents = {};
+      this.normalizeHp();
+      this.emit('sys', '你静坐冥想，将所悟重新梳理了一遍。（天赋点已全部退回）');
+      return;
+    }
+    const free = talentPointsTotal(p) - talentPointsSpent(p);
+    this.emit('sys', `【天赋】修为 ${xiuwei(p)}　可用天赋点 ${free}（再提升 ${xiuweiToNext(p)} 点修为得下一点）`);
+    for (const br of TALENT_TREE) {
+      this.emit('sys', `${br.name}（${br.stance}）：` + br.nodes.map((n) => `${n.name} ${tal(p, n.id)}/${n.max}`).join('　'));
+    }
+    this.emit('sys', '天赋 加 天赋名 / 天赋 重置（免费）。也可以在"人物 → 天赋"里点选。');
   },
 
   // ---- 门派 ----
@@ -236,7 +269,7 @@ export const martial = {
     const v = line.split(/\s+/)[0].toLowerCase();
     const emit = (cls, text, extra) => this.emit(cls, text, extra);
     if (['逃', '逃跑', 'flee'].includes(v)) {
-      if (this.db.battle[b.id]?.props.flee === 'false') { this.emit('err', '此战无路可退！'); return; }
+      if (b.noFlee || this.db.battle[b.id]?.props.flee === 'false') { this.emit('err', '此战无路可退！'); return; }
       this.emit('fx', '你虚晃一招，抽身退出了战圈。');
       this.endBattle('flee');
       return;
@@ -262,6 +295,14 @@ export const martial = {
     delete this.state.battle;
     this.awardExp(b, me);
     if (b.exam) { this.endExam(b, result); return; }
+    if (b.robbery) { this.endRobbery(b, result); return; }
+    // 主线战斗默认必须打赢，输了回到章节开始；写了 lose 分支的是"必败剧情战"，输了剧情照常继续（D-042）
+    const storyBattle = !!this.db.storyline[b.id.split('.')[0]];
+    if (result === 'lose' && storyBattle && !block?.props.lose) {
+      this.emit('combat', '——你败下阵来。——');
+      this.restoreCheckpoint();
+      return;
+    }
     if (result === 'win') {
       const pot = enemiesOf(b).reduce((s, e) => s + e.potential, 0);
       p.potential += pot;
@@ -331,7 +372,7 @@ export const martial = {
       enemies: enemiesOf(b).map((e, i) => ({ n: i + 1, key: e.key, name: e.name, hp: e.hp, maxHp: e.maxHp, hpText: hpText(e), status: Object.keys(e.status).filter((k) => !k.endsWith('dot')), dead: e.hp <= 0 })),
       moves: unitMoves(this.db, me).map((m, i) => ({ n: i + 1, name: m.name, skillName: m.skillName, stance: m.stance, mp: m.mp, effects: m.effects, usable: m.mp <= me.mp })),
       target: b.lastTarget,
-      canFlee: b.exam ? true : this.db.battle[b.id]?.props.flee !== 'false',
+      canFlee: b.exam ? true : !b.noFlee && this.db.battle[b.id]?.props.flee !== 'false',
     };
   },
 
@@ -339,7 +380,7 @@ export const martial = {
   statusView() {
     const p = this.state.player;
     this.normalizeHp();
-    return { hp: p.hp, maxHp: this.hpMax(), mp: maxMp(this.db, p), potential: p.potential };
+    return { hp: p.hp, maxHp: this.hpMax(), mp: maxMp(this.db, p), potential: p.potential, money: p.money ?? 0, day: this.state.day ?? 1 };
   },
 };
 

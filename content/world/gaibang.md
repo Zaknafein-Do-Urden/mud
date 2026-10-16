@@ -340,3 +340,19 @@ do: unflag:world.gb.task_snake rep:gaibang:80
 ---
 地头蛇捂着胸口，恶狠狠地瞪了你一眼，带着手下逃进了田野。
 （门派任务完成。）
+
+# ---------------- 任务清单（D-045）----------------
+
+=== quest: world.q.gaibang_1
+name: 丐帮：教训泼皮
+flag: world.gb.task_pipi
+where: linan.road
+---
+鲁有脚长老的差遣：去城外官道教训欺压百姓的泼皮。
+
+=== quest: world.q.gaibang_2
+name: 丐帮：除掉地头蛇
+flag: world.gb.task_snake
+where: linan.road
+---
+鲁有脚长老的差遣：城外官道上的地头蛇有几分功夫，小心应付。

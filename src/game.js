@@ -4,6 +4,8 @@
 
 import { parseMap, parseList } from './content.js';
 import { martial } from './game-martial.js';
+import { trade } from './game-trade.js';
+import { views } from './game-views.js';
 import { skillCap } from './character.js';
 
 const DIR_ALIAS = {
@@ -12,8 +14,10 @@ const DIR_ALIAS = {
   north: '北', south: '南', east: '东', west: '西', up: '上', down: '下',
 };
 const DIRS = new Set(Object.values(DIR_ALIAS));
+// 主线中只给一次的奖励类效果（D-042）
+const REWARDS = new Set(['give', 'money', 'potential', 'learn', 'rep']);
 
-const COMMANDS = ['look', 'go', 'talk', 'use', 'inventory', 'help', '状态', '武功', '修炼', '装备', '卸下', '学', '晋阶', '休息', '叛出师门'];
+const COMMANDS = ['look', 'go', 'talk', 'use', 'inventory', 'help', '状态', '武功', '修炼', '装备', '卸下', '学', '晋阶', '休息', '叛出师门', '行情', '买', '卖', '货物', '乘车', '存', '取', '存款', '天赋'];
 
 export class Game {
   constructor(db, state) {
@@ -25,7 +29,21 @@ export class Game {
     this.pendingLoads = []; // 需要 UI 异步加载的主线 id
   }
 
-  emit(cls, text, extra) { this.out.push({ cls, text, ...extra }); }
+  emit(cls, text, extra) { this.out.push({ cls, text: this.fmt(text), ...extra }); }
+
+  /**
+   * 文本中的玩家称呼（D-041）：{姓名} {姓} {名}，以及按性别选择的 {男:公子|女:姑娘}。
+   */
+  fmt(text) {
+    if (!text || !text.includes('{')) return text;
+    const p = this.state.player;
+    const female = p.gender === '女';
+    return text
+      .replaceAll('{姓名}', p.name)
+      .replaceAll('{姓}', p.surname ?? '')
+      .replaceAll('{名}', p.given ?? '')
+      .replace(/\{男:([^|}]*)\|女:([^}]*)\}/g, (_, m, f) => (female ? f : m));
+  }
 
   /** 执行一条玩家命令，返回本次产生的输出。 */
   exec(input) {
@@ -94,8 +112,26 @@ export class Game {
         this.promote(); break;
       case '叛出师门': case '叛师':
         this.leaveSect(arg); break;
+      case '天赋': case 'talent':
+        this.talentCmd(arg); break;
       case 'rest': case '休息': case 'sleep':
         this.rest(); break;
+      case '行情': case '市场': case 'market':
+        this.showMarket(); break;
+      case '买': case 'buy':
+        this.buy(arg); break;
+      case '卖': case 'sell':
+        this.sell(arg); break;
+      case '货物': case 'cargo':
+        this.showCargo(); break;
+      case '乘车': case '坐车': case '马车':
+        this.showStation(arg); break;
+      case '存': case 'deposit':
+        this.deposit(arg); break;
+      case '取': case 'withdraw':
+        this.withdraw(arg); break;
+      case '存款': case '银票':
+        this.showBank(); break;
       default:
         if (this.itemsWithVerb(verb).length) { this.use(arg, verb); break; }
         this.emit('err', `「${verb}」？你想做什么？输入 help 查看命令。`);
@@ -116,6 +152,8 @@ export class Game {
       else if (kind === 'visited') ok = !!visited[key];
       else if (kind === 'sect') ok = key === 'none' ? !player.sect : player.sect?.id === key;
       else if (kind === 'rank') ok = (player.sect?.rank ?? -1) >= Number(key);
+      else if (kind === 'gender') ok = player.gender === key;
+      else if (kind === 'money') ok = (player.money ?? 0) >= Number(key);
       else { console.warn('未知条件', c); ok = false; }
       return neg ? !ok : ok;
     });
@@ -126,6 +164,13 @@ export class Game {
     for (const e of effects) {
       const [kind, key] = splitOnce(e);
       const inv = player.inventory;
+      // 主线对话里的奖励只给一次：章节重来时不会重复获得（D-042）
+      if (REWARDS.has(kind) && this.isStoryCtx()) {
+        const claimKey = `${this.ctx}|${e}`;
+        this.state.claimed ??= {};
+        if (this.state.claimed[claimKey]) continue;
+        this.state.claimed[claimKey] = true;
+      }
       if (kind === 'flag') flags[key] = true;
       else if (kind === 'unflag') delete flags[key];
       else if (kind === 'give') {
@@ -143,6 +188,9 @@ export class Game {
       else if (kind === 'rep') { const [sect, n] = splitOnce(key); this.addRep(sect, Number(n)); }
       else if (kind === 'potential') { player.potential += Number(key); this.emit('sys', `潜能 +${key}`); }
       else if (kind === 'heal') { player.hp = this.hpMax(); this.emit('sys', '你的气血恢复了。'); }
+      else if (kind === 'money') this.addMoney(Number(key));
+      else if (kind === 'pay') this.addMoney(-Number(key));
+      else if (kind === 'travel') this.travel(key);
       else if (kind === 'learn') {
         if (player.skills[key] === undefined) { player.skills[key] = 1; this.emit('story', `你学会了${this.db.skill[key]?.props.name ?? key}！`); }
       }
@@ -192,6 +240,39 @@ export class Game {
     const line = this.db.storyline[ch.props.storyline];
     this.emit('chapter', `${line?.props.name ?? ''}　${ch.props.name}`, { pace: true });
     this.emitLines(ch.lines, 'intro', { pace: true });
+    // 章节检查点：记下此刻本主线的全部标记。章节战斗打输时回到这里（D-042）。
+    // 所以 chapter: 效果要写在同一组效果的最前面，检查点里才不含本章开头设下的标记。
+    const prefix = ch.props.storyline + '.';
+    this.state.checkpoint = {
+      chapter: id,
+      storyline: ch.props.storyline,
+      room: ch.props.start ?? this.state.player.room,
+      flags: Object.fromEntries(Object.entries(this.state.flags).filter(([k]) => k.startsWith(prefix))),
+    };
+  }
+
+  /** 回到章节开始的状态：只回滚本主线的标记；经验、潜能、物品、金钱都保留，一次性奖励不再重复 */
+  restoreCheckpoint() {
+    const cp = this.state.checkpoint;
+    if (!cp) return false;
+    const prefix = cp.storyline + '.';
+    for (const k of Object.keys(this.state.flags)) if (k.startsWith(prefix)) delete this.state.flags[k];
+    Object.assign(this.state.flags, cp.flags);
+    this.endDialog();
+    const p = this.state.player;
+    p.hp = this.hpMax();
+    if (this.db.room[cp.room]) p.room = cp.room; // 直接放回，不触发进入房间的剧情
+    const ch = this.db.chapter[cp.chapter];
+    this.emit('story', ch?.props.retry ?? '胜败乃兵家常事。你回到了本章开始的时候——已经获得的经验和潜能都还在，练好了再来。');
+    this.look();
+    return true;
+  }
+
+  /** 当前效果是否来自主线内容（id 以某条主线名开头） */
+  isStoryCtx() {
+    if (!this.ctx) return false;
+    const line = this.ctx.split('.')[0];
+    return !!this.db.storyline[line];
   }
 
   // ---- 房间 ----
@@ -219,6 +300,7 @@ export class Game {
       if (t.props.once === 'true' && this.state.flags[doneKey]) continue;
       if (!this.check(words(t.props.if))) continue;
       if (t.props.once === 'true') this.state.flags[doneKey] = true;
+      this.ctx = t.id;
       this.emitLines(t.lines, 'desc');
       if (t.props.do) this.apply(words(t.props.do));
       if (t.props.dialog) this.showDialog(t.props.dialog);
@@ -322,6 +404,7 @@ export class Game {
       if (u.props.once === 'true' && this.state.flags[doneKey]) continue;
       if (!this.check(words(u.props.if))) continue;
       if (u.props.once === 'true') this.state.flags[doneKey] = true;
+      this.ctx = u.id;
       this.emitLines(u.lines, 'desc');
       if (u.props.do) this.apply(words(u.props.do));
       if (u.props.dialog) this.showDialog(u.props.dialog);
@@ -352,6 +435,8 @@ export class Game {
     const d = this.db.dialog[id];
     if (!d) { this.emit('err', `[内容错误] 对话不存在: ${id}`); this.endDialog(); return; }
     if (d.props.lock === 'true') this.locked = true;
+    this.dialogId = id;
+    this.ctx = id;
     const m = this.merged(d);
     const pace = d.props.pace === 'slow' && !resume ? { pace: true } : undefined;
     this.emitLines(m.lines, 'say', pace);
@@ -397,6 +482,7 @@ export class Game {
     this.emit('echo', `> ${c.text}`);
     const locked = this.locked;
     this.dialog = null;
+    this.ctx = this.dialogId;
     this.apply(c.effects);
     if (c.target) {
       this.locked = locked;
@@ -418,7 +504,11 @@ export class Game {
       '  修炼 武功名            在旅店或本门驻地消耗潜能提升武功',
       '  学 / 晋阶              在本门师父面前学艺、申请晋阶（晋阶要通过考核）',
       '  叛出师门               离开门派：本门武功等级减半且不能再提升',
-      '  休息                   在旅店休息，恢复气血',
+      '  天赋 / 天赋 加 蛮力     查看、点选天赋（修为每 25 点得 1 个天赋点；天赋 重置 免费）',
+      '  休息                   在旅店休息，恢复气血（过去一天）',
+      '  乘车 / 乘车 襄阳        在车马行坐马车去别的城市（路上可能遇到劫道）',
+      '  行情 / 买 / 卖 / 货物   在市集看行情、买卖货物；货物装在马车上',
+      '  存 / 取 / 存款          在钱庄存取钱（各地通兑，没有利息，不会被劫）',
       '  use 竹哨 / 使用 竹哨    使用物品；有的物品有专门的动词，如 吹 竹哨',
       '  help / 帮助            显示本帮助',
       '【操作】',
@@ -440,7 +530,7 @@ export class Game {
   /** 信息卡内容：{title, lines, actions:[{label, cmd}]}，未知 id 返回 null */
   describe(id) {
     const kind = this.kindOf(id);
-    const lines = (b) => b.lines.filter((l) => this.check(l.cond)).map((l) => l.text);
+    const lines = (b) => b.lines.filter((l) => this.check(l.cond)).map((l) => this.fmt(l.text));
     if (kind === 'go') {
       const dir = id.slice(3);
       const target = this.db.room[this.exits()[dir]];
@@ -510,4 +600,4 @@ function splitOnce(s) {
   return i < 0 ? [s, ''] : [s.slice(0, i), s.slice(i + 1)];
 }
 
-Object.assign(Game.prototype, martial);
+Object.assign(Game.prototype, martial, trade, views);
