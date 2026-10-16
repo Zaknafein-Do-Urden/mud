@@ -1,0 +1,9 @@
+{
+  "world": ["world/linan.md"],
+  "storylines": {
+    "shediao": {
+      "hook": ["shediao/hook.md"],
+      "files": ["shediao/ch01.md"]
+    }
+  }
+}

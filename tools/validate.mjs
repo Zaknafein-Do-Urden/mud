@@ -1,0 +1,120 @@
+// 内容校验：node tools/validate.mjs
+// 检查引用是否存在、命名空间规则（STORY.md §4.2）等。有错误时退出码为 1，可用于 CI。
+
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parse, addBlocks, emptyDb, parseMap, parseList, splitLinks } from '../src/content.js';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'content');
+const index = JSON.parse(readFileSync(join(root, 'index.json'), 'utf8'));
+const errors = [];
+const warns = [];
+const err = (b, msg) => errors.push(`${b.file} [${b.type}: ${b.id}] ${msg}`);
+const warn = (b, msg) => warns.push(`${b.file} [${b.type}: ${b.id}] ${msg}`);
+
+// 原生 console.warn 用于解析器的提示，收集起来
+const origWarn = console.warn;
+console.warn = (...a) => warns.push(a.join(' '));
+
+const db = emptyDb();
+const owner = new Map(); // 文件 → 所属命名空间（world 或主线 id）
+const files = [...index.world.map((f) => [f, 'world'])];
+for (const [id, s] of Object.entries(index.storylines ?? {})) {
+  for (const f of [...(s.hook ?? []), ...(s.files ?? [])]) files.push([f, id]);
+}
+for (const [f, ns] of files) {
+  owner.set(f, ns);
+  addBlocks(db, parse(readFileSync(join(root, f), 'utf8'), f), f);
+}
+console.warn = origWarn;
+
+const KNOWN = new Set(['meta', 'room', 'npc', 'item', 'dialog', 'entry', 'storyline', 'chapter', 'trigger', 'patch']);
+const words = (s = '') => s.split(/[\s,]+/).filter(Boolean);
+const linkTarget = (id) => id.startsWith('go:') || ['npc', 'item', 'room', 'entry', 'storyline'].some((k) => db[k][id]);
+
+function checkConds(b, conds) {
+  for (const c of conds) {
+    const [kind, key] = c.replace(/^!/, '').split(/:(.*)/);
+    if (kind === 'has' && !db.item[key]) err(b, `条件引用了不存在的物品: ${key}`);
+    else if (kind === 'visited' && !db.room[key]) err(b, `条件引用了不存在的房间: ${key}`);
+    else if (!['flag', 'has', 'visited'].includes(kind)) err(b, `未知条件: ${c}`);
+  }
+}
+
+function checkEffects(b, effects) {
+  const ns = owner.get(b.file);
+  for (const e of effects) {
+    const [kind, key] = e.split(/:(.*)/);
+    if (kind === 'flag' || kind === 'unflag') {
+      const prefix = ns === 'world' ? 'world.' : `${ns}.`;
+      if (!key.startsWith(prefix)) err(b, `只能写 ${prefix}* 标记，却写了: ${key}`);
+    } else if (kind === 'give' || kind === 'take') { if (!db.item[key]) err(b, `效果引用了不存在的物品: ${key}`); }
+    else if (kind === 'goto') { if (!db.room[key]) err(b, `goto 目标房间不存在: ${key}`); }
+    else if (kind === 'start') { if (!db.storyline[key]) err(b, `start 目标主线不存在: ${key}`); }
+    else if (kind === 'chapter') { if (!db.chapter[key]) err(b, `chapter 目标章节不存在: ${key}`); }
+    else err(b, `未知效果: ${e}`);
+  }
+}
+
+function checkBody(b) {
+  for (const l of b.lines) {
+    checkConds(b, l.cond);
+    for (const part of splitLinks(l.text)) if (part.id && !linkTarget(part.id)) err(b, `链接目标不存在: ${part.id}`);
+  }
+  for (const c of b.choices) {
+    checkConds(b, c.cond);
+    checkEffects(b, c.effects);
+    if (c.target && !db.dialog[c.target]) err(b, `选项目标对话不存在: ${c.target}`);
+    if (!c.text) err(b, '选项没有文字');
+  }
+}
+
+const all = [];
+for (const type of Object.keys(db)) {
+  if (type === 'patch') { for (const ps of Object.values(db.patch)) all.push(...ps); continue; }
+  if (typeof db[type] !== 'object' || db[type] instanceof Set || type === 'loaded') continue;
+  all.push(...Object.values(db[type]));
+}
+
+const referenced = new Set();
+for (const b of all) {
+  if (!KNOWN.has(b.type)) { warn(b, `未知块类型: ${b.type}`); continue; }
+  checkBody(b);
+  if (b.props.if) checkConds(b, words(b.props.if));
+  if (b.props.do) checkEffects(b, words(b.props.do));
+
+  if (b.type === 'room' || b.type === 'patch') {
+    for (const [dir, to] of Object.entries(parseMap(b.props.exits))) {
+      if (!db.room[to]) err(b, `出口 ${dir} 指向不存在的房间: ${to}`);
+      referenced.add(to);
+    }
+    for (const n of parseList(b.props.npcs)) if (!db.npc[n]) err(b, `NPC 不存在: ${n}`);
+  }
+  if (b.type === 'patch') {
+    const target = db.room[b.id] ?? db.dialog[b.id] ?? db.npc[b.id];
+    if (!target) err(b, 'patch 目标不存在');
+  }
+  if (b.type === 'npc' && b.props.talk && !db.dialog[b.props.talk]) err(b, `对话不存在: ${b.props.talk}`);
+  if (b.type === 'trigger') {
+    if (!db.room[b.props.room]) err(b, `触发房间不存在: ${b.props.room}`);
+    if (b.props.dialog && !db.dialog[b.props.dialog]) err(b, `触发对话不存在: ${b.props.dialog}`);
+  }
+  if (b.type === 'chapter' && !db.storyline[b.props.storyline]) err(b, `所属主线不存在: ${b.props.storyline}`);
+  // 主线文件里定义的 id 应带主线前缀（world 文件不限）
+  const ns = owner.get(b.file);
+  if (ns !== 'world' && b.type !== 'patch' && b.id !== ns && !b.id.startsWith(ns + '.')) warn(b, `id 建议以 ${ns}. 开头`);
+}
+
+const start = db.meta.game?.props.start;
+if (!db.room[start]) errors.push(`起始房间不存在: ${start}`);
+for (const id of Object.keys(db.room)) {
+  if (id !== start && !referenced.has(id)) warns.push(`房间没有任何入口: ${id}`);
+}
+
+const count = Object.fromEntries(['room', 'npc', 'dialog', 'item', 'entry'].map((k) => [k, Object.keys(db[k]).length]));
+console.log(`内容统计：${JSON.stringify(count)}，${files.length} 个文件`);
+for (const w of warns) console.log('⚠ ' + w);
+for (const e of errors) console.log('✗ ' + e);
+console.log(errors.length ? `\n${errors.length} 个错误` : '\n✓ 校验通过');
+process.exit(errors.length ? 1 : 0);

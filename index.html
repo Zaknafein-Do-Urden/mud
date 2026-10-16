@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>江湖夜雨</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1 id="title">江湖夜雨</h1>
+    <nav>
+      <button id="btn-export" title="导出存档为文本，可在其他浏览器导入">导出</button>
+      <button id="btn-import" title="从文本或文件导入存档">导入</button>
+      <button id="btn-new" title="放弃当前进度，重新开始">新游戏</button>
+    </nav>
+  </header>
+
+  <main id="output" aria-live="polite"></main>
+
+  <div id="quick"></div>
+
+  <form id="input-form" autocomplete="off">
+    <span class="prompt">&gt;</span>
+    <input id="input" placeholder="输入命令，Tab 补全，如 talk lqg" autofocus>
+  </form>
+
+  <dialog id="save-dialog">
+    <form method="dialog">
+      <h2 id="save-title"></h2>
+      <p id="save-hint"></p>
+      <textarea id="save-text" rows="8" spellcheck="false"></textarea>
+      <p id="save-error" class="err"></p>
+      <div class="row">
+        <span id="export-actions">
+          <button type="button" id="btn-copy">复制</button>
+          <button type="button" id="btn-download">下载 .txt</button>
+        </span>
+        <span id="import-actions">
+          <label class="file-btn">选择文件<input type="file" id="file-input" accept=".txt,text/plain" hidden></label>
+          <button type="button" id="btn-do-import">导入</button>
+        </span>
+        <button value="close">关闭</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
