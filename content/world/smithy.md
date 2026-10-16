@@ -17,6 +17,14 @@ bonus: 12
 ---
 精钢打造的长剑，剑身泛着青光，寻常江湖人用的就是这种。
 
+=== item: w.baila
+name: 白蜡枪
+slot: weapon
+weapon: 枪
+bonus: 12
+---
+白蜡木的枪杆又韧又直，枪头是襄阳的好铁。边军里用的就是这种枪。
+
 === item: w.gangdao
 name: 钢刀
 slot: weapon
@@ -67,6 +75,7 @@ talk: xiangyang.smith.talk
 张铁匠：襄阳的铁好，我的手艺也不赖。军爷们都在我这儿买刀。
 * 买一口钢刀（140 文） ?money:140 !pay:140 !give:w.gangdao
 * 买一柄青钢剑（160 文） ?money:160 !pay:160 !give:w.qinggang
+* 买一杆白蜡枪（150 文） ?money:150 !pay:150 !give:w.baila
 * 随便看看
 
 === patch: xiangyang.market

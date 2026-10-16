@@ -160,7 +160,7 @@ export function gainExp(db, p, id, amount) {
 // ---- 兵器（D-057）----
 
 /** 需要相应兵器才能施展的武功类型 */
-export const ARMED = ['刀', '剑', '棍', '鞭'];
+export const ARMED = ['刀', '剑', '枪', '棍', '鞭'];
 
 /** 物品是否是兵器 */
 export const isWeaponItem = (db, id) => db.item[id]?.props.slot === 'weapon';

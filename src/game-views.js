@@ -38,6 +38,12 @@ export const views = {
     };
   },
 
+  /** 武功的势：招式各有其势时合起来写，如庄稼把式"刚巧守"（D-070） */
+  stancesOf(sk) {
+    const set = new Set(Object.values(this.db.move).filter((m) => m.props.skill === sk.id).map((m) => m.props.stance ?? sk.props.stance).filter(Boolean));
+    return ['刚', '巧', '守'].filter((s) => set.has(s)).join('') || (sk.props.stance ?? '');
+  },
+
   skillsView() {
     const p = this.state.player;
     const lo = p.loadout;
@@ -47,7 +53,7 @@ export const views = {
       if (!sk) return null;
       const cap = skillCap(this.db, p, id);
       return {
-        id, name: sk.props.name, kind: sk.props.kind, stance: sk.props.stance ?? '', lv, cap,
+        id, name: sk.props.name, kind: sk.props.kind, stance: this.stancesOf(sk), lv, cap,
         exp: p.exp?.[id] ?? 0, need: expNeed(lv), frozen: !!p.frozen?.[id],
         equipped: lo.outer.includes(id) || lo.inner === id || lo.light === id,
         trainCost: trainCost(p, lv), canTrain: canTrain && lv < cap && !p.frozen?.[id],
@@ -88,15 +94,15 @@ export const views = {
   moveTip(sk, m, lv) {
     const p = this.state.player;
     const inner = innerOf(this.db, p);
-    const stance = sk.props.stance;
+    const stance = m.props.stance ?? sk.props.stance;
     const power = Number(m.props.power ?? 0);
+    const need = sk.props.weapon && sk.props.weapon !== '拳' && sk.props.weapon !== '暗器' ? sk.props.weapon : '';
+    const w = weaponOf(this.db, p);
+    const wb = need && w?.props.weapon === need ? Number(w.props.bonus ?? 0) : 0;
     const talent = 1 + 0.04 * (stance === '刚' ? tal(p, 'manli') : stance === '巧' ? tal(p, 'ruili') : 0);
     const est = Math.round(power * (1 + lv * 0.02) * innerBonus(inner.lv, inner.skill, stance) * (talent + wb / 100));
     const level = Number(m.props.level ?? 0);
     const effects = parseList(m.props.effects).map((e) => EFFECT_TEXT[e.split(':')[0]] ?? e);
-    const need = sk.props.weapon && sk.props.weapon !== '拳' && sk.props.weapon !== '暗器' ? sk.props.weapon : '';
-    const w = weaponOf(this.db, p);
-    const wb = need && w?.props.weapon === need ? Number(w.props.bonus ?? 0) : 0;
     const lines = [`${m.props.name}（${stance}）　${level <= lv ? '已领悟' : `${level} 级领悟`}`, `威力 ${power}　耗内力 ${m.props.mp ?? 0}${need ? `　需要${need}` : ''}`];
     if (stance === '守') lines.push(`守势：化解巧招（对方伤害减半），并反震约 ${est} 点；被刚招破防时受伤 ×1.5`);
     else lines.push(`按你现在的等级，约造成 ${est} 点伤害；克制对手时约 ${Math.round(est * 1.5)}，被克制时约 ${Math.round(est * 0.5)}`);

@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse, addBlocks, emptyDb, parseMap, parseList, splitLinks } from '../src/content.js';
+import { checkStoryGrants } from '../src/power.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'content');
 const index = JSON.parse(readFileSync(join(root, 'index.json'), 'utf8'));
@@ -133,9 +134,10 @@ for (const b of all) {
     for (const k of ['power', 'mp', 'level']) if (Number.isNaN(Number(b.props[k] ?? 0))) err(b, `${k} 需要数字`);
     const okEffects = b.props.support === 'true' ? ['疗伤', '回气', '振奋', '护体', '解穴'] : ['内伤', '点穴', '破绽', '吸内', '化内', '缴械'];
     for (const e of parseList(b.props.effects)) if (!okEffects.includes(e.split(':')[0])) err(b, `未知招式效果: ${e}`);
-    if (b.props.support === 'true' && db.skill[b.props.skill]?.props.stance !== '守') err(b, '辅助招式必须属于守类武功');
+    if (b.props.stance && !['刚', '巧', '守'].includes(b.props.stance)) err(b, `招式的 stance 只能是 刚/巧/守: ${b.props.stance}`);
+    if (b.props.support === 'true' && (b.props.stance ?? db.skill[b.props.skill]?.props.stance) !== '守') err(b, '辅助招式必须是守招');
   }
-  if ((b.type === 'enemy' || b.type === 'skill') && b.props.weapon && !['拳', '刀', '剑', '棍', '鞭', '匕首', '暗器'].includes(b.props.weapon)) err(b, `未知兵器: ${b.props.weapon}`);
+  if ((b.type === 'enemy' || b.type === 'skill') && b.props.weapon && !['拳', '刀', '剑', '枪', '棍', '鞭', '匕首', '暗器'].includes(b.props.weapon)) err(b, `未知兵器: ${b.props.weapon}`);
   if (b.type === 'enemy' && !b.props.weapon) warn(b, '敌人没有兵器标签（weapon），出招描述会用招式自带的文案');
   if (b.type === 'enemy' && b.props.obscure && !(Number(b.props.obscure) >= 0 && Number(b.props.obscure) <= 100)) err(b, 'obscure 应为 0~100');
   if (b.type === 'enemy') {
@@ -171,7 +173,7 @@ for (const b of all) {
     if (!/^\d+,\d+$/.test(b.props.pos ?? '')) err(b, 'pos 应为 "x,y"（大地图坐标）');
   }
   if (b.type === 'goods' && !(Number(b.props.price) > 0)) err(b, 'price 需要正数');
-  if (b.type === 'item' && b.props.slot === 'weapon' && !['刀', '剑', '棍', '鞭'].includes(b.props.weapon)) err(b, `兵器的 weapon 应为 刀/剑/棍/鞭: ${b.props.weapon}`);
+  if (b.type === 'item' && b.props.slot === 'weapon' && !['刀', '剑', '枪', '棍', '鞭'].includes(b.props.weapon)) err(b, `兵器的 weapon 应为 刀/剑/枪/棍/鞭: ${b.props.weapon}`);
   if (b.type === 'quest') {
     if (!b.props.flag || !b.props.name) err(b, 'quest 需要 name 和 flag');
     if (b.props.where && !db.room[b.props.where]) err(b, `where 房间不存在: ${b.props.where}`);
@@ -253,6 +255,16 @@ for (const id of Object.keys(db.room)) {
       const r = rewardChoice(x);
       if (r && x.props.lock !== 'true') err(d, `选项「${c.text}」先设了让自己消失的标记，奖励「${r.text}」却在之后可以离开的对话 ${x.id} 里。把标记和奖励放在同一个选项里`);
     });
+  }
+}
+
+// 剧情武学的威力不能超过玩家到那一章为止打赢过的最强敌人（D-068，docs/POWER.md）
+{
+  const byFile = {};
+  for (const b of all) (byFile[b.file] ??= []).push(b);
+  const storylines = Object.fromEntries(Object.entries(index.storylines).map(([k, s]) => [k, [...(s.hook ?? []), ...(s.files ?? [])]]));
+  for (const r of checkStoryGrants(db, storylines, byFile)) {
+    if (!r.ok) errors.push(`${r.file} [${r.where}] ${db.skill[r.skill].props.name}上限 ${r.cap} 的威力是 ${r.wp}，超过了到这一章为止必须打赢的最强战斗力 ${r.cp}。降低上限，或者放到更晚的章节（node tools/power.mjs 看详情）`);
   }
 }
 

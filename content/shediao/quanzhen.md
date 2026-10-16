@@ -6,7 +6,23 @@
 item: shediao.qiu_token
 room: quanzhen.hall
 once: true
+if: flag:shediao.ch4_done
 dialog: shediao.qz.token
+
+# 第四章之前：马钰不收。全真心法按威力规则要第四章之后才能得到（D-068，docs/POWER.md）
+=== use: shediao.u.qiu_token_early
+item: shediao.qiu_token
+room: quanzhen.hall
+if: !flag:shediao.ch4_done
+dialog: shediao.qz.token_early
+
+=== dialog: shediao.qz.token_early
+---
+马钰接过铜牌看了看，又双手还给你。
+?!flag:shediao.ch3_done 马钰：这是处机师弟的随身信物。他云游在外，贫道不便替他做主。施主先收好，日后见了他再说。
+?flag:shediao.ch3_done ?!flag:shediao.ch4 马钰：处机师弟前些日子捎信回山，说嘉兴的事还没完，郭家娘子仍下落不明。施主若肯帮他把这件事办出个眉目，再拿信物来，贫道自有道理。
+?flag:shediao.ch4 马钰：淮北凶险，施主先把眼前的事办完。等你回来，再拿信物来找贫道。
+（重阳宫信物要在射雕第四章之后才能使用。）
 
 === dialog: shediao.qz.token
 pace: slow
@@ -25,7 +41,7 @@ lock: true
 do: learn:quanzhen.xinfa
 ---
 马钰：信物你也收好。日后本教若有需要，还要请施主援手。
-你学会了全真心法。翻开册子，第一页写着八个字：清静无为，抱元守一。
+翻开册子，第一页写着八个字：清静无为，抱元守一。
 （全真心法是门派之外的内功，最高可练到 60 级。在人物面板的武功页里可以装备。）
 
 === patch: quanzhen.mayu.talk

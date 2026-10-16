@@ -7,7 +7,7 @@ const PREFIX = 'wuxia-mud:'; // 同一 github.io 用户下所有项目共享 loc
 const SLOT = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('slot')) || '1';
 const SLOT_KEY = PREFIX + 'save:' + SLOT.replace(/[^\w-]/g, '');
 const EXPORT_TAG = 'WXMUD1';
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 export function newState(startRoom) {
   const now = Date.now();
@@ -63,6 +63,17 @@ const migrations = {
     // 竹哨第二章：进过暗室、没收燕翎剑
     if (s.visited?.['feiyan.zhaji'] && !inventory['feiyan.yanling']) inventory['feiyan.yanling'] = 1;
     return { ...s, flags, player: { ...s.player, inventory } };
+  },
+  // v9：射雕剧情新增的秘籍，补给已经走过那几章的老存档（D-071）
+  8: (s) => {
+    const f = s.flags ?? {};
+    const inventory = { ...s.player.inventory };
+    const skills = { ...s.player.skills };
+    const skillcap = { ...(s.player.skillcap ?? {}) };
+    if (f['shediao.ch2_done']) { inventory['shediao.yang_spear'] ??= 1; skills['shediao.yangqiang'] ??= 1; }
+    if (f['shediao.ch3_done']) skills['quanzhen.jianfa'] ??= 1;
+    if (f['shediao.ch5_done']) { skillcap['quanzhen.jianfa'] = Math.max(skillcap['quanzhen.jianfa'] ?? 0, 40); skillcap['shediao.yangqiang'] = Math.max(skillcap['shediao.yangqiang'] ?? 0, 30); }
+    return { ...s, player: { ...s.player, inventory, skills, skillcap } };
   },
 };
 

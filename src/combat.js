@@ -101,7 +101,7 @@ export function moveInfo(db, moveId) {
     name: m.props.name,
     skill: m.props.skill,
     skillName: sk?.props.name ?? '',
-    stance: sk?.props.stance,
+    stance: m.props.stance ?? sk?.props.stance, // 招式可以有自己的势（如庄稼把式三势俱全，D-070）
     weapon: sk?.props.weapon ?? '拳', // 武功用的兵器（D-052）
     support: m.props.support === 'true', // 辅助招式：作用在队友（或自己）身上（D-064）
     power: num(m.props.power),

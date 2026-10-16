@@ -1,10 +1,10 @@
 # 各城武馆（D-061）：花钱学基础武功。从市集往东走。
-# 新角色只会庄稼把式（刚），要读预兆克敌，至少要再学一门巧（小巧掌）和一门守（沾衣十八跌）。
+# 新角色只会庄稼把式（刚巧守各一招，但都粗浅，D-070），学了小巧掌、沾衣十八跌，巧招、守招才真正管用。
 
 === dialog: world.wuguan.talk
 ---
 教头：要学功夫？咱们武馆童叟无欺，交了钱当场就教。
-?!learned:base.zhang ?!learned:base.zhaojia 教头：看你只会两下庄稼把式。听我一句：先学小巧掌和沾衣十八跌，刚、巧、守凑齐了，才能见招拆招。
+?!learned:base.zhang ?!learned:base.zhaojia 教头：看你只会两下庄稼把式。那几下勾腿、抱架粗浅得很，听我一句：先学小巧掌和沾衣十八跌，巧招、守招才真正顶用。
 * 学小巧掌（巧，60 文） ?!learned:base.zhang ?money:60 !pay:60 !learn:base.zhang
 * 学沾衣十八跌（守，60 文） ?!learned:base.zhaojia ?money:60 !pay:60 !learn:base.zhaojia
 * 学养气诀（内功，80 文） ?!learned:base.tuna ?money:80 !pay:80 !learn:base.tuna
