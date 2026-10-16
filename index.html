@@ -16,14 +16,23 @@
     </nav>
   </header>
 
+  <div id="status"><span id="status-text"></span><button id="map-toggle" title="显示 / 收起地图">地图</button></div>
+
   <main id="output" aria-live="polite"></main>
 
+  <div id="combat" hidden></div>
   <div id="quick"></div>
 
   <form id="input-form" autocomplete="off">
     <span class="prompt">&gt;</span>
     <input id="input" placeholder="输入命令，Tab 补全，如 talk lqg" autofocus>
   </form>
+
+  <aside id="side">
+    <div class="side-head"><span id="map-title">地图</span><button id="map-close" title="收起地图">收起 ›</button></div>
+    <div id="map"></div>
+    <p class="side-tip">点击去过的地方可以自动走过去</p>
+  </aside>
 
   <dialog id="save-dialog">
     <form method="dialog">

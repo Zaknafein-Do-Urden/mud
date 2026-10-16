@@ -1,9 +1,11 @@
 // 存档：localStorage 自动存档 + 文本导出导入。见 DEVLOG D-001 / D-002 / D-005。
 
+import { newPlayer } from './character.js';
+
 const PREFIX = 'wuxia-mud:'; // 同一 github.io 用户下所有项目共享 localStorage，必须加前缀
 const SLOT_KEY = PREFIX + 'save:1';
 const EXPORT_TAG = 'WXMUD1';
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 4;
 
 export function newState(startRoom) {
   const now = Date.now();
@@ -11,7 +13,7 @@ export function newState(startRoom) {
     v: SAVE_VERSION,
     createdAt: now,
     updatedAt: now,
-    player: { name: '无名氏', room: startRoom, hp: 100, inventory: { coin: 3 } },
+    player: newPlayer(startRoom),
     flags: {},
     visited: {},
   };
@@ -25,6 +27,13 @@ const migrations = {
     for (const [k, v] of Object.entries(s.flags)) flags[k.includes('.') ? k : `world.${k}`] = v;
     return { ...s, flags };
   },
+  // v3：角色加入属性、武功、装备栏、潜能、门派（战斗系统）
+  2: (s) => {
+    const base = newPlayer(s.player.room);
+    return { ...s, player: { ...base, ...s.player, hp: null, inventory: s.player.inventory } };
+  },
+  // v4：实战经验、叛师记录、冻结武功（D-035、D-037）
+  3: (s) => ({ ...s, player: { exp: {}, formerSects: [], frozen: {}, ...s.player } }),
 };
 
 /** 已开始的主线 id（用于决定加载哪些内容） */

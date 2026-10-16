@@ -3,6 +3,8 @@
 // 文本里可含 [[显示名|id]] 链接标记，由 UI 渲染。
 
 import { parseMap, parseList } from './content.js';
+import { martial } from './game-martial.js';
+import { skillCap } from './character.js';
 
 const DIR_ALIAS = {
   n: '北', s: '南', e: '东', w: '西', u: '上', d: '下',
@@ -11,13 +13,14 @@ const DIR_ALIAS = {
 };
 const DIRS = new Set(Object.values(DIR_ALIAS));
 
-const COMMANDS = ['look', 'go', 'talk', 'inventory', 'help'];
+const COMMANDS = ['look', 'go', 'talk', 'use', 'inventory', 'help', '状态', '武功', '修炼', '装备', '卸下', '学', '晋阶', '休息', '叛出师门'];
 
 export class Game {
   constructor(db, state) {
     this.db = db;
     this.state = state;
     this.dialog = null; // 当前对话中的可选项（已过滤）
+    this.locked = false; // 锁定的剧情对话：必须做出选择才能离开
     this.out = [];
     this.pendingLoads = []; // 需要 UI 异步加载的主线 id
   }
@@ -30,15 +33,35 @@ export class Game {
     const line = input.trim();
     if (!line) return this.out;
 
-    if (this.dialog) {
-      if (/^\d+$/.test(line)) { this.choose(Number(line)); return this.out; }
-      this.dialog = null; // 输入其他命令视为离开对话
-      this.emit('sys', '（你结束了对话。）');
-    }
-
     const [verb, ...rest] = line.split(/\s+/);
     const arg = rest.join(' ');
     const v = verb.toLowerCase();
+
+    if (this.state.battle) {
+      if (['hp', 'score', '状态'].includes(v)) this.showStatus();
+      else if (['l', 'look', '看'].includes(v)) this.emit('sys', '（你正在交手，无暇他顾。出招、调息或逃跑。）');
+      else this.combatInput(line);
+      return this.out;
+    }
+
+    if (this.dialog) {
+      if (/^\d+$/.test(line)) { this.choose(Number(line)); return this.out; }
+      if (this.locked) {
+        // 剧情进行中：只允许查看类命令，之后重新列出选项
+        if (['l', 'look', '看', '观察', 'i', 'inv', 'inventory', '背包', '物品', 'h', 'help', '帮助', '?'].includes(v)) {
+          const choices = this.dialog;
+          this.dialog = null;
+          this.exec(line); // 递归执行查看命令，输出留在 this.out 中
+          this.dialog = choices;
+        } else {
+          this.emit('sys', '（眼下顾不上别的，先做个决定吧。）');
+        }
+        this.emitChoices();
+        return this.out;
+      }
+      this.endDialog(); // 输入其他命令视为离开对话
+      this.emit('sys', '（你结束了对话。）');
+    }
 
     if (DIR_ALIAS[v] || DIRS.has(verb) || this.exits()[verb]) return this.go(DIR_ALIAS[v] ?? verb), this.out;
 
@@ -51,9 +74,30 @@ export class Game {
         this.talk(arg); break;
       case 'i': case 'inv': case 'inventory': case '背包': case '物品':
         this.inventory(); break;
+      case 'u': case 'use': case '使用': case '用':
+        this.use(arg); break;
       case 'h': case 'help': case '帮助': case '?':
         this.help(); break;
+      case 'hp': case 'score': case '状态':
+        this.showStatus(); break;
+      case 'skills': case '武功':
+        this.showSkills(); break;
+      case 'train': case '修炼': case '练':
+        this.train(arg); break;
+      case 'equip': case '装备':
+        this.equip(arg); break;
+      case 'unequip': case '卸下':
+        this.unequip(arg); break;
+      case 'learn': case '学':
+        this.learn(arg); break;
+      case '晋阶': case '晋升':
+        this.promote(); break;
+      case '叛出师门': case '叛师':
+        this.leaveSect(arg); break;
+      case 'rest': case '休息': case 'sleep':
+        this.rest(); break;
       default:
+        if (this.itemsWithVerb(verb).length) { this.use(arg, verb); break; }
         this.emit('err', `「${verb}」？你想做什么？输入 help 查看命令。`);
     }
     return this.out;
@@ -70,6 +114,8 @@ export class Game {
       if (kind === 'flag') ok = !!flags[key];
       else if (kind === 'has') ok = (player.inventory[key] ?? 0) > 0;
       else if (kind === 'visited') ok = !!visited[key];
+      else if (kind === 'sect') ok = key === 'none' ? !player.sect : player.sect?.id === key;
+      else if (kind === 'rank') ok = (player.sect?.rank ?? -1) >= Number(key);
       else { console.warn('未知条件', c); ok = false; }
       return neg ? !ok : ok;
     });
@@ -92,6 +138,14 @@ export class Game {
       } else if (kind === 'goto') this.enter(key);
       else if (kind === 'start') this.startStoryline(key);
       else if (kind === 'chapter') this.showChapter(key);
+      else if (kind === 'fight') this.startBattle(key);
+      else if (kind === 'join') this.joinSect(key);
+      else if (kind === 'rep') { const [sect, n] = splitOnce(key); this.addRep(sect, Number(n)); }
+      else if (kind === 'potential') { player.potential += Number(key); this.emit('sys', `潜能 +${key}`); }
+      else if (kind === 'heal') { player.hp = this.hpMax(); this.emit('sys', '你的气血恢复了。'); }
+      else if (kind === 'learn') {
+        if (player.skills[key] === undefined) { player.skills[key] = 1; this.emit('story', `你学会了${this.db.skill[key]?.props.name ?? key}！`); }
+      }
       else console.warn('未知效果', e);
     }
   }
@@ -143,12 +197,15 @@ export class Game {
   // ---- 房间 ----
 
   room() { return this.db.room[this.state.player.room]; }
+  /** 任意房间当前有效的出口（含 patch），供地图使用 */
+  exitsOf(id) { const r = this.db.room[id]; return r ? this.merged(r).exits : {}; }
   exits() { const r = this.room(); return r ? this.merged(r).exits : {}; }
 
   enter(roomId) {
     const r = this.db.room[roomId];
     if (!r) { this.emit('err', `[内容错误] 房间不存在: ${roomId}`); return; }
     this.state.player.room = roomId;
+    if (r.props.inn === 'true') this.state.player.lastInn = roomId; // 战败后回到最近的旅店
     this.state.visited[roomId] = true;
     this.look();
     this.fireTriggers(roomId);
@@ -233,6 +290,46 @@ export class Game {
     this.emit('sys', '你身上带着：' + inv.map(([id, n]) => `${this.itemLink(id)}×${n}`).join('、'));
   }
 
+  // ---- 使用物品 ----
+
+  /** 背包里带有某个动词（如"吹"）的物品 */
+  itemsWithVerb(verb) {
+    return Object.keys(this.state.player.inventory).filter((id) => this.db.item[id]?.props.verb === verb);
+  }
+
+  /**
+   * 使用物品。use 块定义"在哪里、什么条件下用什么物品会发生什么"；
+   * 指定了 room 的 use 块优先于不限地点的。都不匹配时显示物品的 usefail 文字。
+   */
+  use(name, verb) {
+    let id;
+    if (name) id = this.findItem(name);
+    else if (verb) {
+      const hits = this.itemsWithVerb(verb);
+      if (hits.length === 1) id = hits[0];
+      else { this.emit('err', `${verb}什么？`); return; }
+    } else { this.emit('err', '使用什么？例如：use 竹哨'); return; }
+    if (!id) { this.emit('err', `你身上没有「${name}」。`); return; }
+    const item = this.db.item[id];
+    if (verb && item?.props.verb !== verb) { this.emit('err', `${this.itemName(id)}没法${verb}。`); return; }
+
+    const room = this.state.player.room;
+    const uses = Object.values(this.db.use ?? {})
+      .filter((u) => u.props.item === id && (!u.props.room || u.props.room === room))
+      .sort((a, b) => (b.props.room ? 1 : 0) - (a.props.room ? 1 : 0));
+    for (const u of uses) {
+      const doneKey = `${u.id}.done`;
+      if (u.props.once === 'true' && this.state.flags[doneKey]) continue;
+      if (!this.check(words(u.props.if))) continue;
+      if (u.props.once === 'true') this.state.flags[doneKey] = true;
+      this.emitLines(u.lines, 'desc');
+      if (u.props.do) this.apply(words(u.props.do));
+      if (u.props.dialog) this.showDialog(u.props.dialog);
+      return;
+    }
+    this.emit('desc', item?.props.usefail ?? `你摆弄了一会儿${this.itemName(id)}，什么也没有发生。`);
+  }
+
   // ---- 对话 ----
 
   talk(name) {
@@ -247,26 +344,66 @@ export class Game {
     this.showDialog(npc.props.talk);
   }
 
-  showDialog(id) {
+  /**
+   * 显示对话节点。lock: true 的对话开始后，整条对话链都锁定，直到对话结束。
+   * 当前对话记入 state.dialog，刷新页面或读档后可以接着选（resume）。
+   */
+  showDialog(id, resume = false) {
     const d = this.db.dialog[id];
-    if (!d) { this.emit('err', `[内容错误] 对话不存在: ${id}`); this.dialog = null; return; }
+    if (!d) { this.emit('err', `[内容错误] 对话不存在: ${id}`); this.endDialog(); return; }
+    if (d.props.lock === 'true') this.locked = true;
     const m = this.merged(d);
-    const pace = d.props.pace === 'slow' ? { pace: true } : undefined;
+    const pace = d.props.pace === 'slow' && !resume ? { pace: true } : undefined;
     this.emitLines(m.lines, 'say', pace);
-    if (d.props.do) this.apply(words(d.props.do)); // 进入该对话即生效的效果
+    if (d.props.do && !resume) this.apply(words(d.props.do)); // 进入该对话即生效的效果（恢复时不重复）
     const choices = m.choices.filter((c) => this.check(c.cond));
-    if (!choices.length) { this.dialog = null; return; }
+    if (!choices.length) { this.endDialog(); return; }
     this.dialog = choices;
-    choices.forEach((c, i) => this.emit('choice', c.text, { n: i + 1 }));
+    this.state.dialog = { id, locked: this.locked };
+    this.emitChoices();
+  }
+
+  emitChoices() {
+    this.dialog.forEach((c, i) => this.emit('choice', c.text, { n: i + 1 }));
+  }
+
+  endDialog() {
+    this.dialog = null;
+    this.locked = false;
+    delete this.state.dialog;
+  }
+
+  /** 读档后恢复未完成的对话 */
+  resume() {
+    this.out = [];
+    if (this.state.battle) {
+      this.emit('combat', `——战斗仍在继续（第 ${this.state.battle.round} 回合）——`);
+      return this.out;
+    }
+    const saved = this.state.dialog;
+    if (saved && this.db.dialog[saved.id]) {
+      this.locked = !!saved.locked;
+      this.emit('sys', '（你回过神来——）');
+      this.showDialog(saved.id, true);
+    } else {
+      delete this.state.dialog;
+    }
+    return this.out;
   }
 
   choose(n) {
     const c = this.dialog[n - 1];
-    if (!c) { this.emit('err', '没有这个选项。'); return; }
+    if (!c) { this.emit('err', '没有这个选项。'); this.emitChoices(); return; }
     this.emit('echo', `> ${c.text}`);
+    const locked = this.locked;
     this.dialog = null;
     this.apply(c.effects);
-    if (c.target) this.showDialog(c.target);
+    if (c.target) {
+      this.locked = locked;
+      this.showDialog(c.target);
+    } else {
+      this.endDialog();
+    }
   }
 
   help() {
@@ -276,6 +413,13 @@ export class Game {
       '  北 南 东 西 / n s e w   向该方向走（也可以 go 北）',
       '  talk 老乞丐 / 对话      与人交谈；人名可用拼音首字母，如 talk lqg',
       '  i / 背包               查看随身物品',
+      '  状态 / 武功            查看自身状态、已学武功',
+      '  装备 / 卸下 武功名      调整出战武功（外功最多 4 门，内功、轻功各 1 门）',
+      '  修炼 武功名            在旅店或本门驻地消耗潜能提升武功',
+      '  学 / 晋阶              在本门师父面前学艺、申请晋阶（晋阶要通过考核）',
+      '  叛出师门               离开门派：本门武功等级减半且不能再提升',
+      '  休息                   在旅店休息，恢复气血',
+      '  use 竹哨 / 使用 竹哨    使用物品；有的物品有专门的动词，如 吹 竹哨',
       '  help / 帮助            显示本帮助',
       '【操作】',
       '  彩色文字可以点击；鼠标悬停查看详情，右键固定详情卡。',
@@ -289,7 +433,7 @@ export class Game {
   /** 链接 id 的类别：go / npc / item / room / entry / storyline */
   kindOf(id) {
     if (id.startsWith('go:')) return 'go';
-    for (const k of ['npc', 'item', 'room', 'entry', 'storyline']) if (this.db[k][id]) return k;
+    for (const k of ['npc', 'item', 'room', 'entry', 'storyline', 'skill', 'sect']) if (this.db[k]?.[id]) return k;
     return null;
   }
 
@@ -317,13 +461,21 @@ export class Game {
     if (kind === 'item') {
       const it = this.db.item[id];
       const count = this.state.player.inventory[id];
-      return { title: it.props.name, lines: [...lines(it), ...(count ? [`（你有 ${count} 个）`] : [])], actions: [] };
+      const actions = count ? [{ label: it.props.verb ?? '使用', cmd: `use ${id}` }] : [];
+      return { title: it.props.name, lines: [...lines(it), ...(count ? [`（你有 ${count} 个）`] : [])], actions };
     }
     if (kind === 'room') {
       const r = this.db.room[id];
       return { title: r.props.name, lines: this.state.visited[id] ? lines(r).slice(0, 1) : ['你还没有去过那里。'], actions: [] };
     }
-    if (kind === 'entry' || kind === 'storyline') {
+    if (kind === 'skill') {
+      const sk = this.db.skill[id];
+      const lv = this.state.player.skills[id];
+      const head = `${sk.props.kind}${sk.props.stance ? '·' + sk.props.stance : ''}${sk.props.sect ? '　' + (this.db.sect[sk.props.sect]?.props.name ?? '') : ''}`;
+      const mine = lv !== undefined ? [`你的等级：${lv} / ${skillCap(this.db, this.state.player, id)}`] : [];
+      return { title: sk.props.name, lines: [head, ...lines(sk), ...mine], actions: [] };
+    }
+    if (kind === 'entry' || kind === 'storyline' || kind === 'sect') {
       const b = this.db[kind][id];
       return { title: b.props.name, lines: lines(b), actions: [] };
     }
@@ -337,12 +489,14 @@ export class Game {
       npcs: this.npcsHere().map((n) => ({ id: n.id, name: n.props.name, talk: !!n.props.talk })),
       items: Object.keys(this.state.player.inventory).map((id) => ({ id, name: this.itemName(id) })),
       inDialog: !!this.dialog,
+      inCombat: !!this.state.battle,
     };
   }
 
   completions() {
     const c = this.context();
-    return [...COMMANDS, ...c.exits, ...c.npcs.map((n) => n.name), ...c.items.map((i) => i.name)];
+    const verbs = c.items.map((i) => this.db.item[i.id]?.props.verb).filter(Boolean);
+    return [...COMMANDS, ...verbs, ...c.exits, ...c.npcs.map((n) => n.name), ...c.items.map((i) => i.name)];
   }
 }
 
@@ -355,3 +509,5 @@ function splitOnce(s) {
   const i = s.indexOf(':');
   return i < 0 ? [s, ''] : [s.slice(0, i), s.slice(i + 1)];
 }
+
+Object.assign(Game.prototype, martial);

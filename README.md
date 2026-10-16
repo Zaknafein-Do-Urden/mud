@@ -22,6 +22,12 @@ python -m http.server 8000
 node tools/validate.mjs
 ```
 
+调整战斗数值后，可以跑平衡模拟：
+
+```bash
+node tools/balance.mjs
+```
+
 ## 部署
 
 仓库 Settings → Pages → 选择 `main` 分支根目录即可。`.nojekyll` 让 GitHub Pages 原样提供 `.md` 内容文件。

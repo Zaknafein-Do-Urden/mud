@@ -6,11 +6,16 @@ import { newState, saveLocal, loadLocal, clearLocal, exportText, importText, sta
 import { renderText } from './ui/text.js';
 import { initCards } from './ui/cards.js';
 import { bindTab, resolvePinyin } from './ui/complete.js';
+import { renderCombat } from './ui/combat.js';
+import { renderMap, findPath, regionOf } from './ui/map.js';
 
 const $ = (id) => document.getElementById(id);
 const output = $('output');
 const input = $('input');
 const quick = $('quick');
+const combatBox = $('combat');
+const statusBox = $('status');
+let combatUi = null;
 
 let db;
 let game;
@@ -96,8 +101,11 @@ async function run(cmd) {
   choiceBox = null;
   const resolved = resolvePinyin(cmd, game.completions());
   // 对话中选数字时，引擎会回显选项文字，不再重复显示 "> 1"
-  const isChoice = /^\d+$/.test(cmd) && game.context().inDialog;
-  const echo = isChoice ? [] : [{ cls: 'cmd', text: '> ' + cmd.replace(/\[\[/g, '［［') }];
+  const ctx = game.context();
+  const isChoice = (/^\d+$/.test(cmd) && ctx.inDialog) || (/^\d+( \d+)?$/.test(cmd) && ctx.inCombat);
+  // 点击链接产生的命令里带内部 id（talk shediao.qusan），回显时换成名字
+  const shown = cmd.split(/\s+/).map((t) => db.npc[t]?.props.name ?? db.item[t]?.props.name ?? t).join(' ');
+  const echo = isChoice ? [] : [{ cls: 'cmd', text: '> ' + shown.replace(/\[\[/g, '［［') }];
   print([...echo, ...game.exec(resolved)]);
   await loadPending();
   if (!saveLocal(game.state)) print([{ cls: 'err', text: '（无法自动存档：浏览器禁用了本地存储。请记得手动导出。）' }]);
@@ -120,7 +128,14 @@ async function loadPending() {
 
 function refreshQuick() {
   if (!game) return;
+  refreshStatus();
+  refreshMap();
   const c = game.context();
+  // 战斗中用战斗面板代替情境按钮
+  combatBox.hidden = !c.inCombat;
+  quick.hidden = c.inCombat;
+  if (c.inCombat) { combatUi = renderCombat(combatBox, game.combatView(), (cmd) => { run(cmd); input.focus(); }); return; }
+  combatUi = null;
   quick.replaceChildren();
   const add = (label, cmd, cls = '') => {
     const b = document.createElement('button');
@@ -136,6 +151,58 @@ function refreshQuick() {
   add('帮助', 'help');
 }
 
+function refreshStatus() {
+  const st = game.statusView();
+  $('status-text').textContent = `气血 ${st.hp}/${st.maxHp}　内力 ${st.mp}　潜能 ${st.potential}`;
+  statusBox.classList.toggle('low', st.hp < st.maxHp * 0.3);
+}
+
+// ---- 地图（常驻右侧，可收起；D-034）----
+
+let walking = false;
+
+function refreshMap() {
+  const room = game.room();
+  $('map-title').textContent = room ? regionName(room.id) : '地图';
+  renderMap($('map'), game, walkTo);
+}
+
+/** 区域名：取区域第一个房间名中"·"之前的部分，如"临安城""牛家村" */
+function regionName(id) {
+  const region = regionOf(id);
+  const first = Object.values(db.room).find((r) => regionOf(r.id) === region && r.props.name.includes('·'));
+  return first ? first.props.name.split('·')[0] : '地图';
+}
+
+/** 自动寻路：逐步走过去，遇到对话、战斗或重场戏就停下 */
+async function walkTo(roomId) {
+  if (walking || queue.length) return;
+  const c = game.context();
+  if (c.inCombat || (c.inDialog && game.locked)) return;
+  const path = findPath(game, game.state.player.room, roomId);
+  if (!path) return;
+  walking = true;
+  for (const dir of path) {
+    await run(dir);
+    const now = game.context();
+    if (now.inCombat || now.inDialog || queue.length) break;
+  }
+  walking = false;
+}
+
+function setMapOpen(open) {
+  document.body.classList.toggle('map-open', open);
+  try { localStorage.setItem('wuxia-mud:ui:map', open ? '1' : '0'); } catch { /* 忽略 */ }
+}
+$('map-toggle').addEventListener('click', () => setMapOpen(!document.body.classList.contains('map-open')));
+$('map-close').addEventListener('click', () => setMapOpen(false));
+{
+  let saved = null;
+  try { saved = localStorage.getItem('wuxia-mud:ui:map'); } catch { /* 忽略 */ }
+  // 默认：宽屏打开，窄屏收起
+  setMapOpen(saved === null ? window.innerWidth >= 900 : saved === '1');
+}
+
 // ---- 启动一局 ----
 
 function start(state, isNew) {
@@ -145,7 +212,8 @@ function start(state, isNew) {
   const meta = db.meta.game;
   if (isNew && meta) print(meta.lines.map((l) => ({ cls: 'intro', text: l.text })));
   print([{ cls: 'sys', text: isNew ? '彩色文字可以点击或悬停查看，输入 help 查看命令。' : '读取存档成功。' }]);
-  print(game.exec('look'));
+  if (!state.battle) print(game.exec('look'));
+  print(game.resume()); // 刷新或读档前正在进行的对话
   game.state.visited[game.state.player.room] = true;
   saveLocal(game.state);
 }
@@ -167,6 +235,7 @@ input.addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowDown') input.value = history[++historyPos] ?? (historyPos = history.length, '');
   else if (e.key === ' ' && !input.value && queue.length) pump();
   else if (/^[1-9]$/.test(e.key) && !input.value && game?.context().inDialog && !queue.length) run(e.key);
+  else if (/^[0-9]$/.test(e.key) && !input.value && game?.context().inCombat && !queue.length) run(e.key === '0' ? '0' : e.key + (combatUi?.targetArg() ?? ''));
   else return;
   e.preventDefault();
 });

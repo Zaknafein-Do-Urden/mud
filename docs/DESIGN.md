@@ -42,16 +42,21 @@ src/
   game.js           游戏引擎：命令处理（纯逻辑）
   content.js        内容文件解析器 / 加载器（world + 按需加载主线）
   save.js           存档：本地保存、导出、导入、版本迁移
+  character.js      角色数值：派生属性、武功上限
+  combat.js         战斗引擎（纯逻辑，战斗状态可存档）
+  game-martial.js   引擎的武学部分：战斗流程、门派、修炼、旅店
   ui/
     text.js         [[链接]] 渲染
     cards.js        悬停信息卡、右键固定
     complete.js     Tab 补全、拼音匹配
+    combat.js       战斗面板
 content/
   index.json        内容清单（静态站点无法列目录，需要清单）
   world/            共享世界
   shediao/          射雕英雄传主线：hook.md 总是加载，其余按需加载
 tools/
   validate.mjs      内容校验：node tools/validate.mjs
+  balance.mjs       战斗平衡模拟：node tools/balance.mjs
 docs/               设计文档与开发日志
 ```
 
@@ -60,7 +65,7 @@ docs/               设计文档与开发日志
 ## 4. 存档
 
 - **存储位置**：`localStorage`，键名带前缀 `wuxia-mud:`（见 D-001：为何不用 cookie；D-002：为何必须加前缀）。
-- **自动存档**：每条命令执行后写入。
+- **自动存档**：每条命令执行后写入。进行中的对话也记在存档里（`dialog` 字段），刷新页面或读档后会接着显示选项。
 - **存档结构**：
   ```json
   {
@@ -113,8 +118,8 @@ talk: linan.beggar.start
 - 正文行首 `?条件 `：条件满足才显示该行，`?!` 为取反，可以连写多个。
 - 对话选项 `* 文字 -> 目标 ?条件 !效果`。没有目标也没有效果的选项（如"离开"）总是排在最后。
 - 属性中的条件、效果列表（`if:`、`do:`）用空格或逗号分隔，取反写 `!flag:x`。
-- 条件：`flag:x`、`has:物品`、`visited:房间`。
-- 效果：`flag:x`、`unflag:x`、`give:物品`、`take:物品`、`goto:房间`、`start:主线`、`chapter:章节`。
+- 条件：`flag:x`、`has:物品`、`visited:房间`、`sect:门派`（`sect:none` 为无门派）、`rank:数字`（门派阶位不低于）。
+- 效果：`flag:x`、`unflag:x`、`give:物品`、`take:物品`、`goto:房间`、`start:主线`、`chapter:章节`、`fight:战斗`、`join:门派`、`rep:门派:数值`、`potential:数值`、`learn:武功`、`heal`。
 - **链接**：正文中写 `[[显示名|id]]`，id 可以是人物、物品、房间、百科条目。在场人物的名字会被自动加上链接。
 - **命名空间**：world 文件只写 `world.*` 标记，主线文件只写 `<主线>.*` 标记；主线中的 id 以主线名开头。由校验脚本检查。
 
@@ -123,14 +128,20 @@ talk: linan.beggar.start
 | 类型 | 用途 | 主要属性 |
 |---|---|---|
 | `meta` | 游戏标题、起点、开场白 | `title`、`start` |
-| `room` | 房间 | `name`、`exits`、`npcs` |
-| `npc` | 人物 | `name`、`brief`、`talk`、`if`（出现条件） |
-| `item` | 物品 | `name` |
-| `dialog` | 对话节点 | `pace: slow`（重场戏逐段出现）、`do`（进入即生效的效果） |
+| `room` | 房间 | `name`、`exits`、`npcs`、`inn: true`（旅店：休息、修炼、战败复活点）、`train: true`（可修炼，如门派驻地） |
+| `npc` | 人物 | `name`、`brief`、`talk`、`if`（出现条件）、`teaches: 门派`（门派师父：学艺、晋阶） |
+| `item` | 物品 | `name`、`verb`（专用动词，如"吹"）、`usefail`（用了但没效果时的文字） |
+| `dialog` | 对话节点 | `pace: slow`（重场戏逐段出现）、`lock: true`（剧情对话，必须做出选择才能离开，锁定一直延续到这条对话链结束）、`do`（进入即生效的效果） |
 | `entry` | 百科条目，供信息卡逐层查阅 | `name` |
 | `storyline` | 主线 | `name`、`level` |
 | `chapter` | 章节标题页 | `storyline`、`name` |
 | `trigger` | 进入房间时触发 | `room`、`if`、`once: true`、`do`、`dialog` |
+| `use` | 在某处（或任何地方）使用某物品时发生的事 | `item`、`room`（可省略）、`if`、`once: true`、`do`、`dialog` |
+| `skill` | 武功 | `kind`（外功/内功/轻功）、`stance`（外功：刚/巧/守）、`sect`、`rank`（需要的门派阶位）、`cap`（门派外武功的典籍上限）；内功另有 `hp`、`mp`、`affinity` |
+| `move` | 招式 | `skill`、`name`、`level`（解锁等级）、`power`、`mp`、`effects`（内伤、点穴、破绽、吸内:系数、化内:系数）、`omen`（预兆）；正文是出招描述，可用 $N $n $招 $部位 |
+| `enemy` | 敌人 | `name`、`attrs`、`skills`（武功id=等级）、`ai`（各势权重）、`pattern`（固定出势顺序）、`cunning`（虚招概率%）、`potential`、`hpx`（气血倍率） |
+| `battle` | 一场战斗 | `enemies`、`win` / `lose`（胜负后的对话；没有 lose 时战败回旅店）、`flee: false`（不可逃跑） |
+| `sect` | 门派 | `ranks`（阶位名=所需声望）、`caps`（各阶武功上限） |
 | `patch` | 往别处定义的房间或对话里追加内容（STORY.md §5.1） | `if`、`exits`、`npcs`，正文和选项会被追加 |
 
 ### 5.3 校验
@@ -160,6 +171,6 @@ talk: linan.beggar.start
 ## 8. 开发阶段
 
 1. **骨架**（已完成）：房间移动、查看、对话、剧情标记、物品、存档导入导出。
-2. **战斗**：单机战斗，引擎仍是纯逻辑。
+2. **战斗**（第一版已完成）：单机战斗，引擎仍是纯逻辑。门派系统第一版（丐帮）。
 3. **联机**：Trystero 接入，主机权威同步，组队战斗、合击。
 4. **内容工具**：校验脚本 + CI，按需拆分/懒加载区域文件。

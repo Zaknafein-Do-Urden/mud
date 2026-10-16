@@ -1,9 +1,18 @@
 {
-  "world": ["world/linan.md"],
+  "world": [
+    "world/linan.md",
+    "world/base.md",
+    "world/gaibang.md"
+  ],
   "storylines": {
     "shediao": {
-      "hook": ["shediao/hook.md"],
-      "files": ["shediao/ch01.md"]
+      "hook": [
+        "shediao/hook.md"
+      ],
+      "files": [
+        "shediao/ch01.md",
+        "shediao/ch02.md"
+      ]
     }
   }
 }

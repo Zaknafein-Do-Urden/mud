@@ -29,16 +29,18 @@ for (const [f, ns] of files) {
 }
 console.warn = origWarn;
 
-const KNOWN = new Set(['meta', 'room', 'npc', 'item', 'dialog', 'entry', 'storyline', 'chapter', 'trigger', 'patch']);
+const KNOWN = new Set(['meta', 'room', 'npc', 'item', 'dialog', 'entry', 'storyline', 'chapter', 'trigger', 'use', 'patch', 'skill', 'move', 'enemy', 'battle', 'sect']);
 const words = (s = '') => s.split(/[\s,]+/).filter(Boolean);
-const linkTarget = (id) => id.startsWith('go:') || ['npc', 'item', 'room', 'entry', 'storyline'].some((k) => db[k][id]);
+const linkTarget = (id) => id.startsWith('go:') || ['npc', 'item', 'room', 'entry', 'storyline', 'skill', 'sect'].some((k) => db[k][id]);
 
 function checkConds(b, conds) {
   for (const c of conds) {
     const [kind, key] = c.replace(/^!/, '').split(/:(.*)/);
     if (kind === 'has' && !db.item[key]) err(b, `条件引用了不存在的物品: ${key}`);
     else if (kind === 'visited' && !db.room[key]) err(b, `条件引用了不存在的房间: ${key}`);
-    else if (!['flag', 'has', 'visited'].includes(kind)) err(b, `未知条件: ${c}`);
+    else if (kind === 'sect' && key !== 'none' && !db.sect[key]) err(b, `条件引用了不存在的门派: ${key}`);
+    else if (kind === 'rank' && Number.isNaN(Number(key))) err(b, `rank 条件需要数字: ${c}`);
+    else if (!['flag', 'has', 'visited', 'sect', 'rank'].includes(kind)) err(b, `未知条件: ${c}`);
   }
 }
 
@@ -53,6 +55,12 @@ function checkEffects(b, effects) {
     else if (kind === 'goto') { if (!db.room[key]) err(b, `goto 目标房间不存在: ${key}`); }
     else if (kind === 'start') { if (!db.storyline[key]) err(b, `start 目标主线不存在: ${key}`); }
     else if (kind === 'chapter') { if (!db.chapter[key]) err(b, `chapter 目标章节不存在: ${key}`); }
+    else if (kind === 'fight') { if (!db.battle[key]) err(b, `fight 目标战斗不存在: ${key}`); }
+    else if (kind === 'join') { if (!db.sect[key]) err(b, `join 目标门派不存在: ${key}`); }
+    else if (kind === 'learn') { if (!db.skill[key]) err(b, `learn 目标武功不存在: ${key}`); }
+    else if (kind === 'rep') { const [sect, n] = key.split(':'); if (!db.sect[sect] || Number.isNaN(Number(n))) err(b, `rep 格式应为 rep:门派:数值，却是: ${e}`); }
+    else if (kind === 'potential') { if (Number.isNaN(Number(key))) err(b, `potential 需要数字: ${e}`); }
+    else if (kind === 'heal') { /* 无参数 */ }
     else err(b, `未知效果: ${e}`);
   }
 }
@@ -100,6 +108,42 @@ for (const b of all) {
     if (!db.room[b.props.room]) err(b, `触发房间不存在: ${b.props.room}`);
     if (b.props.dialog && !db.dialog[b.props.dialog]) err(b, `触发对话不存在: ${b.props.dialog}`);
   }
+  if (b.type === 'use') {
+    if (!db.item[b.props.item]) err(b, `物品不存在: ${b.props.item}`);
+    if (b.props.room && !db.room[b.props.room]) err(b, `房间不存在: ${b.props.room}`);
+    if (b.props.dialog && !db.dialog[b.props.dialog]) err(b, `对话不存在: ${b.props.dialog}`);
+  }
+  if (b.type === 'skill') {
+    if (!['外功', '内功', '轻功'].includes(b.props.kind)) err(b, `kind 应为 外功/内功/轻功: ${b.props.kind}`);
+    if (b.props.kind === '外功' && !['刚', '巧', '守'].includes(b.props.stance)) err(b, `外功必须指定 stance（刚/巧/守）`);
+    if (b.props.sect && !db.sect[b.props.sect]) err(b, `所属门派不存在: ${b.props.sect}`);
+    if (b.props.kind === '外功' && !Object.values(db.move).some((m) => m.props.skill === b.id)) err(b, '外功没有任何招式');
+  }
+  if (b.type === 'move') {
+    if (!db.skill[b.props.skill]) err(b, `所属武功不存在: ${b.props.skill}`);
+    for (const k of ['power', 'mp', 'level']) if (Number.isNaN(Number(b.props[k] ?? 0))) err(b, `${k} 需要数字`);
+    for (const e of parseList(b.props.effects)) if (!['内伤', '点穴', '破绽', '吸内', '化内'].includes(e.split(':')[0])) err(b, `未知招式效果: ${e}`);
+  }
+  if (b.type === 'enemy') {
+    for (const part of parseList(b.props.skills)) {
+      const id = part.split('=')[0].trim();
+      if (!db.skill[id]) err(b, `敌人武功不存在: ${id}`);
+    }
+  }
+  if (b.type === 'battle') {
+    for (const id of parseList(b.props.enemies)) if (!db.enemy[id]) err(b, `敌人不存在: ${id}`);
+    for (const k of ['win', 'lose']) if (b.props[k] && !db.dialog[b.props[k]]) err(b, `${k} 对话不存在: ${b.props[k]}`);
+  }
+  if (b.type === 'sect') {
+    // 用户规定：门派可以有侧重，但刚、巧、守三类外功至少各有一门
+    const outer = Object.values(db.skill).filter((sk) => sk.props.sect === b.id && sk.props.kind === '外功');
+    for (const st of ['刚', '巧', '守']) if (!outer.some((sk) => sk.props.stance === st)) err(b, `门派缺少「${st}」类外功`);
+    if (!Object.values(db.skill).some((sk) => sk.props.sect === b.id && sk.props.kind === '内功')) err(b, '门派没有内功');
+    const ranks = (b.props.ranks ?? '').split(',').filter(Boolean).length;
+    const caps = (b.props.caps ?? '').split(',').filter(Boolean).length;
+    if (!ranks || ranks !== caps) err(b, `ranks（${ranks} 阶）与 caps（${caps} 个）数量必须一致`);
+  }
+  if (b.type === 'npc' && b.props.teaches && !db.sect[b.props.teaches]) err(b, `teaches 门派不存在: ${b.props.teaches}`);
   if (b.type === 'chapter' && !db.storyline[b.props.storyline]) err(b, `所属主线不存在: ${b.props.storyline}`);
   // 主线文件里定义的 id 应带主线前缀（world 文件不限）
   const ns = owner.get(b.file);

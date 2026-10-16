@@ -103,12 +103,13 @@ export function addBlocks(db, blocks, file = '?') {
 }
 
 export function emptyDb() {
-  return { room: {}, npc: {}, item: {}, dialog: {}, entry: {}, storyline: {}, chapter: {}, trigger: {}, meta: {}, patch: {}, loaded: new Set() };
+  return { room: {}, npc: {}, item: {}, dialog: {}, entry: {}, storyline: {}, chapter: {}, trigger: {}, use: {}, skill: {}, move: {}, enemy: {}, battle: {}, sect: {}, meta: {}, patch: {}, loaded: new Set() };
 }
 
 async function loadFiles(db, base, files) {
   const todo = files.filter((f) => !db.loaded.has(f));
-  const texts = await Promise.all(todo.map((f) => fetch(base + f).then((r) => {
+  // no-cache：每次向服务器确认是否有新版本（内容更新后玩家不会读到旧文件）
+  const texts = await Promise.all(todo.map((f) => fetch(base + f, { cache: 'no-cache' }).then((r) => {
     if (!r.ok) throw new Error(`${f}: HTTP ${r.status}`);
     return r.text();
   })));
@@ -124,7 +125,7 @@ async function loadFiles(db, base, files) {
  * world 与各主线的 hook（开端）总是加载；主线正文只在已开始时加载（见 STORY.md §4.3）。
  */
 export async function loadContent(startedLines = [], base = 'content/') {
-  const index = await (await fetch(base + 'index.json')).json();
+  const index = await (await fetch(base + 'index.json', { cache: 'no-cache' })).json();
   const db = emptyDb();
   db.index = index;
   db.base = base;

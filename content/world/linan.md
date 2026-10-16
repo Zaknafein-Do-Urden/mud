@@ -5,6 +5,8 @@
 === meta: game
 title: 江湖夜雨
 start: linan.gate
+# 还没去过任何旅店时，战败后回到这里
+inn: linan.inn
 ---
 南宋，宁宗年间。
 你背着一个小小的包袱，在黄昏时分走到了[[临安|linan.e.linan]]城下。
@@ -17,6 +19,8 @@ name: 铜钱
 
 === item: bamboo_whistle
 name: 竹哨
+verb: 吹
+usefail: 你把竹哨凑到嘴边吹了一声。哨音尖细，在风里传出很远，却没有任何回应。
 ---
 一支短短的竹哨，哨身刻着一只歪歪扭扭的燕子。
 
@@ -36,7 +40,7 @@ name: 金国
 
 === room: linan.gate
 name: 临安城·钱塘门
-exits: 北=linan.street, 东=linan.lake, 南=linan.road
+exits: 北=linan.street, 东=linan.lake, 南=linan.road, 西=linan.inn
 npcs: linan.beggar
 ---
 城门高耸，青砖上爬满了暮色。守门的兵卒倚着长枪打盹，偶尔有挑担的货郎匆匆进出。
@@ -46,16 +50,18 @@ npcs: linan.beggar
 === room: linan.road
 name: 城外官道
 exits: 北=linan.gate
+npcs: world.npc.pipi, world.npc.snake
 ---
 出了城门，官道向东南延伸，两旁是收割过的稻田，田埂上积着薄薄一层残雪。
 远处几缕炊烟，是散落在城郊的村落。
 
 === room: linan.street
 name: 临安城·御街
-exits: 南=linan.gate, 东=linan.teahouse, 北=linan.yamen
+exits: 南=linan.gate, 东=linan.teahouse, 北=linan.yamen, 西=linan.temple
 ---
 御街宽阔，两旁店铺林立，灯笼一盏接一盏地亮起来。
 空气里飘着葱包桧儿和定胜糕的香味，叫卖声此起彼伏。
+西边巷子深处是一座破旧的城隍庙，进出的多是些叫花子。
 ?visited:linan.lake 你想起西湖边那座断桥，不知为何心里有些不安。
 
 === room: linan.teahouse
@@ -79,7 +85,8 @@ exits: 西=linan.gate
 ---
 湖面笼着一层薄雾，残荷在风里瑟瑟作响。断桥上空无一人。
 ?!has:bamboo_whistle 桥栏的石缝里似乎塞着什么东西，但天色太暗，看不真切。
-?has:bamboo_whistle 你握紧了竹哨。远处的雾里，仿佛有人也在等一声哨响。
+?has:bamboo_whistle ?!flag:world.whistle_answered 你握紧了竹哨。远处的雾里，仿佛有人也在等一声哨响。
+?flag:world.whistle_answered 湖面上空空荡荡，方才那条小船像是从来没有出现过。
 
 # ---------------- 人物与对话 ----------------
 
@@ -97,6 +104,7 @@ talk: linan.beggar.start
 ?flag:world.beggar_friend 老乞丐：嘿嘿，又是你。东西收好了没有？
 * 给他一文钱 -> linan.beggar.give ?has:coin ?!flag:world.beggar_friend !take:coin !flag:world.beggar_friend
 * 打听会吹竹哨的人 -> linan.beggar.whistle
+* 打听丐帮 -> linan.beggar.gaibang
 * 离开
 
 === dialog: linan.beggar.give
@@ -117,6 +125,18 @@ talk: linan.beggar.start
 ?!flag:world.beggar_friend 老乞丐翻了个白眼：竹哨？老叫花子只会敲破碗。
 ?flag:world.beggar_friend 老乞丐：嘘——小声些。这城里，耳朵多着呢。
 
+=== dialog: linan.beggar.gaibang
+---
+老乞丐咧嘴一笑：想找丐帮？御街往西，城隍庙里那帮叫花子就是。主事的是鲁长老，脾气大，心肠好。
+
+=== room: linan.inn
+name: 望湖客栈
+exits: 东=linan.gate
+inn: true
+---
+一间干净的客栈，楼上是客房，楼下几张方桌。掌柜的在柜台后面拨着算盘。
+在这里可以 休息 恢复气血，也可以 修炼 武功。
+
 === npc: linan.storyteller
 name: 说书先生
 brief: 清风茶楼的说书人，消息灵通。
@@ -129,3 +149,25 @@ talk: linan.storyteller.start
 ---
 说书先生：客官想听什么？前朝旧事，还是眼下的新鲜事？
 * 离开
+
+# ---------------- 物品的使用 ----------------
+
+=== use: world.u.whistle_bridge
+item: bamboo_whistle
+room: linan.lake
+once: true
+dialog: world.whistle.answer
+
+=== dialog: world.whistle.answer
+pace: slow
+do: flag:world.whistle_answered
+---
+你把竹哨凑到嘴边，一声，两声，三声。
+哨音落进雾里，像石子沉入深水，没有一点回响。
+你正要放下竹哨，雾的深处忽然也传来了三声哨响——短，长，短。
+桨声欸乃，一条乌篷小船从雾里滑了出来，在离桥三丈远的地方停住。
+船头立着一个戴斗笠的人，看不清面目。
+戴斗笠的人：三声哨，是燕子回巢的意思。你师父……终究是没能来。
+戴斗笠的人：今夜耳目太多，不是说话的时候。你先在临安住下，等时候到了，我自会来找你。
+不等你开口，小船已经掉转船头，重新没入了雾中。
+（这条线索的后续尚未编写。）
