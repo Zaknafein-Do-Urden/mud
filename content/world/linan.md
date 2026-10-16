@@ -30,7 +30,7 @@ name: 临安
 pos: 520,318
 station: linan.station
 routes: jiaxing=1, xiangyang=7
-goods: silk=0.8, tea=0.85, porcelain=1.0, salt=1.1, herbs=1.2, iron=1.25, fur=1.4, shujin=1.4
+goods: silk=0.7, tea=0.65
 ---
 南宋行在，天下最繁华的地方。丝绸、茶叶便宜，北方的皮货、铁器贵。
 

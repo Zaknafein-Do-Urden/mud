@@ -5,7 +5,7 @@ name: 襄阳
 pos: 300,240
 station: xiangyang.station
 routes: linan=7, luoyang=4, chengdu=8
-goods: iron=0.85, salt=1.0, herbs=1.0, silk=1.2, tea=1.15, fur=1.1, porcelain=1.05
+goods: iron=0.6, herbs=0.7
 areas: wudang
 ---
 汉水之滨的雄城，南宋北方的门户，城墙高厚，铁器出名。往西是武当山。
@@ -21,7 +21,7 @@ name: 襄阳·市集
 exits: 西=xiangyang.center, 北=xiangyang.bank
 market: true
 ---
-市集上铁匠铺的叮当声不绝于耳，刀枪锄犁都有，价钱比江南便宜得多。
+市集上铁匠铺的叮当声不绝于耳，刀枪锄犁都有，价钱比江南便宜得多。汉水上游采来的药材也在这里集散。
 在这里可以 行情、买、卖。
 
 === room: xiangyang.bank

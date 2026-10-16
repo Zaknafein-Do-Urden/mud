@@ -5,7 +5,7 @@ name: 嘉兴
 pos: 600,225
 station: jiaxing.station
 routes: linan=1
-goods: silk=0.75, tea=0.9, salt=0.85, porcelain=1.1, herbs=1.15, iron=1.2
+goods: silk=0.6, salt=0.65
 ---
 江南水乡，南湖烟雨。离临安只有一日路程，丝绸和私盐都便宜。
 

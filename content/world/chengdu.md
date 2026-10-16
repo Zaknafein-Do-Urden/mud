@@ -5,7 +5,7 @@ name: 成都
 pos: 90,262
 station: chengdu.station
 routes: xiangyang=8, changan=9
-goods: shujin=0.75, herbs=0.75, tea=0.8, salt=1.3, iron=1.2, fur=1.2, silk=1.3, porcelain=1.25
+goods: shujin=0.6, herbs=0.6, tea=0.65
 areas: tangmen
 ---
 天府之国，锦官城。蜀锦、药材、茶叶都便宜。城外有神秘的唐家堡。

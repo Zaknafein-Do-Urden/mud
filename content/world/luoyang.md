@@ -5,7 +5,7 @@ name: 洛阳
 pos: 300,140
 station: luoyang.station
 routes: xiangyang=4, changan=4
-goods: porcelain=0.75, iron=0.9, silk=1.25, tea=1.3, fur=1.0, salt=1.2, shujin=1.4, herbs=1.05
+goods: porcelain=0.6, iron=0.7
 areas: shaolin
 ---
 九朝古都，如今在金国治下。牡丹和瓷器天下闻名。往东南是嵩山少林寺。

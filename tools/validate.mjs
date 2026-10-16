@@ -151,6 +151,12 @@ for (const b of all) {
     for (const k of ['win', 'lose']) if (b.props[k] && !db.dialog[b.props[k]]) err(b, `${k} 对话不存在: ${b.props[k]}`);
     for (const id of parseList(b.props.allies)) if (!db.enemy[id]) err(b, `NPC 队友要用 enemy 块定义，找不到: ${id}`);
   }
+  if (b.type === 'city') {
+    for (const [g, m] of Object.entries(parseMap(b.props.goods ?? ''))) {
+      if (!db.goods[g]) err(b, `goods 里的货物不存在: ${g}`);
+      else if (!(Number(m) <= 0.8)) err(b, `goods 只列本地特产，倍率要便宜（≤ 0.8），${g} 却是 ${m}（D-077）`);
+    }
+  }
   if (b.type === 'goal' && !b.props.name) err(b, '目标要写 name（只显示做什么），正文写具体怎么做（点"提示"才显示，D-074）');
   if (b.type === 'storyline' && b.props.level) err(b, '主线的建议等级改用 xiuwei: 起-止（建议修为，D-075）');
   if (b.type === 'sect') {
@@ -259,6 +265,11 @@ for (const id of Object.keys(db.room)) {
       if (r && x.props.lock !== 'true') err(d, `选项「${c.text}」先设了让自己消失的标记，奖励「${r.text}」却在之后可以离开的对话 ${x.id} 里。把标记和奖励放在同一个选项里`);
     });
   }
+}
+
+// 每种货至少要有一个产地，否则哪里都买不到（D-077）
+for (const g of Object.values(db.goods)) {
+  if (!Object.values(db.city).some((c) => parseMap(c.props.goods ?? '')[g.id])) err(g, '没有任何城市出产这种货（城市的 goods 里都没列）');
 }
 
 // 剧情武学的威力不能超过玩家到那一章为止打赢过的最强敌人（D-068，docs/POWER.md）

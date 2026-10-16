@@ -44,8 +44,9 @@ export const trade = {
     this.emit('sys', `【${city?.props.name ?? ''}市集　第 ${this.state.day ?? 1} 日行情】（买 货名 数量 / 卖 货名 数量；数量可写"全部"）`);
     for (const g of this.marketList()) {
       const have = p.cargo?.[g.id] ?? 0;
-      this.emit('sys', `　[[${g.name}|${g.id}]]　${g.local ? `买入 ${g.buy}` : '本地无货'}　卖出 ${g.sell}${have ? `　车上 ${have} 件` : ''}`);
+      this.emit('sys', `　[[${g.name}|${g.id}]]${g.local ? '（特产）' : ''}　${g.local ? `买入 ${g.buy}` : '本地无货'}　卖出 ${g.sell}${have ? `　车上 ${have} 件` : ''}`);
     }
+    this.emit('sys', '　特产便宜，运到不产它的地方卖；离产地越远卖得越贵，路上也越容易遇到劫匪。');
     this.emit('sys', `马车载货 ${cargoUnits(p.cargo)}/${CARGO_CAP} 件　身上 ${p.money ?? 0} 文`);
   },
 
@@ -59,7 +60,7 @@ export const trade = {
     const p = this.state.player;
     const g = this.marketList().find((x) => x.id === this.findGoods(name));
     if (!g) { this.emit('err', name ? `没有「${name}」这种货。输入 行情 看看。` : '买什么？例如：买 丝绸 5'); return; }
-    if (!g.local) { this.emit('err', `${g.name}本地没有货，买不到；带来的${g.name}倒是可以在这里卖。`); return; }
+    if (!g.local) { this.emit('err', `${g.name}不是本地特产，这里买不到；带来的${g.name}倒是可以在这里卖个好价钱。`); return; }
     const room = CARGO_CAP - cargoUnits(p.cargo);
     const afford = Math.floor((p.money ?? 0) / g.buy);
     const qty = ALL.includes(qtyStr) ? Math.min(room, afford) : Number(qtyStr ?? 1);

@@ -292,12 +292,12 @@ export function initPanels(api) {
       const noBuy = !gd.local;
       ops.append(
         button('买1', () => act(`买 ${gd.id} 1`), { disabled: noBuy || v.money < gd.buy || v.cargoUnits >= v.cargoCap }),
-        button('买5', () => act(`买 ${gd.id} 5`), { disabled: noBuy || v.money < gd.buy * 5 || v.cargoUnits + 5 > v.cargoCap }),
+        button('买10', () => act(`买 ${gd.id} 10`), { disabled: noBuy || v.money < gd.buy * 10 || v.cargoUnits + 10 > v.cargoCap }),
         button('买满', () => act(`买 ${gd.id} 全部`), { disabled: noBuy || v.money < gd.buy || v.cargoUnits >= v.cargoCap }),
         button('卖1', () => act(`卖 ${gd.id} 1`), { disabled: !gd.have }),
         button('全卖', () => act(`卖 ${gd.id} 全部`), { disabled: !gd.have }),
       );
-      tr.append(el('td', '', gd.name), el('td', noBuy ? 'pn-dim' : '', noBuy ? '本地无货' : gd.buy), el('td', '', gd.sell), el('td', '', gd.have || ''), ops);
+      tr.append(el('td', '', gd.local ? `${gd.name}（特产）` : gd.name), el('td', noBuy ? 'pn-dim' : '', noBuy ? '本地无货' : gd.buy), el('td', '', gd.sell), el('td', '', gd.have || ''), ops);
       t.append(tr);
     }
     body.append(t);

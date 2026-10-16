@@ -1,5 +1,5 @@
 # 生成城市内容文件（一次性脚手架）：python tools/gen_cities.py
-# 各城市的结构相同：十字街、车马行、市集、钱庄、客栈、衙门（差事）。描述、货物、路线、本地匪患各不相同。
+# 各城市的结构相同（goods 只列本地特产，倍率 0.6~0.7，D-077）：十字街、车马行、市集、钱庄、客栈、衙门（差事）。描述、货物、路线、本地匪患各不相同。
 # 生成后的 content/world/<城市>.md 是普通内容文件，可以直接手改；再次运行会覆盖，请注意。
 
 import os
@@ -9,7 +9,7 @@ ROOT = os.path.join(os.path.dirname(__file__), '..', 'content', 'world')
 CITIES = {
     'jiaxing': dict(
         name='嘉兴', pos='600,225', routes='linan=1', areas='',
-        goods='silk=0.75, tea=0.9, salt=0.85, porcelain=1.1, herbs=1.15, iron=1.2',
+        goods='silk=0.6, salt=0.65',
         brief='江南水乡，南湖烟雨。离临安只有一日路程，丝绸和私盐都便宜。',
         center='青石板路被雨水洗得发亮，河道从城中穿过，乌篷船咿咿呀呀地摇过石拱桥。',
         market='沿河的市集，丝绸铺子一家挨着一家，还有挑着盐担子吆喝的小贩。',
@@ -26,7 +26,7 @@ CITIES = {
     ),
     'xiangyang': dict(
         name='襄阳', pos='300,240', routes='linan=7, luoyang=4, chengdu=8', areas='wudang',
-        goods='iron=0.85, salt=1.0, herbs=1.0, silk=1.2, tea=1.15, fur=1.1, porcelain=1.05',
+        goods='iron=0.6, herbs=0.7',
         brief='汉水之滨的雄城，南宋北方的门户，城墙高厚，铁器出名。往西是武当山。',
         center='城墙又高又厚，街上随处可见披甲的军士。汉水的腥风从城外吹来，带着几分肃杀。',
         market='市集上铁匠铺的叮当声不绝于耳，刀枪锄犁都有，价钱比江南便宜得多。',
@@ -43,7 +43,7 @@ CITIES = {
     ),
     'luoyang': dict(
         name='洛阳', pos='300,140', routes='xiangyang=4, changan=4', areas='shaolin',
-        goods='porcelain=0.75, iron=0.9, silk=1.25, tea=1.3, fur=1.0, salt=1.2, shujin=1.4, herbs=1.05',
+        goods='porcelain=0.6, iron=0.7',
         brief='九朝古都，如今在金国治下。牡丹和瓷器天下闻名。往东南是嵩山少林寺。',
         center='宫阙的残垣还在，只是城头换了旗号。街上汉人、女真人混杂，说话都压着嗓子。',
         market='瓷器摊子一字排开，青瓷白瓷在日头下泛着光。卖茶的却少，价钱贵得吓人。',
@@ -61,7 +61,7 @@ CITIES = {
     ),
     'changan': dict(
         name='长安', pos='190,130', routes='luoyang=4, chengdu=9', areas='huashan, quanzhen',
-        goods='fur=0.75, salt=0.9, herbs=1.1, silk=1.4, tea=1.4, porcelain=1.2, shujin=1.5, iron=1.0',
+        goods='fur=0.6, salt=0.7',
         brief='汉唐故都，关中重镇，西域的皮货从这里进来。往东是西岳华山，往南是终南山全真教。',
         center='城郭依旧宏大，坊墙却已倒了大半。驼队从西门进来，驼铃声在街上回荡。',
         market='皮货、青盐堆成了小山，胡商操着生硬的汉话讨价还价。',
@@ -79,7 +79,7 @@ CITIES = {
     ),
     'chengdu': dict(
         name='成都', pos='90,262', routes='xiangyang=8, changan=9', areas='tangmen',
-        goods='shujin=0.75, herbs=0.75, tea=0.8, salt=1.3, iron=1.2, fur=1.2, silk=1.3, porcelain=1.25',
+        goods='shujin=0.6, herbs=0.6, tea=0.65',
         brief='天府之国，锦官城。蜀锦、药材、茶叶都便宜。城外有神秘的唐家堡。',
         center='街边的茶馆里坐满了人，掏耳朵的、算命的、唱川戏的，热闹得很。',
         market='蜀锦的颜色艳得晃眼，药铺门口晒着成筐的川芎、黄连。',
