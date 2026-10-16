@@ -205,6 +205,8 @@ export function createBattle(db, battleBlock, players, seed) {
   const foes = parseList(battleBlock.props.enemies).map((id) => db.enemy[id]);
   const units = foes.map((f, i) => enemyUnit(db, f, i));
   const pUnits = playerUnits(db, players);
+  // NPC 队友（D-072）：战斗块写 allies，和玩家站在一边，由电脑出招；可以给他疗伤、加持，也能和他合击
+  const allyUnits = parseList(battleBlock.props.allies).map((id, i) => ({ ...enemyUnit(db, db.enemy[id], i), key: 'a' + i, side: 'p', isAlly: true }));
   // 战斗块的 hpx：这一场战斗中敌人气血的倍率（用 tools/tune.mjs 调校，D-051）
   const bhpx = num(battleBlock.props.hpx, 1);
   if (bhpx !== 1) for (const u of units) { u.maxHp = Math.max(1, Math.round(u.maxHp * bhpx)); u.hp = u.maxHp; }
@@ -220,7 +222,7 @@ export function createBattle(db, battleBlock, players, seed) {
     seed: seed | 0,
     round: 0,
     foeLv: Math.max(1, ...units.map((u) => u.level)), // 对手水平，用于折算实战经验
-    units: [...pUnits, ...units],
+    units: [...pUnits, ...allyUnits, ...units],
     over: null,
   };
 }
@@ -234,6 +236,8 @@ export function unitMoves(db, u) {
 
 export const playerUnitOf = (b, pid = 'host') => b.units.find((u) => u.isPlayer && u.pid === pid);
 export const playersOf = (b) => b.units.filter((u) => u.isPlayer);
+/** 玩家一方的全部单位：玩家和 NPC 队友（D-072）。守招目标、合击都按这个算 */
+export const teamOf = (b) => b.units.filter((u) => u.side === 'p');
 /** 所有还站着的玩家都已出招（或被点穴） */
 export const intentsReady = (b) => playersOf(b).filter(alive).every((u) => u.intent || u.status.点穴);
 export const enemiesOf = (b) => b.units.filter((u) => u.side === 'e');
@@ -288,7 +292,42 @@ export function beginRound(db, b, emit) {
         if (sees(me)) emit('hint', `你察觉${u.name}的气息与架势并不相合……`, { to: me.pid });
       }
     }
+  }  // NPC 队友在敌人之后出招，并公开（D-072）
+  for (const u of b.units.filter((x) => x.isAlly && alive(x))) {
+    u.intent = u.status.点穴 ? { type: 'stunned' } : chooseAllyIntent(db, b, u);
+    announceAlly(db, b, u, emit);
   }
+}
+
+/**
+ * NPC 队友的出招（D-072）：挑一个敌人，一半的机会读对它的预兆、出克制它的势，否则按自己的路数。
+ * 回合开始就决定并公开，玩家据此配合（合击、护法、辅助）。
+ */
+function chooseAllyIntent(db, b, u) {
+  const moves = unitMoves(db, u).filter((m) => m.mp <= u.mp && canUse(u, m) && !m.support);
+  const foes = enemiesOf(b).filter(alive);
+  if (!moves.length || !foes.length) return { type: 'rest' };
+  const foe = pick(b, foes);
+  const stances = STANCES.filter((s) => moves.some((m) => m.stance === s));
+  let stance;
+  const want = foe.intent?.type === 'move' ? COUNTER[foe.intent.stance] : null;
+  if (want && stances.includes(want) && rand(b) < 0.5) stance = want;
+  else {
+    const weights = stances.map((s) => u.ai[s] ?? 1);
+    let r = rand(b) * weights.reduce((a, c) => a + c, 0);
+    stance = stances.find((s, i) => (r -= weights[i]) < 0) ?? stances[0];
+  }
+  const move = moves.filter((m) => m.stance === stance).sort((a, c) => c.power - a.power)[0];
+  return { type: 'move', move: move.id, stance, target: stance === '守' ? u.key : foe.key };
+}
+
+function announceAlly(db, b, u, emit) {
+  const it = u.intent;
+  if (it.type === 'stunned') return emit('team', `${u.name}穴道受制，这一回合动弹不得。`);
+  if (it.type === 'rest') return emit('team', `${u.name}退开一步，调匀内息。`);
+  const m = moveInfo(db, it.move);
+  const target = b.units.find((x) => x.key === it.target);
+  emit('team', `${u.name}准备使出「${m.name}」（${it.stance}）${it.stance === '守' ? '' : `，攻向${target?.name ?? '敌人'}`}。`);
 }
 
 /** 预兆文字：该势招式自己写的 omen（可用 | 分隔多种）与通用文案混在一起随机挑 */
@@ -333,7 +372,7 @@ export function setPlayerIntent(db, b, input, pid = 'host') {
     // 守招：默认护住自己；"@2" 表示第 2 位队友（1 是自己）。辅助招式作用在目标身上，普通守招则是护法（D-064）
     target = me.key;
     if (t?.startsWith('@')) {
-      const allies = playersOf(b).filter(alive);
+      const allies = teamOf(b).filter(alive);
       const ally = allies[Number(t.slice(1)) - 1];
       if (!ally) return '没有这位队友。';
       target = ally.key;
@@ -497,7 +536,7 @@ function attack(db, b, u, target, m, tPosture, emit) {
   else if (tPosture === '无') emit('tag', fill('$n门户大开，结结实实挨了这一下。', ctx));
   target.hp = Math.max(0, target.hp - dmg);
   emit('hit', `${target.name}${woundText(dmg / target.maxHp)}。（气血 -${dmg}）`, { target: target.key });
-  if (u.isPlayer) u.roundHit = { target: target.key, dmg, mult, skill: m.skill };
+  if (u.side === 'p') u.roundHit = { target: target.key, dmg, mult, skill: m.skill }; // 玩家和 NPC 队友都记，合击用
 
   // 招式附加效果：只在没有被克制时生效
   if (mult >= 1 && alive(target)) {
@@ -595,7 +634,7 @@ function comboMatch(db, c, P, Q) {
 }
 
 function resolveCombos(db, b, emit) {
-  const ps = playersOf(b).filter(alive);
+  const ps = teamOf(b).filter(alive); // 包括 NPC 队友（D-072）
   const byKey = Object.fromEntries(b.units.map((u) => [u.key, u]));
   const combos = Object.values(db.combo ?? {});
   for (let i = 0; i < ps.length; i++) {
@@ -630,16 +669,31 @@ function resolveCombos(db, b, emit) {
   }
 }
 
-/** UI 用：我出这一招，能否和队友已选的招式构成合击？返回合击名或空 */
+/**
+ * UI 用：我出这一招，能否和队友（含 NPC 队友）已选的招式构成合击？
+ * 返回 {name, guard, mate, foe}：guard = 要我用守招护住队友；foe = 合击要打的敌人（和队友打同一个）。
+ * 只在真能触发时提示：合击要双方都出攻招；护攻要守方真的护住了攻方（D-072）。
+ */
 export function comboHint(db, b, me, move) {
   const combos = Object.values(db.combo ?? {});
-  for (const t of playersOf(b).filter((x) => x !== me && alive(x) && x.intent?.type === 'move')) {
-    const ts = moveInfo(db, t.intent.move).skill;
+  for (const t of teamOf(b).filter((x) => x !== me && alive(x) && x.intent?.type === 'move')) {
+    const tm = moveInfo(db, t.intent.move);
+    const attacking = (st) => st !== '守';
     for (const c of combos) {
       const [A, B] = comboSides(c);
+      const guardMode = db.skill[A.skill]?.props.stance === '守';
       const lvOk = (P, X, Q, Y) => (P.skills[X.skill] ?? 0) >= X.lv && (Q.skills[Y.skill] ?? 0) >= Y.lv;
-      if (A.skill === move.skill && B.skill === ts && lvOk(me, A, t, B)) return { name: c.props.name, guard: db.skill[A.skill]?.props.stance === '守', mate: t.name };
-      if (B.skill === move.skill && A.skill === ts && lvOk(t, A, me, B)) return { name: c.props.name, guard: false, mate: t.name };
+      const hint = (extra) => ({ name: c.props.name, guard: false, mate: t.name, foe: null, ...extra });
+      // 我是 a 方，队友是 b 方
+      if (A.skill === move.skill && B.skill === tm.skill && lvOk(me, A, t, B)) {
+        if (guardMode && move.stance === '守' && attacking(tm.stance)) return hint({ guard: true });
+        if (!guardMode && attacking(move.stance) && attacking(tm.stance)) return hint({ foe: t.intent.target });
+      }
+      // 队友是 a 方，我是 b 方
+      if (B.skill === move.skill && A.skill === tm.skill && lvOk(t, A, me, B)) {
+        if (guardMode && tm.stance === '守' && t.intent.target === me.key && attacking(move.stance)) return hint();
+        if (!guardMode && attacking(move.stance) && attacking(tm.stance)) return hint({ foe: t.intent.target });
+      }
     }
   }
   return null;

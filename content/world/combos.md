@@ -188,3 +188,31 @@ bonus: 1.6
 effects: 破绽
 ---
 $A的剑阵护住$B的空门，$B的绵掌趁势而入，后劲绵绵不绝。
+
+# ---------------- 剧情 NPC 队友参与的合击（D-072）----------------
+# 玩家之间满足条件也能触发。
+
+=== combo: combo.base_twin
+name: 同仇敌忾
+a: base.quan@10
+b: base.quan@10
+bonus: 1.3
+---
+$A和$B一左一右，两记庄稼把式同时砸在$n身上，打的就是一股不要命的狠劲。
+
+=== combo: combo.yuenv_quanzhen
+name: 剑影双飞
+a: shediao.yuenv@10
+b: quanzhen.jianfa@10
+bonus: 1.5
+effects: 破绽
+---
+$A的越女剑轻灵如燕，$B的全真剑端凝如山，一快一稳，两道剑光交错着罩住了$n。
+
+=== combo: combo.yuenv_yang
+name: 枪挑剑引
+a: shediao.yuenv@10
+b: shediao.yangqiang@5
+bonus: 1.5
+---
+$A剑尖一引，把$n的兵器带偏了半尺；就这半尺的空当，$B的枪已经扎了进去。

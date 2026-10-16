@@ -2,7 +2,7 @@
 
 import { maxHp, maxMp, skillCap, trainCost, sectRanks, bestInnerLv, MAX_OUTER, movesOf, expNeed, expPerUse, gainExp, isWeaponItem, weaponOf, ARMED } from './character.js';
 import { TALENT_TREE, talentPointsTotal, talentPointsSpent, canAddTalent, findTalent, xiuwei, xiuweiToNext, tal } from './talents.js';
-import { adaptEnemyHp } from './combat.js';
+import { adaptEnemyHp, teamOf } from './combat.js';
 import { todayStr } from './game.js';
 import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, playersOf, enemiesOf, hpText, moveInfo, canUse, comboHint } from './combat.js';
 
@@ -415,8 +415,8 @@ export const martial = {
     if (!me) return null;
     return {
       // 队友的状态与本回合已选的招式（D-019：队友出招实时可见）
-      team: playersOf(b).filter((u) => u !== me).map((u) => ({
-        name: u.name, hp: u.hp, maxHp: u.maxHp,
+      team: teamOf(b).filter((u) => u !== me).map((u) => ({
+        name: u.name, hp: u.hp, maxHp: u.maxHp, npc: !!u.isAlly,
         chosen: !u.intent ? null : u.intent.type === 'rest' ? '调息' : u.intent.type === 'move' ? `${moveInfo(this.db, u.intent.move).name}（${u.intent.stance}）` : '……',
       })),
       chosen: !!me.intent,
@@ -427,6 +427,8 @@ export const martial = {
       moves: unitMoves(this.db, me).map((m, i) => {
         const armedOk = canUse(me, m);
         const hint = comboHint(this.db, b, me, m);
+        // 合击要打的敌人：换成面板上的编号和名字，点卡片时自动打它（D-072）
+        if (hint?.foe) { const foes = enemiesOf(b).filter((e) => e.hp > 0); const k = foes.findIndex((e) => e.key === hint.foe); hint.foeN = k + 1; hint.foeName = foes[k]?.name; }
         return { n: i + 1, name: m.name, skillName: m.skillName, stance: m.stance, mp: m.mp, effects: m.effects, usable: m.mp <= me.mp && armedOk, need: armedOk ? '' : `需要${m.weapon}`, support: m.support, combo: hint };
       }),
       // 兵器：手里的、被打飞的、可以换上的（D-057）
@@ -435,7 +437,7 @@ export const martial = {
       swaps: (me.bag ?? []).filter((id) => id !== me.dropped && (id !== me.wid || me.disarmed)).map((id) => ({ id, name: this.db.item[id]?.props.name ?? id })),
       target: me.lastTarget,
       // 守招、辅助招式的目标：1 是自己（D-064）
-      allies: playersOf(b).filter((u) => u.hp > 0).map((u, i) => ({ n: i + 1, key: u.key, name: u === me ? `${u.name}（自己）` : u.name, hp: u.hp, maxHp: u.maxHp, self: u === me })),
+      allies: teamOf(b).filter((u) => u.hp > 0).map((u, i) => ({ n: i + 1, key: u.key, name: u === me ? `${u.name}（自己）` : u.name, hp: u.hp, maxHp: u.maxHp, self: u === me })),
       canFlee: pid === 'host' && (b.exam ? true : !b.noFlee && this.db.battle[b.id]?.props.flee !== 'false'),
     };
   },

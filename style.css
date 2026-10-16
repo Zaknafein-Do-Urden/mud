@@ -391,3 +391,6 @@ button.adopt { font-size: 12px; padding: 0 8px; margin-left: 6px; }
 .cb-card.combo { border-color: var(--accent); }
 .combo { color: var(--accent); font-weight: bold; text-align: center; }
 .pn-item.faded { opacity: 0.55; }
+
+/* NPC 队友（D-072） */
+.cb-mate.npc { color: var(--accent); }

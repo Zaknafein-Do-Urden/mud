@@ -149,6 +149,7 @@ for (const b of all) {
   if (b.type === 'battle') {
     for (const id of parseList(b.props.enemies)) if (!db.enemy[id]) err(b, `敌人不存在: ${id}`);
     for (const k of ['win', 'lose']) if (b.props[k] && !db.dialog[b.props[k]]) err(b, `${k} 对话不存在: ${b.props[k]}`);
+    for (const id of parseList(b.props.allies)) if (!db.enemy[id]) err(b, `NPC 队友要用 enemy 块定义，找不到: ${id}`);
   }
   if (b.type === 'sect') {
     // 用户规定：门派可以有侧重，但刚、巧、守三类外功至少各有一门

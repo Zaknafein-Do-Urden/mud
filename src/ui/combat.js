@@ -85,9 +85,12 @@ export function renderCombat(root, view, run, secondsLeft = 0) {
     // 合击提示（D-065）：与队友已选的招式能构成合击
     if (m.combo) {
       c.classList.add('combo');
-      c.append(el('span', 'cb-combo', `★ 合击「${m.combo.name}」${m.combo.guard ? `（守招目标选${m.combo.mate}）` : ''}`));
+      const how = m.combo.guard ? `（守招目标选${m.combo.mate}）` : m.combo.foeName ? `（和${m.combo.mate}同打${m.combo.foeName}）` : '';
+      c.append(el('span', 'cb-combo', `★ 合击「${m.combo.name}」${how}`));
     }
-    c.addEventListener('click', () => run(m.n + (m.stance === '守' ? allyArg() : targetArg())));
+    // 有合击提示时，点卡片自动打队友正在打的那个敌人
+    const comboArg = () => (m.combo?.foeN > 0 && alive.length > 1 ? ' ' + m.combo.foeN : targetArg());
+    c.addEventListener('click', () => run(m.n + (m.stance === '守' ? allyArg() : comboArg())));
     cards.append(c);
   }
   const rest = el('button', 'cb-card st-无');
@@ -117,7 +120,8 @@ export function renderCombat(root, view, run, secondsLeft = 0) {
   const team = el('div', 'cb-team');
   if (view.team?.length) {
     for (const t of view.team) {
-      team.append(el('div', 'cb-mate', `${t.name}　${t.hp}/${t.maxHp}　${t.hp <= 0 ? '已倒下' : t.chosen ? `已出招：${t.chosen}` : '思考中……'}`));
+      const doing = t.npc ? (t.chosen ? `准备出：${t.chosen}` : '……') : t.chosen ? `已出招：${t.chosen}` : '思考中……';
+      team.append(el('div', 'cb-mate' + (t.npc ? ' npc' : ''), `${t.npc ? '【同伴】' : ''}${t.name}　${t.hp}/${t.maxHp}　${t.hp <= 0 ? '已倒下' : doing}`));
     }
   }
   if (secondsLeft) foot.prepend(el('span', 'cb-timer', `⏳ ${secondsLeft} 秒`));
