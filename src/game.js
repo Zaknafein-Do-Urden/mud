@@ -7,7 +7,8 @@ import { martial } from './game-martial.js';
 import { trade } from './game-trade.js';
 import { views } from './game-views.js';
 import { party } from './game-party.js';
-import { skillCap } from './character.js';
+import { skillCap, bestInnerLv } from './character.js';
+import { xiuwei, tal } from './talents.js';
 
 const DIR_ALIAS = {
   n: '北', s: '南', e: '东', w: '西', u: '上', d: '下',
@@ -16,7 +17,7 @@ const DIR_ALIAS = {
 };
 const DIRS = new Set(Object.values(DIR_ALIAS));
 // 主线中只给一次的奖励类效果（D-042）
-const REWARDS = new Set(['give', 'money', 'potential', 'learn', 'rep']);
+const REWARDS = new Set(['give', 'money', 'potential', 'learn', 'rep', 'cap']);
 
 const COMMANDS = ['look', 'go', 'talk', 'use', 'inventory', 'help', '状态', '武功', '修炼', '装备', '卸下', '学', '晋阶', '休息', '叛出师门', '行情', '买', '卖', '货物', '乘车', '存', '取', '存款', '天赋'];
 
@@ -159,6 +160,17 @@ export class Game {
       else if (kind === 'gender') ok = player.gender === key;
       else if (kind === 'money') ok = (player.money ?? 0) >= Number(key);
       else if (kind === 'today') ok = this.state.daily?.[key] === todayStr();
+      // 战力门槛（D-060）
+      else if (kind === 'maxhp') ok = this.hpMax() >= Number(key);
+      else if (kind === 'xiuwei') ok = xiuwei(player) >= Number(key);
+      else if (kind === 'inner') ok = bestInnerLv(this.db, player) >= Number(key);
+      else if (kind === 'stance') {
+        const [st, lv] = splitOnce(key);
+        ok = Object.entries(player.skills).some(([id, l]) => this.db.skill[id]?.props.kind === '外功' && this.db.skill[id].props.stance === st && l >= Number(lv));
+      }
+      else if (kind === 'talent') { const [id, lv] = splitOnce(key); ok = tal(player, id) >= Number(lv || 1); }
+      else if (kind === 'party') ok = 1 + (this.party?.members.length ?? 0) >= Number(key);
+      else if (kind === 'learned') ok = player.skills[key] !== undefined;
       else { console.warn('未知条件', c); ok = false; }
       return neg ? !ok : ok;
     });
@@ -198,7 +210,20 @@ export class Game {
       else if (kind === 'pay') this.addMoney(-Number(key));
       else if (kind === 'travel') this.travel(key);
       else if (kind === 'learn') {
-        if (player.skills[key] === undefined) { player.skills[key] = 1; this.emit('story', `你学会了${this.db.skill[key]?.props.name ?? key}！`); }
+        if (player.skills[key] === undefined) {
+          player.skills[key] = 1;
+          this.emit('story', `你学会了${this.db.skill[key]?.props.name ?? key}！`);
+          this.autoEquip(key);
+        }
+      }
+      else if (kind === 'cap') {
+        // 提高某门武功的上限（剧情奖励，如独门武功随章节解锁，D-060）
+        const [id, n] = splitOnce(key);
+        player.skillcap ??= {};
+        if ((player.skillcap[id] ?? 0) < Number(n)) {
+          player.skillcap[id] = Number(n);
+          this.emit('story', `你对${this.db.skill[id]?.props.name ?? id}的领悟更深了一层（上限提高到 ${n} 级）。`);
+        }
       }
       else console.warn('未知效果', e);
     }

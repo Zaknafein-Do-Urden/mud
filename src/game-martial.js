@@ -1,10 +1,10 @@
 // 引擎的武学部分：战斗、门派、修炼、旅店。以方法的形式并入 Game（见 game.js 末尾）。
 
-import { maxHp, maxMp, skillCap, trainCost, sectRanks, bestInnerLv, MAX_OUTER, movesOf, expNeed, expPerUse, gainExp } from './character.js';
+import { maxHp, maxMp, skillCap, trainCost, sectRanks, bestInnerLv, MAX_OUTER, movesOf, expNeed, expPerUse, gainExp, isWeaponItem, weaponOf, ARMED } from './character.js';
 import { TALENT_TREE, talentPointsTotal, talentPointsSpent, canAddTalent, findTalent, xiuwei, xiuweiToNext, tal } from './talents.js';
 import { adaptEnemyHp } from './combat.js';
 import { todayStr } from './game.js';
-import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, playersOf, enemiesOf, hpText, moveInfo } from './combat.js';
+import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, playersOf, enemiesOf, hpText, moveInfo, canUse, comboHint } from './combat.js';
 
 const KIND_LABEL = { 外功: '外功', 内功: '内功', 轻功: '轻功' };
 
@@ -54,6 +54,15 @@ export const martial = {
 
   equip(name) {
     const p = this.state.player;
+    // 兵器（D-057）
+    const wid = Object.keys(p.inventory).find((id) => isWeaponItem(this.db, id) && (id === name || this.db.item[id].props.name === name));
+    if (wid) {
+      p.equip ??= {};
+      p.equip.weapon = wid;
+      const it = this.db.item[wid];
+      this.emit('sys', `你握住了${it.props.name}。（${it.props.weapon}${Number(it.props.bonus) ? `，${it.props.weapon}类招式伤害 +${it.props.bonus}%` : ''}）`);
+      return;
+    }
     const id = this.findSkill(name, Object.keys(p.skills));
     if (!id) { this.emit('err', `你不会「${name}」。`); return; }
     const kind = this.db.skill[id].props.kind;
@@ -69,6 +78,13 @@ export const martial = {
   },
 
   unequip(name) {
+    const p = this.state.player;
+    const w = weaponOf(this.db, p);
+    if (w && (name === w.id || name === w.props.name || name === '兵器')) {
+      p.equip.weapon = null;
+      this.emit('sys', `你收起了${w.props.name}，空手应敌。`);
+      return;
+    }
     const lo = this.state.player.loadout;
     const id = this.findSkill(name, [...lo.outer, lo.inner, lo.light].filter(Boolean));
     if (!id) { this.emit('err', `你没有装备「${name}」。`); return; }
@@ -181,12 +197,19 @@ export const martial = {
     // 从 1 级学起：比 10 级的基础武功弱，要靠实战和修炼练上来（D-035）
     p.skills[sk.id] = 1;
     this.emit('story', `你学会了${sk.props.name}！（1 级。战斗中多用它，就能长进。）`);
-    // 有空栏位就自动装上；内功只在不降级时自动替换
+    this.autoEquip(sk.id);
+  },
+
+  /** 新学的武功：有空栏位就自动装上；内功只在不降级时自动替换 */
+  autoEquip(id) {
+    const p = this.state.player;
+    const sk = this.db.skill[id];
+    if (!sk) return;
     const lo = p.loadout;
     const curInner = lo.inner ? p.skills[lo.inner] ?? 0 : -1;
-    if (sk.props.kind === '外功' && lo.outer.length < MAX_OUTER) lo.outer.push(sk.id);
-    else if (sk.props.kind === '内功' && p.skills[sk.id] >= curInner) lo.inner = sk.id;
-    else if (sk.props.kind === '轻功' && !lo.light) lo.light = sk.id;
+    if (sk.props.kind === '外功' && lo.outer.length < MAX_OUTER && !lo.outer.includes(id)) lo.outer.push(id);
+    else if (sk.props.kind === '内功' && p.skills[id] >= curInner) lo.inner = id;
+    else if (sk.props.kind === '轻功' && (!lo.light || (p.skills[lo.light] ?? 0) <= p.skills[id])) lo.light = id;
     else { this.emit('sys', '（栏位已满，需要时用 装备 换上。）'); return; }
     this.normalizeHp();
     this.emit('sys', '（已自动装备。）');
@@ -307,6 +330,9 @@ export const martial = {
     const p = this.state.player;
     const me = playerUnitOf(b);
     p.hp = Math.max(0, me.hp);
+    // 战斗中换过兵器就保留新的；被打飞的兵器战后拾回（D-057）
+    if (me.wid !== (p.equip?.weapon ?? null)) { p.equip ??= {}; p.equip.weapon = me.wid; }
+    if (me.dropped) this.emit('sys', `战后你拾回了被打飞的${this.db.item[me.dropped]?.props.name ?? '兵器'}。`, { to: 'host' });
     delete this.state.battle;
     this.awardExp(b, me);
     // 组队：给客人结算（实战经验胜负都给，潜能只在胜利时给）
@@ -384,8 +410,18 @@ export const martial = {
       round: b.round,
       me: { hp: me.hp, maxHp: me.maxHp, mp: me.mp, maxMp: me.maxMp, status: Object.keys(me.status).filter((k) => !k.endsWith('dot')) },
       enemies: enemiesOf(b).map((e, i) => ({ n: i + 1, key: e.key, name: e.name, hp: e.hp, maxHp: e.maxHp, hpText: hpText(e), status: Object.keys(e.status).filter((k) => !k.endsWith('dot')), dead: e.hp <= 0 })),
-      moves: unitMoves(this.db, me).map((m, i) => ({ n: i + 1, name: m.name, skillName: m.skillName, stance: m.stance, mp: m.mp, effects: m.effects, usable: m.mp <= me.mp })),
+      moves: unitMoves(this.db, me).map((m, i) => {
+        const armedOk = canUse(me, m);
+        const hint = comboHint(this.db, b, me, m);
+        return { n: i + 1, name: m.name, skillName: m.skillName, stance: m.stance, mp: m.mp, effects: m.effects, usable: m.mp <= me.mp && armedOk, need: armedOk ? '' : `需要${m.weapon}`, support: m.support, combo: hint };
+      }),
+      // 兵器：手里的、被打飞的、可以换上的（D-057）
+      weapon: me.disarmed ? null : me.wname,
+      disarmed: !!me.disarmed,
+      swaps: (me.bag ?? []).filter((id) => id !== me.dropped && (id !== me.wid || me.disarmed)).map((id) => ({ id, name: this.db.item[id]?.props.name ?? id })),
       target: me.lastTarget,
+      // 守招、辅助招式的目标：1 是自己（D-064）
+      allies: playersOf(b).filter((u) => u.hp > 0).map((u, i) => ({ n: i + 1, key: u.key, name: u === me ? `${u.name}（自己）` : u.name, hp: u.hp, maxHp: u.maxHp, self: u === me })),
       canFlee: pid === 'host' && (b.exam ? true : !b.noFlee && this.db.battle[b.id]?.props.flee !== 'false'),
     };
   },

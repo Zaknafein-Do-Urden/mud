@@ -1,0 +1,190 @@
+# 双人合击（D-065）。组队时两位玩家同一回合触发。
+# a、b 是两方的武功（@ 后面是最低等级）。
+#   - a 是守类武功：a 方用守招护住 b 方（守招目标选 b），b 方的攻击没被克制，就触发"护攻"合击；
+#   - 否则：两人用 a、b 两门武功打同一个对手，都没被克制，就触发"合击"。
+# bonus：额外伤害 = 两人这一回合造成的伤害 ×（bonus - 1）。effects 作用在对手身上。
+# 正文是合击描述：$A 是 a 方，$B 是 b 方，$n 是对手。
+# 覆盖：五派两两之间各一个、本门各一个，再加武馆基础武功的几个。低级（10~15 级）、高级（20~30 级，用镇派绝学）都有。
+
+# ---------------- 武馆基础武功（不拜师也能合击）----------------
+
+=== combo: combo.base_fist
+name: 二龙戏珠
+a: base.quan@10
+b: base.zhang@10
+bonus: 1.4
+---
+$A一拳当胸直捣，$B一掌斜拍侧肋，$n顾得了前顾不了后。
+
+=== combo: combo.base_guard
+name: 一夫当关
+a: base.zhaojia@10
+b: base.quan@10
+bonus: 1.5
+effects: 破绽
+---
+$A挡在前面硬接来招，$B从$A身后闪出，一拳正中$n空门。
+
+=== combo: combo.base_blades
+name: 刀剑合璧
+a: base.dao@10
+b: base.jian@10
+bonus: 1.6
+effects: 破绽
+---
+$A一刀劈开$n的守势，$B的剑尖已经从刀光的缝隙里递了进去。
+
+# ---------------- 本门合击 ----------------
+
+=== combo: combo.gaibang_self
+name: 双龙出海
+a: gaibang.xianglong@20
+b: gaibang.xianglong@20
+bonus: 2.2
+effects: 内伤
+---
+$A与$B同时出掌，两股降龙掌力在半空合为一股，如两条怒龙破浪而出，直撞$n！
+
+=== combo: combo.shaolin_self
+name: 罗汉合击
+a: shaolin.luohan@10
+b: shaolin.luohan@10
+bonus: 1.5
+---
+$A与$B一前一后，罗汉拳一拳接一拳，像两尊铜罗汉轮番撞钟，震得$n气血翻腾。
+
+=== combo: combo.wudang_self
+name: 真武护法
+a: wudang.taiji@10
+b: wudang.mianzhang@10
+bonus: 1.6
+effects: 破绽
+---
+$A以太极圆劲卸开$n的来招，$B顺势一掌，绵劲透体而入。
+
+=== combo: combo.huashan_self
+name: 双剑合璧
+a: huashan.jianfa@10
+b: huashan.jianfa@10
+bonus: 1.6
+---
+$A与$B两柄剑一左一右，剑光交织成网，把$n罩在当中。
+
+=== combo: combo.tangmen_self
+name: 千机万象
+a: tangmen.qianji@20
+b: tangmen.baoyu@20
+bonus: 2.2
+effects: 点穴
+---
+$A十指翻飞，把$n的暗器尽数接下；$B趁机按动机括，漫天银针罩住了$n周身大穴。
+
+# ---------------- 跨门派合击（五派两两之间）----------------
+
+=== combo: combo.gaibang_shaolin
+name: 降魔双拳
+a: gaibang.lianhua@10
+b: shaolin.luohan@10
+bonus: 1.6
+effects: 内伤
+---
+$A的莲花掌、$B的罗汉拳一柔一刚，同时印在$n胸口。
+
+=== combo: combo.gaibang_wudang
+name: 亢龙太极
+a: wudang.taiji@20
+b: gaibang.xianglong@20
+bonus: 2.0
+effects: 破绽
+---
+$A以太极之劲为$B引开所有来招，$B毫无顾忌地推出一掌亢龙，掌力排山倒海！
+
+=== combo: combo.gaibang_huashan
+name: 莲花剑影
+a: gaibang.lianhua@10
+b: huashan.jianfa@10
+bonus: 1.5
+effects: 破绽
+---
+$A的掌影如莲花层层绽开，$B的剑光就藏在花瓣之间，$n看得眼花缭乱。
+
+=== combo: combo.gaibang_tangmen
+name: 逍遥飞蝗
+a: gaibang.xiaoyao@15
+b: tangmen.feihuang@15
+bonus: 1.5
+effects: 点穴
+---
+$A飘忽的掌影引开$n的视线，$B的飞蝗石趁隙打中了穴道。
+
+=== combo: combo.shaolin_wudang
+name: 刚柔并济
+a: shaolin.jingang@20
+b: wudang.taijijian@20
+bonus: 2.2
+effects: 内伤, 破绽
+---
+$A的大力金刚掌至刚至猛，$B的太极剑至柔至圆，一刚一柔同时到了$n身前，叫人避无可避。
+
+=== combo: combo.shaolin_huashan
+name: 罗汉剑阵
+a: shaolin.luohan@10
+b: huashan.jianfa@10
+bonus: 1.5
+---
+$A的拳风封住$n的退路，$B的剑尖已经刺到了面前。
+
+=== combo: combo.shaolin_tangmen
+name: 金钟暗雨
+a: shaolin.jinzhong@10
+b: tangmen.feihuang@10
+bonus: 1.6
+effects: 点穴
+---
+$A运起金钟罩挡在$B身前，任凭$n如何攻打也纹丝不动；$B躲在金钟之后，飞蝗石一颗颗打了出去。
+
+=== combo: combo.wudang_huashan
+name: 两仪剑法
+a: wudang.taijijian@20
+b: huashan.dugu@20
+bonus: 2.2
+effects: 化内:1.0
+---
+$A的太极剑画圆，$B的独孤剑走直，一圆一直，正反两仪，$n的内力被搅得七零八落。
+
+=== combo: combo.wudang_tangmen
+name: 柔云暗雨
+a: wudang.rouyun@15
+b: tangmen.feihuang@15
+bonus: 1.5
+effects: 点穴
+---
+$A的剑光如云卷云舒遮住了$n的眼，云里却藏着$B打出的飞蝗石。
+
+=== combo: combo.huashan_tangmen
+name: 九剑梨花
+a: huashan.dugu@20
+b: tangmen.baoyu@20
+bonus: 2.5
+effects: 点穴, 破绽
+---
+$A一剑破尽$n的招式，就在$n门户大开的一瞬，$B的暴雨梨花针已经到了。
+
+# ---------------- 辅助武功参与的合击（护攻）----------------
+
+=== combo: combo.shaolin_hufa
+name: 金刚护法
+a: shaolin.hufa@10
+b: gaibang.lianhua@10
+bonus: 1.6
+---
+$A以护法金刚罩住$B，$B放开手脚，莲花掌一掌重过一掌。
+
+=== combo: combo.huashan_jianzhen
+name: 剑阵突击
+a: huashan.jianzhen@10
+b: wudang.mianzhang@10
+bonus: 1.6
+effects: 破绽
+---
+$A的剑阵护住$B的空门，$B的绵掌趁势而入，后劲绵绵不绝。

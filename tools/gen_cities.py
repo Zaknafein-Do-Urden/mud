@@ -60,9 +60,9 @@ CITIES = {
         weapon='棍', weapon_name='洛阳铲',
     ),
     'changan': dict(
-        name='长安', pos='190,130', routes='luoyang=4, chengdu=9', areas='huashan',
+        name='长安', pos='190,130', routes='luoyang=4, chengdu=9', areas='huashan, quanzhen',
         goods='fur=0.75, salt=0.9, herbs=1.1, silk=1.4, tea=1.4, porcelain=1.2, shujin=1.5, iron=1.0',
-        brief='汉唐故都，关中重镇，西域的皮货从这里进来。往东是西岳华山。',
+        brief='汉唐故都，关中重镇，西域的皮货从这里进来。往东是西岳华山，往南是终南山全真教。',
         center='城郭依旧宏大，坊墙却已倒了大半。驼队从西门进来，驼铃声在街上回荡。',
         market='皮货、青盐堆成了小山，胡商操着生硬的汉话讨价还价。',
         bank='钱庄门面不大，后院却有一间铁皮包着的库房。',

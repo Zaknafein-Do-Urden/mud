@@ -25,6 +25,8 @@ export function renderCombat(root, view, run, secondsLeft = 0) {
   root.replaceChildren();
   const alive = view.enemies.filter((e) => !e.dead);
   let target = alive.find((e) => e.key === view.target) ?? alive[0];
+  // 守招 / 辅助招式的目标（D-064）：默认自己
+  let ally = (view.allies ?? []).find((a) => a.self) ?? null;
 
   // 对手
   const foes = el('div', 'cb-foes');
@@ -50,8 +52,24 @@ export function renderCombat(root, view, run, secondsLeft = 0) {
   );
   if (view.me.status.length) me.append(el('span', 'cb-status', view.me.status.join(' ')));
 
+  // 队友（守招、辅助招式的目标）
+  const allies = el('div', 'cb-allies');
+  if ((view.allies ?? []).length > 1) {
+    allies.append(el('span', 'cb-text', '守招目标：'));
+    for (const a of view.allies) {
+      const btn = el('button', 'cb-ally' + (a === ally ? ' sel' : ''), `${a.name} ${a.hp}/${a.maxHp}`);
+      btn.addEventListener('click', () => {
+        ally = a;
+        allies.querySelectorAll('.cb-ally').forEach((x) => x.classList.remove('sel'));
+        btn.classList.add('sel');
+      });
+      allies.append(btn);
+    }
+  }
+
   // 招式
   const targetArg = () => (alive.length > 1 ? ' ' + (alive.indexOf(target) + 1) : '');
+  const allyArg = () => (ally && !ally.self ? ' @' + ally.n : '');
   const cards = el('div', 'cb-cards');
   for (const m of view.moves) {
     const c = el('button', `cb-card st-${m.stance}`);
@@ -61,14 +79,31 @@ export function renderCombat(root, view, run, secondsLeft = 0) {
       el('span', 'cb-move', m.name),
       el('span', 'cb-cost', `内力 ${m.mp}${m.effects.length ? ' · ' + m.effects.join(' ') : ''}`),
     );
-    c.title = m.usable ? '' : '内力不足';
-    c.addEventListener('click', () => run(m.n + (m.stance === '守' ? '' : targetArg())));
+    c.title = m.usable ? '' : m.need || '内力不足';
+    if (m.need) c.append(el('span', 'cb-need', m.need));
+    if (m.support) c.append(el('span', 'cb-support', '辅助：作用在目标身上'));
+    // 合击提示（D-065）：与队友已选的招式能构成合击
+    if (m.combo) {
+      c.classList.add('combo');
+      c.append(el('span', 'cb-combo', `★ 合击「${m.combo.name}」${m.combo.guard ? `（守招目标选${m.combo.mate}）` : ''}`));
+    }
+    c.addEventListener('click', () => run(m.n + (m.stance === '守' ? allyArg() : targetArg())));
     cards.append(c);
   }
   const rest = el('button', 'cb-card st-无');
   rest.append(el('span', 'cb-stance', '0 · 无势'), el('span', 'cb-move', '调息'), el('span', 'cb-cost', `内力 +${Math.round(view.me.maxMp * 0.1)}`));
   rest.addEventListener('click', () => run('0'));
   cards.append(rest);
+
+  // 兵器：手中的兵器；可以花一回合换上背包里的另一件（D-057）
+  const arms = el('div', 'cb-arms');
+  arms.append(el('span', 'cb-text', view.disarmed ? '兵器被打飞了！' : `兵器：${view.weapon ?? '空手'}`));
+  for (const w of view.swaps ?? []) {
+    const b = el('button', 'cb-swap', `换上${w.name}（花一回合）`);
+    b.disabled = !!view.chosen;
+    b.addEventListener('click', () => run(`换 ${w.id}`));
+    arms.append(b);
+  }
 
   const foot = el('div', 'cb-foot');
   foot.append(el('span', 'cb-hint', '刚克守 · 巧克刚 · 守克巧　看清预兆再出手'));
@@ -90,6 +125,6 @@ export function renderCombat(root, view, run, secondsLeft = 0) {
     cards.querySelectorAll('button').forEach((b) => { b.disabled = true; });
     team.prepend(el('div', 'cb-wait', '你已出招，等待队友……'));
   }
-  root.append(foes, me, team, cards, foot);
+  root.append(foes, me, team, allies, cards, arms, foot);
   return { targetArg };
 }

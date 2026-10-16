@@ -375,3 +375,19 @@ button.adopt { font-size: 12px; padding: 0 8px; margin-left: 6px; }
 .lb-count { color: var(--muted); font-size: 13px; }
 #party .pt-member { margin-right: 4px; }
 #party .pt-kick { font-size: 11px; padding: 0 6px; margin-right: 10px; }
+
+/* ---- 兵器（D-057）---- */
+.cb-need { font-size: 11px; color: var(--err); }
+.cb-arms { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.cb-swap { font-size: 12px; padding: 1px 8px; }
+.pn-item.on { border-left: 4px solid var(--accent); }
+
+/* ---- 辅助、合击（D-064、D-065）---- */
+.cb-allies { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
+.cb-ally { font-size: 12px; padding: 1px 8px; }
+.cb-ally.sel { border-color: var(--st-shou); color: var(--st-shou); }
+.cb-support { font-size: 11px; color: var(--lk-entry); }
+.cb-combo { font-size: 11px; color: var(--accent); font-weight: bold; }
+.cb-card.combo { border-color: var(--accent); }
+.combo { color: var(--accent); font-weight: bold; text-align: center; }
+.pn-item.faded { opacity: 0.55; }

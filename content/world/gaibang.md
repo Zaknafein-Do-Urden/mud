@@ -90,6 +90,7 @@ name: 反扣脉门
 level: 25
 power: 26
 mp: 9
+effects: 缴械:35
 omen: $N双手交错，翻腕成爪……
 ---
 $N翻腕成爪，摆出「$招」的架势，专等对手手腕送上门来。
@@ -528,3 +529,39 @@ flag: world.gaibang.task_b3
 where: linan.road
 ---
 有金国细作混进了临安，在城外官道一带打探军情。拿下他！
+
+# ================= 辅助武功（D-064）：给队友疗伤、加持，鼓励组队 =================
+# 守类招式。默认作用在自己身上；组队时在战斗面板选一位队友作为目标。
+
+=== skill: gaibang.lianhualuo
+name: 莲花落
+kind: 外功
+stance: 守
+sect: gaibang
+rank: 1
+---
+丐帮弟子沿街唱的莲花落，在帮中是聚众鼓劲的号子。唱起来，同伴便斗志昂扬。
+
+=== move: gaibang.lianhualuo.1
+skill: gaibang.lianhualuo
+name: 莲花落·起
+level: 0
+power: 14
+mp: 6
+support: true
+effects: 振奋
+omen: $N退开半步，气息一沉……
+---
+$N拍着竹板，一段莲花落唱得响亮，给$n鼓劲！
+
+=== move: gaibang.lianhualuo.2
+skill: gaibang.lianhualuo
+name: 莲花落·合
+level: 30
+power: 20
+mp: 10
+support: true
+effects: 振奋, 回气:0.6
+omen: $N退开半步，气息一沉……
+---
+$N领着腔调一唱三叹，$n只觉得浑身是劲，气息也顺了。

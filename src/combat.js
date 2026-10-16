@@ -2,7 +2,7 @@
 // 规则见 COMBAT.md：同时出招、刚巧守相克、内力、预兆与虚招。
 // 随机数由战斗自带的种子产生，便于联机时由主机统一结算（D-008）。
 
-import { STANCES, parseNums, innerOf, maxHp, maxMp, speed, innerBonus, movesOf } from './character.js';
+import { STANCES, parseNums, innerOf, maxHp, maxMp, speed, innerBonus, movesOf, ARMED, weaponOf, isWeaponItem } from './character.js';
 import { parseList } from './content.js';
 import { tal } from './talents.js';
 import { ATTACK, OMEN as WEAPON_OMEN, WEAPON_NAME } from './weapons.js';
@@ -103,6 +103,7 @@ export function moveInfo(db, moveId) {
     skillName: sk?.props.name ?? '',
     stance: sk?.props.stance,
     weapon: sk?.props.weapon ?? '拳', // 武功用的兵器（D-052）
+    support: m.props.support === 'true', // 辅助招式：作用在队友（或自己）身上（D-064）
     power: num(m.props.power),
     mp: num(m.props.mp),
     effects: parseList(m.props.effects),
@@ -125,10 +126,38 @@ function playerUnit(db, p, key = 'p0', pid = 'host', named = false) {
     speed: speed(db, p), innerLv: inner.lv, innerId: inner.id, wuxing: p.attrs.悟性,
     skills: { ...p.skills }, outer: [...p.loadout.outer], light: p.loadout.light,
     talents: { ...(p.talents ?? {}) },
+    // 兵器（D-057）：wtype 兵器类型，wbonus 伤害加成 %，wid 物品 id；disarmed 被缴械
+    ...playerWeapon(db, p),
+    // 轻功（D-062）：等级与已解锁的特性
+    ...playerLight(db, p),
+    bag: Object.keys(p.inventory ?? {}).filter((id) => isWeaponItem(db, id)),
     status: {}, intent: null,
     used: {}, // 各武功本场使用次数（战后折算实战经验）
     rounds: 0, // 本场运功回合数（内功、轻功的经验）
   };
+}
+
+function playerLight(db, p) {
+  const id = p.loadout.light;
+  const lv = id ? p.skills[id] ?? 0 : 0;
+  // 特性写法：traits: 燕返@1, 回旋@30, 燕回巢@60（达到等级才生效）
+  const traits = (id ? db.skill[id]?.props.traits ?? '' : '').split(',').map((t) => t.trim()).filter(Boolean)
+    .map((t) => t.split('@')).filter(([, need]) => lv >= Number(need || 0)).map(([name]) => name);
+  return { lightLv: lv, traits };
+}
+
+const hasTrait = (u, name) => !!u.traits?.includes(name);
+
+function playerWeapon(db, p) {
+  const w = weaponOf(db, p);
+  return { wid: w?.id ?? null, wtype: w?.props.weapon ?? null, wbonus: num(w?.props.bonus), wname: w?.props.name ?? null, disarmed: false, dropped: null };
+}
+
+/** 招式是否需要兵器、此刻能否施展（D-057） */
+export function canUse(u, m) {
+  if (!ARMED.includes(m.weapon)) return true;
+  if (u.isPlayer) return !u.disarmed && u.wtype === m.weapon;
+  return !u.disarmed; // 敌人：没被缴械就能用
 }
 
 function enemyUnit(db, foe, i) {
@@ -212,7 +241,7 @@ export const enemiesOf = (b) => b.units.filter((u) => u.side === 'e');
 // ---- 回合开始：敌人决定意图，透露预兆 ----
 
 function chooseEnemyIntent(db, b, u) {
-  const moves = unitMoves(db, u).filter((m) => m.mp <= u.mp);
+  const moves = unitMoves(db, u).filter((m) => m.mp <= u.mp && canUse(u, m));
   if (!moves.length) return { type: 'rest' };
   const stances = STANCES.filter((s) => moves.some((m) => m.stance === s));
   let stance;
@@ -284,14 +313,32 @@ export function setPlayerIntent(db, b, input, pid = 'host') {
   if (me.status.点穴) { me.intent = { type: 'stunned' }; return null; }
   const [a, t] = input.trim().split(/\s+/);
   if (a === '0' || a === '调息') { me.intent = { type: 'rest' }; return null; }
+  // 换兵器：花掉这一回合（D-057）
+  if (['换', '换兵器', 'wield'].includes(a)) {
+    const id = me.bag.find((x) => x === t || db.item[x]?.props.name === t);
+    if (!id) return `背包里没有「${t ?? ''}」这件兵器。`;
+    if (id === me.dropped) return '那件兵器被打飞了，这一战捡不回来。';
+    if (id === me.wid && !me.disarmed) return '你手里拿的就是它。';
+    me.intent = { type: 'equip', item: id };
+    return null;
+  }
   const moves = unitMoves(db, me);
   const m = moves[Number(a) - 1];
   if (!m) return '没有这一招。输入招式编号，0 为调息。';
+  if (!canUse(me, m)) return `施展「${m.name}」需要${m.weapon}${me.disarmed ? '（你的兵器被打飞了，可以换一件，或者用拳脚功夫）' : ''}。`;
   if (m.mp > me.mp) return `内力不足（需要 ${m.mp}，现有 ${me.mp}）。可以输入 0 调息。`;
   const foes = enemiesOf(b).filter(alive);
   let target;
-  if (m.stance === '守') target = me.key;
-  else if (t) {
+  if (m.stance === '守') {
+    // 守招：默认护住自己；"@2" 表示第 2 位队友（1 是自己）。辅助招式作用在目标身上，普通守招则是护法（D-064）
+    target = me.key;
+    if (t?.startsWith('@')) {
+      const allies = playersOf(b).filter(alive);
+      const ally = allies[Number(t.slice(1)) - 1];
+      if (!ally) return '没有这位队友。';
+      target = ally.key;
+    }
+  } else if (t) {
     target = (foes[Number(t) - 1] ?? foes.find((f) => f.name === t))?.key;
     if (!target) return '没有这个对手。';
   } else target = foes.find((f) => f.key === me.lastTarget)?.key ?? foes[0].key;
@@ -304,6 +351,8 @@ export function setPlayerIntent(db, b, input, pid = 'host') {
 
 export function resolveRound(db, b, emit) {
   const units = b.units.filter(alive);
+  // 本回合谁打了谁、谁护了谁（合击判定用，D-065）
+  for (const u of b.units) { u.roundHit = null; u.roundGuard = null; }
   const byKey = Object.fromEntries(b.units.map((u) => [u.key, u]));
   const posture = {};
   const protects = {};
@@ -315,8 +364,13 @@ export function resolveRound(db, b, emit) {
     if (u.intent?.type === 'stunned') {
       if (u.isPlayer) emit('fx', '你穴道受制，动弹不得！');
       posture[u.key] = '无';
+    } else if (u.intent?.type === 'equip') {
+      const it = db.item[u.intent.item];
+      Object.assign(u, { wid: it.id, wtype: it.props.weapon, wbonus: num(it.props.bonus), wname: it.props.name, disarmed: false });
+      posture[u.key] = '无';
+      emit('fx', `${sayN(u)}从行囊里抽出${it.props.name}，握在手中。`);
     } else if (u.intent?.type === 'rest') {
-      const gain = Math.min(u.maxMp - u.mp, Math.round(u.maxMp * (REST_RATE + 0.03 * tal(u, 'tuna'))));
+      const gain = Math.min(u.maxMp - u.mp, Math.round(u.maxMp * (REST_RATE + 0.03 * tal(u, 'tuna') + (hasTrait(u, '回旋') ? 0.05 : 0))));
       u.mp += gain;
       posture[u.key] = '无';
       emit('fx', `${sayN(u)}盘膝调息，内力略有恢复。（内力 +${gain}）`);
@@ -332,6 +386,13 @@ export function resolveRound(db, b, emit) {
     if (u.used) u.used[m.skill] = (u.used[m.skill] ?? 0) + 1;
     posture[u.key] = '守';
     const guarded = byKey[u.intent.target];
+    u.roundGuard = { target: guarded?.key, skill: m.skill };
+    if (m.support) {
+      // 辅助招式：疗伤、回气、振奋、护体、解穴（D-064）
+      emit('act', fill(m.text || '$N运起「$招」，护住$n。', { N: sayN(u), n: guarded === u ? '自己' : guarded?.name, move: m.name }));
+      applySupport(db, u, guarded ?? u, m, emit);
+      continue;
+    }
     if (guarded && guarded !== u) protects[guarded.key] = u.key;
     emit('act', fill(u.weapon ? actText(b, u, m) : (m.text || '$N使出「$招」，守住门户。'), { N: sayN(u), n: guarded?.name, move: m.name, W: u.weaponName }));
   }
@@ -363,9 +424,13 @@ export function resolveRound(db, b, emit) {
     if (enemiesOf(b).every((e) => !alive(e)) || playersOf(b).every((p) => !alive(p))) break;
   }
 
+  // ④½ 合击（D-065）
+  if (!b.over && enemiesOf(b).some(alive)) resolveCombos(db, b, emit);
+
   // ⑤ 回合结束：内伤
   for (const u of b.units) if (u.isPlayer && alive(u)) u.rounds++;
   for (const u of b.units.filter(alive)) {
+    if (u.status.护体 > 0 && --u.status.护体 <= 0) delete u.status.护体;
     if (u.status.内伤 > 0) {
       const d = Math.min(u.hp, u.status.内伤dot ?? 5);
       u.hp -= d;
@@ -403,7 +468,9 @@ function attack(db, b, u, target, m, tPosture, emit) {
   emit('act', fill(actText(b, u, m), ctx));
 
   const innerSk = u.innerId ? db.skill[u.innerId] : null;
-  const talentPower = 1 + 0.04 * (m.stance === '刚' ? tal(u, 'manli') : tal(u, 'ruili'));
+  const talentPower = 1 + 0.04 * (m.stance === '刚' ? tal(u, 'manli') : tal(u, 'ruili'))
+    + (u.isPlayer && m.weapon === u.wtype && !u.disarmed ? u.wbonus / 100 : 0) // 兵器加成（D-057）
+    + (m.stance === '巧' ? (u.lightLv ?? 0) * 0.003 : 0); // 轻功：巧招 +0.3% / 级（D-062）
   const value = m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, m.stance) * talentPower;
   let mult = MULT[m.stance][tPosture] ?? 1;
   // 天赋对克制倍率的修正（D-044）
@@ -413,17 +480,24 @@ function attack(db, b, u, target, m, tPosture, emit) {
   }
   if (m.stance === '刚' && tPosture === '巧' && tal(u, 'wangqian')) mult = 0.65;
   if (m.stance === '巧' && tPosture === '守' && tal(u, 'youren')) mult = 0.65;
+  // 轻功（D-062）：无势（调息、换兵器）时受伤倍率随轻功等级从 ×1.2 降到 ×1.0；回旋特性直接免去
+  if (tPosture === '无') mult = hasTrait(target, '回旋') ? 1.0 : Math.max(1.0, mult - (target.lightLv ?? 0) * 0.004);
+  // 燕回巢：巧招不再被守势克制
+  const unblockable = m.stance === '巧' && tPosture === '守' && hasTrait(u, '燕回巢');
+  if (unblockable) mult = 1.0;
   const armor = 100 / (100 + target.innerLv);
-  const flaw = target.status.破绽 ? 1.3 : 1;
+  const flaw = (target.status.破绽 ? 1.3 : 1) * (target.status.护体 ? 0.7 : 1) * (u.status.振奋 ? 1.3 : 1);
+  if (u.status.振奋) delete u.status.振奋;
   if (flaw > 1) delete target.status.破绽;
   // dmgx：敌人伤害倍率（自适应战斗用来拉长战斗，减少运气成分，D-051）
   const dmg = Math.max(1, Math.round(value * mult * armor * flaw * (u.dmgx ?? 1) * (0.9 + rand(b) * 0.2)));
 
-  const outcome = OUTCOME[m.stance + tPosture];
+  const outcome = unblockable ? '$N身形如燕子穿帘，绕过了$n的守势！（燕回巢）' : OUTCOME[m.stance + tPosture];
   if (outcome) emit('tag', fill(outcome, ctx));
   else if (tPosture === '无') emit('tag', fill('$n门户大开，结结实实挨了这一下。', ctx));
   target.hp = Math.max(0, target.hp - dmg);
   emit('hit', `${target.name}${woundText(dmg / target.maxHp)}。（气血 -${dmg}）`, { target: target.key });
+  if (u.isPlayer) u.roundHit = { target: target.key, dmg, mult, skill: m.skill };
 
   // 招式附加效果：只在没有被克制时生效
   if (mult >= 1 && alive(target)) {
@@ -432,6 +506,7 @@ function attack(db, b, u, target, m, tPosture, emit) {
       if (kind === '内伤') { target.status.内伤 = 3; target.status.内伤dot = Math.max(3, Math.round(dmg * 0.2 * (1 + 0.25 * tal(u, 'zhongchuang')))); emit('fx', `${target.name}受了内伤。`); }
       else if (kind === '点穴') { target.status.点穴 = 1; emit('fx', `${target.name}被点中穴道，下一回合动弹不得！`); }
       else if (kind === '破绽') { target.status.破绽 = 1; emit('fx', `${target.name}露出了破绽。`); }
+      else if (kind === '缴械') tryDisarm(b, u, target, num(k, 20), emit);
       else if (kind === '吸内' || kind === '化内') {
         const drain = Math.min(target.mp, Math.round(dmg * num(k, 1)));
         target.mp -= drain;
@@ -441,8 +516,15 @@ function attack(db, b, u, target, m, tPosture, emit) {
     }
   }
 
-  // 守势化解巧招：反震
-  if (m.stance === '巧' && tPosture === '守' && alive(u)) {
+  // 燕返：巧招得手后，有两成机会再补一击（半成威力）
+  if (m.stance === '巧' && mult >= 1 && alive(target) && hasTrait(u, '燕返') && rand(b) < 0.2) {
+    const extra = Math.max(1, Math.round(dmg * 0.5));
+    target.hp = Math.max(0, target.hp - extra);
+    emit('tag', `${u.name}身形一折，如燕子回翔，又补上一击！（气血 -${extra}）`);
+  }
+
+  // 守势化解巧招：反震（燕回巢无视守势，不受反震）
+  if (m.stance === '巧' && tPosture === '守' && alive(u) && !unblockable) {
     const gm = target.intent?.type === 'move' ? moveInfo(db, target.intent.move) : null;
     if (gm) {
       const tInner = target.innerId ? db.skill[target.innerId] : null;
@@ -450,10 +532,129 @@ function attack(db, b, u, target, m, tPosture, emit) {
       const cd = Math.max(1, Math.round(counter * (100 / (100 + u.innerLv)) * (1 + 0.25 * tal(target, 'fanzhen')) * (tal(u, 'youren') ? 0.5 : 1)));
       u.hp = Math.max(0, u.hp - cd);
       emit('tag', `反震之力直透${u.name}臂膀！（气血 -${cd}）`);
+      const dis = gm.effects.find((e) => e.startsWith('缴械'));
+      if (dis) tryDisarm(b, target, u, num(dis.split(':')[1], 20), emit);
       if (!alive(u)) emit('fx', `${u.name}倒在地上。`);
     }
   }
   if (!alive(target)) emit('fx', `${target.name}倒地不起。`);
+}
+
+/** 辅助招式的效果（D-064）。数值与招式威力、武功等级、内功挂钩 */
+function applySupport(db, u, target, m, emit) {
+  const innerSk = u.innerId ? db.skill[u.innerId] : null;
+  const value = m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, '守');
+  const who = target === u ? '你' : target.name;
+  for (const e of m.effects) {
+    const [kind, k] = e.split(':');
+    if (kind === '疗伤') {
+      const heal = Math.min(target.maxHp - target.hp, Math.round(value * num(k, 1)));
+      target.hp += heal;
+      emit('fx', heal > 0 ? `${target.name}的伤势好转了。（气血 +${heal}）` : `${target.name}气血充盈，并无伤势。`);
+    } else if (kind === '回气') {
+      const gain = Math.min(target.maxMp - target.mp, Math.round(value * num(k, 1)));
+      target.mp += gain;
+      emit('fx', `${target.name}精神一振。（内力 +${gain}）`);
+    } else if (kind === '振奋') {
+      target.status.振奋 = 1;
+      emit('fx', `${target.name}斗志昂扬，下一招威力大增！`);
+    } else if (kind === '护体') {
+      target.status.护体 = 2;
+      emit('fx', `${target.name}周身如有气墙护住，两回合内所受伤害减轻三成。`);
+    } else if (kind === '解穴') {
+      const had = target.status.点穴 || target.status.内伤;
+      delete target.status.点穴; delete target.status.内伤; delete target.status.内伤dot;
+      if (had) emit('fx', `${target.name}被封的穴道、受的内伤都化解了。`);
+    }
+  }
+  void who;
+}
+
+// ---- 合击（D-065）----
+
+function comboSides(c) {
+  const side = (s) => { const [skill, lv] = (s ?? '').split('@').map((x) => x.trim()); return { skill, lv: Number(lv || 1) }; };
+  return [side(c.props.a), side(c.props.b)];
+}
+
+/** P、Q 两位玩家本回合的出手能否构成合击 c（P 对应 a 方，Q 对应 b 方）。返回 {target, dmg} 或 null */
+function comboMatch(db, c, P, Q) {
+  const [A, B] = comboSides(c);
+  if ((P.skills[A.skill] ?? 0) < A.lv || (Q.skills[B.skill] ?? 0) < B.lv) return null;
+  const bonus = num(c.props.bonus, 1.5) - 1;
+  if (db.skill[A.skill]?.props.stance === '守') {
+    // 护攻：P 用守招护住 Q，Q 的攻击没被克制
+    if (P.roundGuard?.skill !== A.skill || P.roundGuard.target !== Q.key) return null;
+    if (Q.roundHit?.skill !== B.skill || Q.roundHit.mult < 1) return null;
+    return { target: Q.roundHit.target, dmg: Math.round(Q.roundHit.dmg * bonus) };
+  }
+  // 合击：两人打同一个对手，都没被克制
+  if (P.roundHit?.skill !== A.skill || Q.roundHit?.skill !== B.skill) return null;
+  if (P.roundHit.target !== Q.roundHit.target || P.roundHit.mult < 1 || Q.roundHit.mult < 1) return null;
+  return { target: P.roundHit.target, dmg: Math.round((P.roundHit.dmg + Q.roundHit.dmg) * bonus) };
+}
+
+function resolveCombos(db, b, emit) {
+  const ps = playersOf(b).filter(alive);
+  const byKey = Object.fromEntries(b.units.map((u) => [u.key, u]));
+  const combos = Object.values(db.combo ?? {});
+  for (let i = 0; i < ps.length; i++) {
+    for (let j = i + 1; j < ps.length; j++) {
+      // 每对队友每回合最多触发一次，取加成最高的
+      let best = null;
+      for (const c of combos) {
+        for (const [P, Q] of [[ps[i], ps[j]], [ps[j], ps[i]]]) {
+          const r = comboMatch(db, c, P, Q);
+          if (r && (!best || num(c.props.bonus) > num(best.c.props.bonus))) best = { c, P, Q, ...r };
+        }
+      }
+      if (!best) continue;
+      const target = byKey[best.target];
+      if (!target || !alive(target)) continue;
+      const dmg = Math.max(1, best.dmg);
+      target.hp = Math.max(0, target.hp - dmg);
+      emit('combo', `★ 合击「${best.c.props.name}」！`);
+      emit('act', fill(best.c.lines.map((l) => l.text).join('') || '$A与$B一左一右，同时攻向$n！', { N: best.P.name, n: target.name }).replaceAll('$A', best.P.name).replaceAll('$B', best.Q.name));
+      emit('hit', `${target.name}${woundText(dmg / target.maxHp)}。（合击 气血 -${dmg}）`, { target: target.key });
+      if (alive(target)) {
+        for (const e of parseList(best.c.props.effects)) {
+          const [kind, k] = e.split(':');
+          if (kind === '内伤') { target.status.内伤 = 3; target.status.内伤dot = Math.max(3, Math.round(dmg * 0.2)); emit('fx', `${target.name}受了内伤。`); }
+          else if (kind === '点穴') { target.status.点穴 = 1; emit('fx', `${target.name}被点中穴道，下一回合动弹不得！`); }
+          else if (kind === '破绽') { target.status.破绽 = 1; emit('fx', `${target.name}露出了破绽。`); }
+          else if (kind === '化内') { const d = Math.min(target.mp, Math.round(dmg * num(k, 1))); target.mp -= d; emit('fx', `${target.name}内力大泄！（内力 -${d}）`); }
+        }
+      }
+      if (!alive(target)) emit('fx', `${target.name}倒地不起。`);
+    }
+  }
+}
+
+/** UI 用：我出这一招，能否和队友已选的招式构成合击？返回合击名或空 */
+export function comboHint(db, b, me, move) {
+  const combos = Object.values(db.combo ?? {});
+  for (const t of playersOf(b).filter((x) => x !== me && alive(x) && x.intent?.type === 'move')) {
+    const ts = moveInfo(db, t.intent.move).skill;
+    for (const c of combos) {
+      const [A, B] = comboSides(c);
+      const lvOk = (P, X, Q, Y) => (P.skills[X.skill] ?? 0) >= X.lv && (Q.skills[Y.skill] ?? 0) >= Y.lv;
+      if (A.skill === move.skill && B.skill === ts && lvOk(me, A, t, B)) return { name: c.props.name, guard: db.skill[A.skill]?.props.stance === '守', mate: t.name };
+      if (B.skill === move.skill && A.skill === ts && lvOk(t, A, me, B)) return { name: c.props.name, guard: false, mate: t.name };
+    }
+  }
+  return null;
+}
+
+/** 缴械：打飞对手手里的兵器（D-057）。敌人此后只能用拳脚；玩家可以花一回合换一件 */
+function tryDisarm(b, by, target, chance, emit) {
+  if (!alive(target) || target.disarmed) return;
+  const armed = target.isPlayer ? !!target.wtype : target.weapon && target.weapon !== '拳';
+  if (!armed || rand(b) * 100 >= chance) return;
+  const wname = target.isPlayer ? target.wname : target.weaponName;
+  target.disarmed = true;
+  if (target.isPlayer) target.dropped = target.wid;
+  else { target.weapon = '拳'; target.weaponName = '双拳'; }
+  emit('fx', `${by.name}一招夺下，${target.name}手中的${wname}脱手飞出！`);
 }
 
 function woundText(ratio) {
@@ -530,7 +731,7 @@ function simChoice(db, b, me, accuracy) {
     const right = COUNTER[foe.intent.stance];
     want = rand(b) < accuracy ? right : pick(b, STANCES.filter((s) => s !== right));
   }
-  const m = moves.filter((x) => x.stance === want && x.mp <= me.mp).sort((x, y) => y.power - x.power)[0];
+  const m = moves.filter((x) => x.stance === want && x.mp <= me.mp && canUse(me, x)).sort((x, y) => y.power - x.power)[0];
   return m ? `${m.i + 1} 1` : '0';
 }
 

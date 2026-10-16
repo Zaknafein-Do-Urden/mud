@@ -2,7 +2,7 @@
 // 天赋的效果需要代码配合（战斗公式里的钩子），所以定义写在代码里而不是内容文件里。
 
 export const TALENT_STEP = 25; // 每 25 点修为得 1 个天赋点
-const BASE_XIUWEI = 40; // 开局四门基础武功各 10 级
+const BASE_XIUWEI = 10; // 开局只有庄稼把式 10 级（D-061）
 
 /** 每支 4 个天赋，必须先点前一个（至少 1 级）才能点后一个 */
 export const TALENT_TREE = [

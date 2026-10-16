@@ -53,7 +53,7 @@ export function initPanels(api) {
   }
 
   const PANELS = {
-    char: { title: '人物', tabs: ['状态', '武功', '天赋', '背包'], render: renderChar },
+    char: { title: '人物', tabs: ['状态', '武功', '天赋', '合击', '背包'], render: renderChar },
     journal: { title: '江湖', tabs: ['主线', '任务'], render: renderJournal },
     market: { title: '市集', tabs: [], render: renderMarket },
     bank: { title: '钱庄', tabs: [], render: renderBank },
@@ -87,6 +87,7 @@ export function initPanels(api) {
         row(el('span', 'pn-k', '气血'), bar(v.hp, v.maxHp, 'hp'), el('span', 'pn-v', `${v.hp}/${v.maxHp}`)),
         kv('内力上限', `${v.mp}（每场战斗开始时回满）`),
         kv('先天', `根骨 ${v.attrs.根骨}　身法 ${v.attrs.身法}　悟性 ${v.attrs.悟性}`),
+        kv('兵器', v.weapon),
         kv('修为', `${v.xiuwei}（所有武功等级之和）`),
         kv('潜能', `${v.potential}（用于修炼武功）`),
         kv('钱财', `身上 ${v.money} 文　钱庄 ${v.bank} 文`),
@@ -189,13 +190,36 @@ export function initPanels(api) {
       return;
     }
 
+    if (tab === '合击') {
+      // 双人合击（D-065）：组队时两人同一回合各出一招触发
+      body.append(el('p', 'pn-hint', '组队时，两人同一回合用下面这些武功出招就会触发合击。"合击"要打同一个对手；"护攻"是甲用守招护住乙（守招目标选乙），乙出手。双方都不能被对手克制。'));
+      for (const c of g.comboView()) {
+        const box = el('div', 'pn-item' + (c.mine ? '' : ' faded'));
+        const sideText = (x, who) => `${who}：${x.sect ? x.sect + '·' : ''}${x.name} ${x.lv} 级${x.have ? (x.have >= x.lv ? '（你已达到）' : `（你 ${x.have} 级）`) : ''}`;
+        box.append(row(el('span', 'pn-skill-name', `${c.name}`), el('span', 'pn-v', `${c.guard ? '护攻' : '合击'}　额外伤害 ×${(c.bonus - 1).toFixed(1)}${c.effects ? '　' + c.effects : ''}`)));
+        box.append(el('div', 'pn-moves', `${sideText(c.a, c.guard ? '甲（守招护住乙）' : '甲')}　｜　${sideText(c.b, '乙')}`));
+        box.append(el('div', 'pn-moves', c.desc));
+        body.append(box);
+      }
+      return;
+    }
+
     if (tab === '背包') {
       const v = g.inventoryView();
       body.append(el('h4', 'pn-sub', '随身物品'));
       if (!v.items.length) body.append(el('p', 'pn-hint', '身上空空如也。'));
       for (const it of v.items) {
-        const r = el('div', 'pn-item');
-        r.append(row(el('span', 'pn-skill-name', `${it.name}×${it.count}`), button(it.verb, () => act(`use ${it.id}`), { disabled: !it.usable, title: it.usable ? '' : '这件东西暂时用不上' })));
+        const r = el('div', 'pn-item' + (it.equipped ? ' on' : ''));
+        if (it.weapon) {
+          // 兵器：装备 / 卸下（D-057）
+          r.append(row(
+            el('span', 'pn-skill-name', `${it.name}${it.equipped ? '（手中）' : ''}`),
+            el('span', 'pn-v', `${it.wtype}${it.bonus ? `　${it.wtype}类招式伤害 +${it.bonus}%` : ''}`),
+            it.equipped ? button('卸下', () => act(`卸下 ${it.id}`)) : button('装备', () => act(`装备 ${it.id}`)),
+          ));
+        } else {
+          r.append(row(el('span', 'pn-skill-name', `${it.name}×${it.count}`), button(it.verb, () => act(`use ${it.id}`), { disabled: !it.usable, title: it.usable ? '' : '这件东西暂时用不上' })));
+        }
         r.append(el('div', 'pn-moves', it.desc));
         body.append(r);
       }

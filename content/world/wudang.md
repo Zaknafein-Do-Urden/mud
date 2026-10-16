@@ -44,6 +44,7 @@ name: 云手
 level: 25
 power: 30
 mp: 9
+effects: 缴械:25
 omen: $N双臂缓缓画圈，如行云流水，不见首尾……
 ---
 $N双手如云般连绵转动，「$招」一出，任何来劲都被带得偏了方向。
@@ -225,8 +226,9 @@ talk: wudang.qingxu.talk
 * 容我再想想
 
 === dialog: wudang.qingxu.joined
+do: give:w.songwen
 ---
-清虚道长点点头，递给你一件青色道袍。
+清虚道长点点头，递给你一件青色道袍，又把一柄松纹古剑放在你手里。
 清虚道长：{姓名}，从今往后你便是武当记名弟子。先学太极拳、绵掌和纯阳无极功吧。
 
 === dialog: wudang.qingxu.task
@@ -535,3 +537,39 @@ flag: world.wudang.task_b3
 where: wudang.forest
 ---
 有个西域番僧上山挑衅，说要领教武当的太极。他掌上有毒，不可轻敌。
+
+# ================= 辅助武功（D-064）：给队友疗伤、加持，鼓励组队 =================
+# 守类招式。默认作用在自己身上；组队时在战斗面板选一位队友作为目标。
+
+=== skill: wudang.daoyin
+name: 太极导引
+kind: 外功
+stance: 守
+sect: wudang
+rank: 1
+---
+武当以太极之理调和气血的导引术，可为同伴疏通经脉、疗伤回气。
+
+=== move: wudang.daoyin.1
+skill: wudang.daoyin
+name: 导引归元
+level: 0
+power: 18
+mp: 7
+support: true
+effects: 疗伤:1.4
+omen: $N退开半步，气息一沉……
+---
+$N双手虚按$n的肩井，以太极圆转之劲为其导气归元。
+
+=== move: wudang.daoyin.2
+skill: wudang.daoyin
+name: 阴阳调和
+level: 30
+power: 24
+mp: 11
+support: true
+effects: 回气:0.8, 解穴
+omen: $N退开半步，气息一沉……
+---
+$N掌心一阴一阳，在$n周身大穴上轻轻拂过，被封的经脉豁然贯通。

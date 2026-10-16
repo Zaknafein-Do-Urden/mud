@@ -16,16 +16,22 @@ const files = [...index.world, ...Object.values(index.storylines).flatMap((s) =>
 for (const f of files) addBlocks(db, parse(readFileSync(join(root, f), 'utf8'), f), f);
 
 export const PROFILES = {
-  开局: () => newPlayer('x'),
+  // 开局：已在武馆学了小巧掌、沾衣十八跌、养气诀（D-061），各 10 级
+  开局: () => {
+    const p = newPlayer('x');
+    Object.assign(p.skills, { 'base.zhang': 10, 'base.zhaojia': 10, 'base.tuna': 10 });
+    p.loadout = { outer: ['base.quan', 'base.zhang', 'base.zhaojia'], inner: 'base.tuna', light: null };
+    return p;
+  },
   入门: () => {
     const p = newPlayer('x');
-    Object.assign(p.skills, { 'gaibang.huntian': 12, 'gaibang.lianhua': 15, 'gaibang.chansi': 15 });
+    Object.assign(p.skills, { 'base.zhang': 10, 'base.zhaojia': 10, 'base.tuna': 10, 'gaibang.huntian': 12, 'gaibang.lianhua': 15, 'gaibang.chansi': 15 });
     p.loadout = { outer: ['gaibang.lianhua', 'base.zhang', 'gaibang.chansi'], inner: 'gaibang.huntian', light: null };
     return p;
   },
   二袋: () => {
     const p = newPlayer('x');
-    Object.assign(p.skills, { 'gaibang.huntian': 20, 'gaibang.lianhua': 25, 'gaibang.chansi': 25, 'gaibang.xiaoyao': 20 });
+    Object.assign(p.skills, { 'base.zhang': 10, 'base.zhaojia': 10, 'base.tuna': 10, 'gaibang.huntian': 20, 'gaibang.lianhua': 25, 'gaibang.chansi': 25, 'gaibang.xiaoyao': 20 });
     p.loadout = { outer: ['gaibang.lianhua', 'gaibang.xiaoyao', 'gaibang.chansi'], inner: 'gaibang.huntian', light: null };
     return p;
   },

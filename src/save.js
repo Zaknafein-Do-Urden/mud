@@ -7,7 +7,7 @@ const PREFIX = 'wuxia-mud:'; // 同一 github.io 用户下所有项目共享 loc
 const SLOT = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('slot')) || '1';
 const SLOT_KEY = PREFIX + 'save:' + SLOT.replace(/[^\w-]/g, '');
 const EXPORT_TAG = 'WXMUD1';
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 export function newState(startRoom) {
   const now = Date.now();
@@ -50,6 +50,8 @@ const migrations = {
   },
   // v6：天赋（D-044）
   5: (s) => ({ ...s, player: { talents: {}, ...s.player } }),
+  // v7：兵器装备（D-057）。基本刀法、剑法后来改为去武馆学（D-061），不再补给
+  6: (s) => ({ ...s, player: { equip: { weapon: null }, ...s.player } }),
 };
 
 /** 已开始的主线 id（用于决定加载哪些内容） */

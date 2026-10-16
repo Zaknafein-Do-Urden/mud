@@ -76,6 +76,7 @@ name: 拈针回手
 level: 25
 power: 28
 mp: 9
+effects: 缴械:30
 omen: $N双手拢在袖中，身子一动不动……
 ---
 $N双手拢袖，摆出「$招」的架势，专等对手出手。
@@ -511,3 +512,39 @@ flag: world.tangmen.task_b3
 where: tangmen.bamboo
 ---
 唐家的仇家雇了杀手，藏在竹林里伺机行刺。除掉他。
+
+# ================= 辅助武功（D-064）：给队友疗伤、加持，鼓励组队 =================
+# 守类招式。默认作用在自己身上；组队时在战斗面板选一位队友作为目标。
+
+=== skill: tangmen.baicao
+name: 百草疗毒
+kind: 外功
+stance: 守
+sect: tangmen
+rank: 1
+---
+唐门的医毒之术，用毒者必先识毒。金针渡穴、灵药续命，都是唐家秘传。
+
+=== move: tangmen.baicao.1
+skill: tangmen.baicao
+name: 金针渡穴
+level: 0
+power: 14
+mp: 6
+support: true
+effects: 解穴, 疗伤:0.8
+omen: $N退开半步，气息一沉……
+---
+$N指间金针一闪，刺入$n几处穴道，淤塞的气血顿时通畅。
+
+=== move: tangmen.baicao.2
+skill: tangmen.baicao
+name: 回魂续命
+level: 30
+power: 26
+mp: 13
+support: true
+effects: 疗伤:1.8
+omen: $N退开半步，气息一沉……
+---
+$N从药囊里取出一粒药丸塞进$n口中，又以金针催动药力。

@@ -1,7 +1,7 @@
 // 引擎给界面面板用的只读数据（D-045）。面板上的按钮一律通过发送命令来操作，
 // 这样界面和命令行永远等价，联机时客人也只需要发命令。
 
-import { maxMp, skillCap, trainCost, sectRanks, expNeed, MAX_OUTER, movesOf, innerOf, innerBonus } from './character.js';
+import { maxMp, skillCap, trainCost, sectRanks, expNeed, MAX_OUTER, movesOf, innerOf, innerBonus, isWeaponItem, weaponOf } from './character.js';
 import { parseList } from './content.js';
 import { TALENT_TREE, talentPointsTotal, talentPointsSpent, canAddTalent, xiuwei, xiuweiToNext, tal } from './talents.js';
 import { cargoUnits, CARGO_CAP } from './economy.js';
@@ -15,6 +15,7 @@ const EFFECT_TEXT = {
   破绽: '破绽：对手下一次受到的伤害 +30%',
   吸内: '吸内：化去对手内力，自己回复一半',
   化内: '化内：化去对手内力',
+  缴械: '缴械：有一定几率打飞对手的兵器（守招在化解巧招时触发）',
 };
 
 export const views = {
@@ -33,6 +34,7 @@ export const views = {
         next: ranks[p.sect.rank + 1] ?? null,
       } : null,
       formerSects: (p.formerSects ?? []).map((id) => this.db.sect[id]?.props.name ?? id),
+      weapon: (() => { const w = weaponOf(this.db, p); return w ? `${w.props.name}（${w.props.weapon}${Number(w.props.bonus) ? `，${w.props.weapon}类招式伤害 +${w.props.bonus}%` : ''}）` : '空手'; })(),
     };
   },
 
@@ -89,14 +91,39 @@ export const views = {
     const stance = sk.props.stance;
     const power = Number(m.props.power ?? 0);
     const talent = 1 + 0.04 * (stance === '刚' ? tal(p, 'manli') : stance === '巧' ? tal(p, 'ruili') : 0);
-    const est = Math.round(power * (1 + lv * 0.02) * innerBonus(inner.lv, inner.skill, stance) * talent);
+    const est = Math.round(power * (1 + lv * 0.02) * innerBonus(inner.lv, inner.skill, stance) * (talent + wb / 100));
     const level = Number(m.props.level ?? 0);
     const effects = parseList(m.props.effects).map((e) => EFFECT_TEXT[e.split(':')[0]] ?? e);
-    const lines = [`${m.props.name}（${stance}）　${level <= lv ? '已领悟' : `${level} 级领悟`}`, `威力 ${power}　耗内力 ${m.props.mp ?? 0}`];
+    const need = sk.props.weapon && sk.props.weapon !== '拳' && sk.props.weapon !== '暗器' ? sk.props.weapon : '';
+    const w = weaponOf(this.db, p);
+    const wb = need && w?.props.weapon === need ? Number(w.props.bonus ?? 0) : 0;
+    const lines = [`${m.props.name}（${stance}）　${level <= lv ? '已领悟' : `${level} 级领悟`}`, `威力 ${power}　耗内力 ${m.props.mp ?? 0}${need ? `　需要${need}` : ''}`];
     if (stance === '守') lines.push(`守势：化解巧招（对方伤害减半），并反震约 ${est} 点；被刚招破防时受伤 ×1.5`);
     else lines.push(`按你现在的等级，约造成 ${est} 点伤害；克制对手时约 ${Math.round(est * 1.5)}，被克制时约 ${Math.round(est * 0.5)}`);
     if (effects.length) lines.push('效果：' + effects.join('；'));
+    if (need && w?.props.weapon !== need) lines.push(`（你现在没有拿${need}，施展不了这一招）`);
     return { name: m.props.name, level, unlocked: level <= lv, power, mp: Number(m.props.mp ?? 0), est, tip: lines.join('\n') };
+  },
+
+  /** 合击（D-065）：与自己武功有关的合击，以及双方的条件 */
+  comboView() {
+    const p = this.state.player;
+    const side = (s) => { const [skill, lv] = (s ?? '').split('@').map((x) => x.trim()); return { skill, lv: Number(lv || 1) }; };
+    const label = (x) => {
+      const sk = this.db.skill[x.skill];
+      const sect = sk?.props.sect ? this.db.sect[sk.props.sect]?.props.name : sk?.id.startsWith('base.') ? '武馆' : '';
+      return { name: sk?.props.name ?? x.skill, lv: x.lv, sect, have: p.skills[x.skill] ?? 0, stance: sk?.props.stance ?? '' };
+    };
+    return Object.values(this.db.combo ?? {}).map((c) => {
+      const [A, B] = [side(c.props.a), side(c.props.b)];
+      const a = label(A);
+      const b = label(B);
+      const mine = a.have > 0 || b.have > 0;
+      return {
+        id: c.id, name: c.props.name, bonus: Number(c.props.bonus), effects: c.props.effects ?? '', a, b, mine,
+        guard: a.stance === '守', desc: c.lines.map((l) => l.text).join('').replaceAll('$A', '甲').replaceAll('$B', '乙').replaceAll('$n', '对手'),
+      };
+    }).sort((x, y) => Number(y.mine) - Number(x.mine) || x.bonus - y.bonus);
   },
 
   talentView() {
@@ -118,7 +145,11 @@ export const views = {
       items: Object.entries(p.inventory).map(([id, n]) => {
         const it = this.db.item[id];
         const hasUse = Object.values(this.db.use ?? {}).some((u) => u.props.item === id) || !!it?.props.verb || !!it?.props.usefail;
-        return { id, name: it?.props.name ?? id, count: n, desc: it?.lines.map((l) => this.fmt(l.text)).join('') ?? '', verb: it?.props.verb ?? '使用', usable: hasUse };
+        const weapon = isWeaponItem(this.db, id);
+        return {
+          id, name: it?.props.name ?? id, count: n, desc: it?.lines.map((l) => this.fmt(l.text)).join('') ?? '', verb: it?.props.verb ?? '使用', usable: hasUse,
+          weapon, wtype: it?.props.weapon ?? '', bonus: Number(it?.props.bonus ?? 0), equipped: weapon && p.equip?.weapon === id,
+        };
       }),
       cargo: Object.entries(p.cargo ?? {}).map(([id, n]) => ({ id, name: this.db.goods[id]?.props.name ?? id, count: n })),
       cargoUnits: cargoUnits(p.cargo), cargoCap: CARGO_CAP,

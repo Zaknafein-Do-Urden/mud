@@ -6,9 +6,9 @@ pos: 190,130
 station: changan.station
 routes: luoyang=4, chengdu=9
 goods: fur=0.75, salt=0.9, herbs=1.1, silk=1.4, tea=1.4, porcelain=1.2, shujin=1.5, iron=1.0
-areas: huashan
+areas: huashan, quanzhen
 ---
-汉唐故都，关中重镇，西域的皮货从这里进来。往东是西岳华山。
+汉唐故都，关中重镇，西域的皮货从这里进来。往东是西岳华山，往南是终南山全真教。
 
 === room: changan.center
 name: 长安·十字街

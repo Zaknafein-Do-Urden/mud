@@ -144,7 +144,7 @@ name: 破剑式
 level: 0
 power: 44
 mp: 24
-effects: 破绽
+effects: 破绽, 缴械:40
 omen: $N长剑随意垂着，整个人却像一张拉满的弓……
 ---
 $N看准$n招式中的破绽，「$招」一剑刺出，正是对方不得不救之处！
@@ -217,6 +217,7 @@ talk: huashan.mu.talk
 * 让我再想想
 
 === dialog: huashan.mu.joined
+do: give:w.mujian
 ---
 穆清风点点头，扔给你一柄木剑。
 穆清风：{姓名}，先从华山剑法、混元掌和华山心法练起。剑法不在多，在于精。
@@ -528,3 +529,39 @@ flag: world.huashan.task_b3
 where: huashan.cliff
 ---
 嵩山派派了个高手来，说要"指点"华山剑法。去让他知道华山剑法的厉害。
+
+# ================= 辅助武功（D-064）：给队友疗伤、加持，鼓励组队 =================
+# 守类招式。默认作用在自己身上；组队时在战斗面板选一位队友作为目标。
+
+=== skill: huashan.jianzhen
+name: 华山剑阵
+kind: 外功
+stance: 守
+sect: huashan
+rank: 1
+---
+华山弟子结阵御敌的法门，护住同伴的空门，为其创造出手的良机。
+
+=== move: huashan.jianzhen.1
+skill: huashan.jianzhen
+name: 剑阵·掩护
+level: 0
+power: 14
+mp: 6
+support: true
+effects: 护体
+omen: $N退开半步，气息一沉……
+---
+$N横身挡在$n侧前，剑势封住了对手所有的进路。
+
+=== move: huashan.jianzhen.2
+skill: huashan.jianzhen
+name: 剑阵·齐心
+level: 30
+power: 20
+mp: 10
+support: true
+effects: 振奋, 护体
+omen: $N退开半步，气息一沉……
+---
+$N与$n背靠背站定，剑阵一合，两人的气势连成一片。

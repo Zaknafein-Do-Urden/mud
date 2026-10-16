@@ -105,7 +105,7 @@ name: 拈花微笑
 level: 0
 power: 17
 mp: 8
-effects: 点穴
+effects: 点穴, 缴械:20
 omen: $N右手拇指与食指轻轻一捏，嘴角似笑非笑……
 ---
 $N面带微笑，右手轻轻一拈，「$招」，一缕指风无声无息点向$n$部位！
@@ -530,3 +530,39 @@ flag: world.shaolin.task_b3
 where: shaolin.hill
 ---
 早年被逐出寺门的叛僧回来了，在后山出没。他武功不弱，你多加小心。
+
+# ================= 辅助武功（D-064）：给队友疗伤、加持，鼓励组队 =================
+# 守类招式。默认作用在自己身上；组队时在战斗面板选一位队友作为目标。
+
+=== skill: shaolin.hufa
+name: 伏魔护法
+kind: 外功
+stance: 守
+sect: shaolin
+rank: 1
+---
+少林武僧护持同门的功夫，以自身内力为同伴撑起护体罡气，也能以佛门手法疗伤。
+
+=== move: shaolin.hufa.1
+skill: shaolin.hufa
+name: 护法金刚
+level: 0
+power: 16
+mp: 7
+support: true
+effects: 护体
+omen: $N退开半步，气息一沉……
+---
+$N双掌一合，一层淡淡的金光罩住了$n。
+
+=== move: shaolin.hufa.2
+skill: shaolin.hufa
+name: 佛光普照
+level: 30
+power: 24
+mp: 12
+support: true
+effects: 疗伤:1.6, 护体
+omen: $N退开半步，气息一沉……
+---
+$N口诵佛号，掌心贴上$n后背，一股醇和的内力缓缓渡了过去。

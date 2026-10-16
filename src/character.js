@@ -32,14 +32,16 @@ export function newPlayer(startRoom) {
     money: 200, // 身上的现钱（文）
     bank: 0, // 钱庄存款
     cargo: {}, // 马车上的货物 {goodsId: 件数}
-    skills: { 'base.quan': 10, 'base.zhang': 10, 'base.zhaojia': 10, 'base.tuna': 10 },
-    loadout: { outer: ['base.quan', 'base.zhang', 'base.zhaojia'], inner: 'base.tuna', light: null },
+    // 开局只会一门庄稼把式；其他基础武功去城里的武馆花钱学（D-061）
+    skills: { 'base.quan': 10 },
+    loadout: { outer: ['base.quan'], inner: null, light: null },
     exp: {}, // 武功实战经验 {skillId: exp}
     sect: null, // {id, rep, rank}
     formerSects: [], // 叛出过的门派（不能再回去）
     frozen: {}, // 叛师后被冻结的武功 {skillId: true}：不能再提升
     lastInn: null,
     talents: {}, // 天赋 {天赋id: 等级}（D-044）
+    equip: { weapon: null }, // 装备的兵器（物品 id，D-057）
   };
 }
 
@@ -99,7 +101,8 @@ export function skillCap(db, p, id) {
     const rankCaps = (sect?.props.caps ?? '').split(',').map(Number);
     caps.push(mine ? rankCaps[p.sect.rank] ?? 0 : num(sk.props.cap, 0));
   } else {
-    caps.push(num(sk.props.cap, 100));
+    // 门派之外的武功：典籍上限；剧情可以用 cap 效果提高（如独门武功随章节解锁）
+    caps.push(Math.max(num(sk.props.cap, 100), p.skillcap?.[id] ?? 0));
   }
   return Math.min(...caps);
 }
@@ -152,4 +155,18 @@ export function gainExp(db, p, id, amount) {
   }
   p.exp[id] = p.skills[id] >= skillCap(db, p, id) ? 0 : exp;
   return gained;
+}
+
+// ---- 兵器（D-057）----
+
+/** 需要相应兵器才能施展的武功类型 */
+export const ARMED = ['刀', '剑', '棍', '鞭'];
+
+/** 物品是否是兵器 */
+export const isWeaponItem = (db, id) => db.item[id]?.props.slot === 'weapon';
+
+/** 身上装备的兵器（物品块），没有或不在背包里则为 null */
+export function weaponOf(db, p) {
+  const id = p.equip?.weapon;
+  return id && (p.inventory?.[id] ?? 0) > 0 && db.item[id] ? db.item[id] : null;
 }

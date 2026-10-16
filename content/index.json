@@ -12,7 +12,11 @@
     "world/shaolin.md",
     "world/wudang.md",
     "world/huashan.md",
-    "world/tangmen.md"
+    "world/tangmen.md",
+    "world/quanzhen.md",
+    "world/smithy.md",
+    "world/wuguan.md",
+    "world/combos.md"
   ],
   "storylines": {
     "shediao": {
@@ -22,7 +26,19 @@
       "files": [
         "shediao/ch01.md",
         "shediao/ch02.md",
-        "shediao/ch03.md"
+        "shediao/ch03.md",
+        "shediao/quanzhen.md"
+      ]
+    },
+    "feiyan": {
+      "hook": [
+        "feiyan/hook.md"
+      ],
+      "files": [
+        "feiyan/ch01.md",
+        "feiyan/ch02.md",
+        "feiyan/ch03.md",
+        "feiyan/ch04.md"
       ]
     }
   }

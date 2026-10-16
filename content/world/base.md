@@ -1,13 +1,13 @@
-# 基础武功：所有角色开局就会，上限 50 级（SECT.md §4）。
+# 基础武功，上限 50 级。开局只会庄稼把式；其余在各城武馆花钱学（D-061，world/wuguan.md）。
 # 招式正文是出招描述：$N 出招者，$n 对手，$招 招式名，$部位 随机部位。
 # omen 是预兆：回合开始时对手看到的样子（COMBAT.md §9.1）。可以用 | 分隔多种写法，每次随机挑一种。
 
 === skill: base.quan
-name: 基本拳脚
+name: 庄稼把式
 kind: 外功
 stance: 刚
 ---
-师父传下的入门拳脚，一拳一脚都是实打实的硬功夫。
+乡下人打架的路数，师父教你的第一样功夫。没什么花样，一拳一脚都是实打实的力气。
 
 === move: base.quan.1
 skill: base.quan
@@ -30,11 +30,11 @@ omen: $N双臂张开，如大鹏展翅，拳风隐隐……|$N两拳分开，一
 $N双拳一左一右，使出「$招」，夹击$n两侧太阳穴！
 
 === skill: base.zhang
-name: 基本掌法
+name: 小巧掌
 kind: 外功
 stance: 巧
 ---
-入门掌法，讲究出手快、变招灵。
+武馆里教的入门掌法，讲究出手快、变招灵，以巧破力。
 
 === move: base.zhang.1
 skill: base.zhang
@@ -52,17 +52,17 @@ name: 穿云手
 level: 25
 power: 19
 mp: 8
-effects: 破绽
+effects: 破绽, 缴械:15
 omen: $N身形微侧，五指并拢如刀……|$N侧身绕步，手指绷得笔直……
 ---
 $N五指并拢，一招「$招」从$n意想不到的角度穿入！
 
 === skill: base.zhaojia
-name: 基本招架
+name: 沾衣十八跌
 kind: 外功
 stance: 守
 ---
-入门的招架功夫，护住要害，以静制动。
+武馆里教的招架功夫，护住要害，借力卸力，对手的拳脚一沾身就被引开。
 
 === move: base.zhaojia.1
 skill: base.zhaojia
@@ -75,9 +75,69 @@ omen: $N双臂一竖，护在胸前……|$N两臂交叉，缩身含胸……|$N
 $N双臂交叉，摆出「$招」的架势，严守门户。
 
 === skill: base.tuna
-name: 吐纳法
+name: 养气诀
 kind: 内功
 hp: 6
 mp: 8
 ---
-最粗浅的呼吸吐纳之法，聊胜于无。
+武馆里教的呼吸吐纳之法，粗浅平和，却是练内功的第一步。
+
+# ---------------- 兵器类基础武功（D-057）：要拿着相应的兵器才能施展 ----------------
+
+=== skill: base.dao
+name: 五虎断门刀
+kind: 外功
+stance: 刚
+weapon: 刀
+---
+镖师、护院人人会两手的刀法，劈、砍、撩、扫，刀刀都要用上全身的力气。要手里有刀才能施展。
+
+=== move: base.dao.1
+skill: base.dao
+name: 力劈
+level: 0
+power: 26
+mp: 10
+omen: $N双手握刀，刀身缓缓举过头顶……|$N拖刀而立，脚下踏实……
+---
+$N双手握刀，一招「$招」当头劈下，刀风直扑$n$部位！
+
+=== move: base.dao.2
+skill: base.dao
+name: 横扫千军
+level: 20
+power: 34
+mp: 15
+effects: 破绽
+omen: $N把刀横在身侧，腰身微拧……
+---
+$N拧腰发力，「$招」一刀横扫，刀光贴着地面卷向$n$部位！
+
+=== skill: base.jian
+name: 三才剑
+kind: 外功
+stance: 巧
+weapon: 剑
+---
+天、地、人三才为纲的入门剑法，刺、挑、点、抹，讲究剑尖的准头。要手里有剑才能施展。
+
+=== move: base.jian.1
+skill: base.jian
+name: 直刺
+level: 0
+power: 17
+mp: 6
+omen: $N剑尖微颤，对准了你的胸口……|$N手腕一沉，剑身平平端在身前……
+---
+$N踏步进身，「$招」一剑笔直刺向$n$部位！
+
+=== move: base.jian.2
+skill: base.jian
+name: 挑腕
+level: 25
+power: 22
+mp: 9
+effects: 缴械:20
+omen: $N剑尖下垂，盯着你握兵器的手……
+---
+$N剑尖自下而上一挑，「$招」，专取$n的手腕！
