@@ -4,6 +4,22 @@
 > **开工前依次读**：仓库根目录 `CLAUDE.md` → [WRITING.md](WRITING.md)（剧情的全部要求）→ 本文 → [POWER.md](POWER.md)（武学授予规则）。
 > 写法范例：`content/shediao/`（射雕，尤其第四章：门槛三选一、NPC 队友、分支、秘籍授予）、`content/feiyan/`（原创线，双人机关）。
 
+## 0. 进度（2026-10-17 更新）
+
+**已写：第一 ~ 四章（段誉线前半）＋ 大理城。** 详见 docs/DEVLOG.md 的 D-200 ~ D-212、docs/STORY.md §7、docs/POWER.md §5 和 §8。
+
+| 已有的东西 | 位置 |
+|---|---|
+| 大理城（车马行、三月街、钱庄、洱海客栈、提刑司、武馆、四件差事） | `content/world/dali.md`、`world/wuguan.md`、`world/goods.md`（滇马）、`world/chengdu.md`（成都↔大理送信） |
+| 开端：成都车马行的马锅头 | `content/tianlong/hook.md` |
+| 剧情地区：无量山（山道、剑湖宫、西崖、玉洞）、万劫谷（谷口、石梁、石厅、茶花圃）、大理城西破院与屋脊、天龙寺（山门、钟楼前院、松林小径、藏经小楼、牟尼堂内外） | `content/tianlong/ch01~ch04.md` |
+| 玩家可学：凌波微步（轻功，上限 70）、北冥神功（内功，60）、一阳指（外功·巧，45） | `content/world/arts.md` 天龙小节 |
+| NPC／敌人专用：六脉神剑、修罗刀（world/arts.md）；鹤爪手、鳄尾鞭法、断魂刀法、吐蕃刀、火焰刀、小无相功（各章节文件） | 同上 |
+| NPC 队友：木婉清（第二章）、朱丹臣（第三、四章）、段誉（第四章）；七个天龙合击 | `content/world/combos.md` 天龙小节 |
+| 通关测试：四条路线（两处门槛的三条路、查案两条线、必败战的输赢、打输重来） | `node tools/playtest-tianlong.mjs` |
+
+**接着往下写的人**：第五章起是江南姑苏（燕子坞、曼陀山庄、松鹤楼结识乔峰）。伏笔见 docs/TODO-CONTENT.md 的"天龙八部"小节。
+
 ## 1. 基本约定
 
 | 项目 | 约定 |

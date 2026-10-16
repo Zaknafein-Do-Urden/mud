@@ -1,7 +1,7 @@
 # 双人合击（D-065）。组队时两位玩家同一回合触发。
 # a、b 是两方的武功（@ 后面是最低等级）。
-#   - a 是守类武功：a 方用守招护住 b 方（守招目标选 b），b 方的攻击没被克制，就触发"护攻"合击；
-#   - 否则：两人用 a、b 两门武功打同一个对手，都没被克制，就触发"合击"。
+#   - a 是守类武功：a 方用守招护住 b 方（守招目标选 b），b 方的攻击没被克制，就触发“护攻”合击；
+#   - 否则：两人用 a、b 两门武功打同一个对手，都没被克制，就触发“合击”。
 # bonus：额外伤害 = 两人这一回合造成的伤害 ×（bonus - 1）。effects 作用在对手身上。
 # 正文是合击描述：$A 是 a 方，$B 是 b 方，$n 是对手。
 # 覆盖：五派两两之间各一个、本门各一个，再加武馆基础武功的几个。低级（10~15 级）、高级（20~30 级，用镇派绝学）都有。
@@ -216,3 +216,67 @@ b: shediao.yangqiang@5
 bonus: 1.5
 ---
 $A剑尖一引，把$n的兵器带偏了半尺；就这半尺的空当，$B的枪已经扎了进去。
+
+# ---------------- 天龙八部（剧情 NPC 队友与剧情武学）----------------
+# 木婉清、朱丹臣、段誉做 NPC 队友时（D-072），和玩家这时多半会的武功配出来的合击。
+
+=== combo: combo.tl_mu_jian
+name: 刀剑双绝
+a: tianlong.xiuluo@10
+b: base.jian@10
+bonus: 1.6
+effects: 破绽
+---
+$A一刀斩开$n的门户，刀风未歇，$B的剑尖已经贴着刀背递了进去。
+
+=== combo: combo.tl_mu_zhang
+name: 错影分光
+a: tianlong.xiuluo@10
+b: base.zhang@10
+bonus: 1.5
+---
+$A的刀光从正面压下，$B的手掌却从刀影底下翻出，$n的眼睛被刀光晃着，看不见那只手。
+
+=== combo: combo.tl_zhi_shuang
+name: 双指连心
+a: tianlong.yiyangzhi@10
+b: tianlong.yiyangzhi@10
+bonus: 1.8
+effects: 点穴
+---
+$A一指封住$n的上路，$B一指点向下路，两道指力一前一后落在同一条经脉上。
+
+=== combo: combo.tl_duan_zhi
+name: 剑气引指
+a: tianlong.liumai@15
+b: tianlong.yiyangzhi@10
+bonus: 2.0
+effects: 内伤
+---
+$A的剑气破空而至，逼得$n侧身让开；$B的指力早已等在他让开的那一边。
+
+=== combo: combo.tl_duan_quan
+name: 指东打西
+a: tianlong.liumai@15
+b: base.quan@10
+bonus: 1.5
+---
+$A胡乱指了几指，剑气东一道西一道，$n忙着躲闪，被$B一拳结结实实打中。
+
+=== combo: combo.tl_zhi_yuenv
+name: 指影剑光
+a: tianlong.yiyangzhi@10
+b: shediao.yuenv@20
+bonus: 1.8
+effects: 点穴
+---
+$A的指力封住$n周身大穴，$B的剑光在指影里穿来穿去，一剑快过一剑。
+
+=== combo: combo.tl_zhi_quan
+name: 点穴借力
+a: tianlong.yiyangzhi@20
+b: base.quan@10
+bonus: 1.5
+effects: 破绽
+---
+$A一指点在$n肩头，$n半边身子一麻，$B的拳头正好砸在他僵住的那一侧。

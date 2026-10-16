@@ -241,3 +241,29 @@ flag: world.job.mail_xiangyang_from_chengdu
 where: xiangyang.office
 ---
 把成都衙门的书信送到襄阳衙门，脚钱 150 文。坐马车 8 日。
+
+# ---------------- 天龙八部新增：成都 ←→ 大理 的送信差事 ----------------
+
+=== patch: chengdu.officer.talk
+---
+* 有信要送去大理吗？ -> chengdu.job.mail_dali ?!flag:world.job.mail_dali ?!today:world.job.mailday_chengdu_dali
+* 交上大理提刑司托付的书信 -> chengdu.job.deliver_dali ?flag:world.job.mail_chengdu_from_dali
+
+=== dialog: chengdu.job.mail_dali
+do: flag:world.job.mail_dali flag:world.job.mail_dali_from_chengdu
+---
+周捕头从抽屉里摸出一封信：“这封要送到大理提刑司去，蜀道难走，脚钱给得也厚，那边付你 150 文。”
+（差事：把书信送到大理提刑司。坐马车 7 日可到）
+
+=== dialog: chengdu.job.deliver_dali
+do: unflag:world.job.mail_chengdu unflag:world.job.mail_chengdu_from_dali money:150 potential:10 today:world.job.mailday_dali_chengdu
+---
+周捕头认得那块火漆上的印子，点点头，数了 150 文给你。
+周捕头：大理的信走得慢，难为你了。
+
+=== quest: world.q.mail_chengdu_dali
+name: 送信：成都 → 大理
+flag: world.job.mail_dali_from_chengdu
+where: dali.office
+---
+把成都衙门的书信送到大理提刑司，脚钱 150 文。坐马车 7 日。

@@ -125,3 +125,24 @@ brief: 成都武馆的教头，教基础武功。
 talk: world.wuguan.talk
 ---
 一个四十来岁的汉子，腰板挺得笔直，说话中气十足。
+
+# ---------------- 天龙八部（大理）新增 ----------------
+
+=== patch: dali.market
+exits: 东=dali.wuguan
+
+=== room: dali.wuguan
+name: 大理·武馆
+exits: 西=dali.market
+npcs: dali.teacher
+train: true
+---
+院子里晒着几张弓，兵器架上的刀枪都擦得锃亮。几个白族后生光着膀子对练，喝起彩来满院子回声。
+在这里可以花钱学基础武功，也可以修炼。
+
+=== npc: dali.teacher
+name: 和教头
+brief: 大理武馆的教头，教基础武功。
+talk: world.wuguan.talk
+---
+一个黑瘦精悍的汉子，手背上一道旧刀疤，说话不多，示范起来却极有耐心。
