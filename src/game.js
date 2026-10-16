@@ -472,6 +472,8 @@ export class Game {
     const pace = d.props.pace === 'slow' && !resume ? { pace: true } : undefined;
     this.emitLines(m.lines, 'say', pace);
     if (d.props.do && !resume) this.apply(words(d.props.do)); // 进入该对话即生效的效果（恢复时不重复）
+    // do 里的 goto 可能触发了目标房间的剧情对话：那个对话接管，这里不再收尾（否则会把它关掉）
+    if (this.dialogId !== id) return;
     const choices = m.choices.filter((c) => this.check(c.cond));
     // ifnone：除"离开"类选项外一个都没有时显示的话（如"目前没有门派任务"，D-054）
     if (d.props.ifnone && !choices.some((c) => c.target || c.effects.length)) this.emit('say', d.props.ifnone);
