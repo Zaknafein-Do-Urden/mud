@@ -409,7 +409,8 @@ export function resolveRound(db, b, emit) {
       posture[u.key] = '无';
       emit('fx', `${sayN(u)}从行囊里抽出${it.props.name}，握在手中。`);
     } else if (u.intent?.type === 'rest') {
-      const gain = Math.min(u.maxMp - u.mp, Math.round(u.maxMp * (REST_RATE + 0.03 * tal(u, 'tuna') + (hasTrait(u, '回旋') ? 0.05 : 0))));
+      // 吸内可能让内力暂时高过上限，这里不能回成负数
+      const gain = Math.max(0, Math.min(u.maxMp - u.mp, Math.round(u.maxMp * (REST_RATE + 0.03 * tal(u, 'tuna') + (hasTrait(u, '回旋') ? 0.05 : 0)))));
       u.mp += gain;
       posture[u.key] = '无';
       emit('fx', `${sayN(u)}盘膝调息，内力略有恢复。（内力 +${gain}）`);
@@ -571,6 +572,18 @@ function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
     }
   }
 
+  // 内功吸内（D-214）：装备的内功写了 absorb 时，攻击得手（没被克制）就把对手的内力吸过来。
+  // 吸来的内力可以临时超过自己的上限；内力不进存档（每战开打时重置为上限），所以战后上限和内力都不受影响。
+  const absorbRate = num(innerSk?.props.absorb);
+  if (absorbRate > 0 && mult >= 1 && alive(target) && target.mp > 0 && opts.primary !== false) {
+    const drain = Math.min(target.mp, Math.round(dmg * absorbRate));
+    if (drain > 0) {
+      target.mp -= drain;
+      u.mp += drain; // 故意不夹 maxMp
+      emit('fx', `${target.name}只觉丹田一空，内力顺着交手处倒灌而去。（${target.name}内力 -${drain}，${u.name}内力 +${drain}）`);
+    }
+  }
+
   // 燕返：巧招得手后，有两成机会再补一击（半成威力）
   if (m.stance === '巧' && mult >= 1 && alive(target) && hasTrait(u, '燕返') && rand(b) < 0.2) {
     const extra = Math.max(1, Math.round(dmg * 0.5));
@@ -607,7 +620,7 @@ function applySupport(db, u, target, m, emit) {
       target.hp += heal;
       emit('fx', heal > 0 ? `${target.name}的伤势好转了。（气血 +${heal}）` : `${target.name}气血充盈，并无伤势。`);
     } else if (kind === '回气') {
-      const gain = Math.min(target.maxMp - target.mp, Math.round(value * num(k, 1)));
+      const gain = Math.max(0, Math.min(target.maxMp - target.mp, Math.round(value * num(k, 1))));
       target.mp += gain;
       emit('fx', `${target.name}精神一振。（内力 +${gain}）`);
     } else if (kind === '振奋') {

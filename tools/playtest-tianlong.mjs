@@ -253,6 +253,7 @@ function ch4(g, label, { how = 'qiao', hide = true, beat = false } = {}) {
   pick(g, '拦住他', label);
   pick(g, '……', label);
   expectFlag(g, 'tianlong.ch4_done', label);
+  expectSkill(g, 'tianlong.liumai', label); // 本因传的商阳一路（D-215）
   const cap = g.db.skill['tianlong.yiyangzhi'].props.cap;
   if (!flag(g, 'tianlong.lead_jiangnan')) note(`${label}：江南的伏笔标记没有设下`);
   if (cap !== '25') note(`${label}：一阳指的初始上限被改过了（${cap}），检查 POWER 规划`);

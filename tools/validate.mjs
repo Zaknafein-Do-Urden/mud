@@ -128,6 +128,10 @@ for (const b of all) {
     if (b.props.kind === '外功' && !['刚', '巧', '守'].includes(b.props.stance)) err(b, `外功必须指定 stance（刚/巧/守）`);
     if (b.props.sect && !db.sect[b.props.sect]) err(b, `所属门派不存在: ${b.props.sect}`);
     if (b.props.kind === '外功' && !Object.values(db.move).some((m) => m.props.skill === b.id)) err(b, '外功没有任何招式');
+    if (b.props.absorb !== undefined) {
+      if (b.props.kind !== '内功') err(b, 'absorb（吸内）只能写在内功上');
+      else if (!(Number(b.props.absorb) > 0 && Number(b.props.absorb) <= 1)) err(b, 'absorb 应为 0~1 之间的小数（吸走的内力 = 伤害 × absorb）');
+    }
   }
   if (b.type === 'move') {
     if (!db.skill[b.props.skill]) err(b, `所属武功不存在: ${b.props.skill}`);

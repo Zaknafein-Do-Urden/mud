@@ -17,7 +17,11 @@ function effectFactor(effects) {
 export function skillPower(db, skillId, lv) {
   const sk = db.skill[skillId];
   if (!sk) return 0;
-  if (sk.props.kind !== '外功') return Math.round(STANDARD_POWER * (1 + lv * 0.02));
+  // 内功、轻功没有招式：按标准招式折算。带吸内的内功（absorb）加 5%，和招式效果「吸内」同一个系数（D-214）
+  if (sk.props.kind !== '外功') {
+    const absorb = Number(sk.props.absorb) > 0 ? 1 + EFFECT_BONUS.吸内 : 1;
+    return Math.round(STANDARD_POWER * absorb * (1 + lv * 0.02));
+  }
   let best = 0;
   for (const m of Object.values(db.move)) {
     if (m.props.skill !== skillId || m.props.support === 'true' || num(m.props.level) > lv) continue;
