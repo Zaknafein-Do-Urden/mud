@@ -15,12 +15,20 @@ function hash01(...parts) {
   return ((h >>> 0) % 10000) / 10000;
 }
 
-/** 某城市当天某货物的行情价；城市不收这种货时返回 null */
+/** 本地没有的货（城市 goods 里没列出的）：买不到，但照样收，按基准价（D-076） */
+export const UNLISTED_MULT = 1.0;
+
+/** 这座城市本地有没有这种货（能不能买） */
+export function goodsLocal(db, cityId, goodsId) {
+  return parseNums(db.city[cityId]?.props.goods)[goodsId] !== undefined;
+}
+
+/** 某城市当天某货物的行情价。本地没有的货也有价（按基准价），只是不能买（D-076） */
 export function goodsPrice(db, cityId, goodsId, day) {
   const city = db.city[cityId];
-  const mult = parseNums(city?.props.goods)[goodsId];
   const g = db.goods[goodsId];
-  if (!mult || !g) return null;
+  if (!city || !g) return null;
+  const mult = parseNums(city.props.goods)[goodsId] ?? UNLISTED_MULT;
   const wave = 0.85 + 0.3 * hash01(cityId, goodsId, day);
   return Math.max(1, Math.round(Number(g.props.price) * mult * wave));
 }

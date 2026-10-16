@@ -288,14 +288,16 @@ export function initPanels(api) {
     for (const gd of v.goods) {
       const tr = el('tr');
       const ops = el('td', 'pn-btns');
+      // 本地没有的货（D-076）：显示价格，不能买，但能卖
+      const noBuy = !gd.local;
       ops.append(
-        button('买1', () => act(`买 ${gd.id} 1`), { disabled: v.money < gd.buy || v.cargoUnits >= v.cargoCap }),
-        button('买5', () => act(`买 ${gd.id} 5`), { disabled: v.money < gd.buy * 5 || v.cargoUnits + 5 > v.cargoCap }),
-        button('买满', () => act(`买 ${gd.id} 全部`), { disabled: v.money < gd.buy || v.cargoUnits >= v.cargoCap }),
+        button('买1', () => act(`买 ${gd.id} 1`), { disabled: noBuy || v.money < gd.buy || v.cargoUnits >= v.cargoCap }),
+        button('买5', () => act(`买 ${gd.id} 5`), { disabled: noBuy || v.money < gd.buy * 5 || v.cargoUnits + 5 > v.cargoCap }),
+        button('买满', () => act(`买 ${gd.id} 全部`), { disabled: noBuy || v.money < gd.buy || v.cargoUnits >= v.cargoCap }),
         button('卖1', () => act(`卖 ${gd.id} 1`), { disabled: !gd.have }),
         button('全卖', () => act(`卖 ${gd.id} 全部`), { disabled: !gd.have }),
       );
-      tr.append(el('td', '', gd.name), el('td', '', gd.buy), el('td', '', gd.sell), el('td', '', gd.have || ''), ops);
+      tr.append(el('td', '', gd.name), el('td', noBuy ? 'pn-dim' : '', noBuy ? '本地无货' : gd.buy), el('td', '', gd.sell), el('td', '', gd.have || ''), ops);
       t.append(tr);
     }
     body.append(t);

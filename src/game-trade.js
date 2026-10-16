@@ -1,6 +1,6 @@
 // 引擎的经济部分：金钱、市场、钱庄、马车。以方法的形式并入 Game（见 game.js 末尾）。
 
-import { goodsPrice, cargoUnits, cargoValue, robberyChance, robbers, routesOf, cityOfRoom, CARGO_CAP, SELL_RATE } from './economy.js';
+import { goodsPrice, goodsLocal, cargoUnits, cargoValue, robberyChance, robbers, routesOf, cityOfRoom, CARGO_CAP, SELL_RATE } from './economy.js';
 import { createScaledBattle, beginRound, enemiesOf } from './combat.js';
 
 const ALL = ['全部', 'all'];
@@ -16,15 +16,19 @@ export const trade = {
 
   // ---- 市场 ----
 
-  /** 当前城市可交易的货物 [{id, name, buy, sell}] */
+  /**
+   * 当前城市的全部货物 [{id, name, buy, sell, local}]（D-076）：
+   * 每种货都有价、都能卖；local 为 false 的是本地没有的货，不能买。
+   */
   marketList() {
     const city = this.cityHere();
     return Object.values(this.db.goods)
       .map((g) => {
         const price = goodsPrice(this.db, city, g.id, this.state.day ?? 1);
-        return price === null ? null : { id: g.id, name: g.props.name, buy: price, sell: Math.round(price * SELL_RATE) };
+        return price === null ? null : { id: g.id, name: g.props.name, buy: price, sell: Math.round(price * SELL_RATE), local: goodsLocal(this.db, city, g.id) };
       })
-      .filter(Boolean);
+      .filter(Boolean)
+      .sort((a, b) => Number(b.local) - Number(a.local)); // 本地有的货排前面
   },
 
   inMarket() {
@@ -40,10 +44,8 @@ export const trade = {
     this.emit('sys', `【${city?.props.name ?? ''}市集　第 ${this.state.day ?? 1} 日行情】（买 货名 数量 / 卖 货名 数量；数量可写"全部"）`);
     for (const g of this.marketList()) {
       const have = p.cargo?.[g.id] ?? 0;
-      this.emit('sys', `　[[${g.name}|${g.id}]]　买入 ${g.buy}　卖出 ${g.sell}${have ? `　车上 ${have} 件` : ''}`);
+      this.emit('sys', `　[[${g.name}|${g.id}]]　${g.local ? `买入 ${g.buy}` : '本地无货'}　卖出 ${g.sell}${have ? `　车上 ${have} 件` : ''}`);
     }
-    const others = Object.entries(p.cargo ?? {}).filter(([id]) => !this.marketList().some((g) => g.id === id));
-    if (others.length) this.emit('sys', `　（车上的${others.map(([id]) => this.db.goods[id]?.props.name).join('、')}这里没人收）`);
     this.emit('sys', `马车载货 ${cargoUnits(p.cargo)}/${CARGO_CAP} 件　身上 ${p.money ?? 0} 文`);
   },
 
@@ -56,7 +58,8 @@ export const trade = {
     const [name, qtyStr] = arg.split(/\s+/);
     const p = this.state.player;
     const g = this.marketList().find((x) => x.id === this.findGoods(name));
-    if (!g) { this.emit('err', name ? `这里不卖「${name}」。输入 行情 看看有什么货。` : '买什么？例如：买 丝绸 5'); return; }
+    if (!g) { this.emit('err', name ? `没有「${name}」这种货。输入 行情 看看。` : '买什么？例如：买 丝绸 5'); return; }
+    if (!g.local) { this.emit('err', `${g.name}本地没有货，买不到；带来的${g.name}倒是可以在这里卖。`); return; }
     const room = CARGO_CAP - cargoUnits(p.cargo);
     const afford = Math.floor((p.money ?? 0) / g.buy);
     const qty = ALL.includes(qtyStr) ? Math.min(room, afford) : Number(qtyStr ?? 1);
@@ -75,8 +78,7 @@ export const trade = {
     const id = this.findGoods(name);
     const have = p.cargo?.[id] ?? 0;
     if (!have) { this.emit('err', name ? `车上没有「${name}」。` : '卖什么？例如：卖 丝绸 全部'); return; }
-    const g = this.marketList().find((x) => x.id === id);
-    if (!g) { this.emit('err', `这里没人收${this.db.goods[id].props.name}。`); return; }
+    const g = this.marketList().find((x) => x.id === id); // 任何货都能卖（D-076）
     const qty = ALL.includes(qtyStr) || qtyStr === undefined ? have : Number(qtyStr);
     if (!Number.isInteger(qty) || qty <= 0 || qty > have) { this.emit('err', `数量不对，车上有 ${have} 件。`); return; }
     p.cargo[id] -= qty;
