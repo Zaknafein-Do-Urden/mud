@@ -204,9 +204,10 @@ talk: huashan.mu.talk
 === dialog: huashan.mu.talk
 ---
 ?sect:none 穆清风：上华山的人，不是来看风景的，就是来学剑的。你是哪一种？
-?sect:huashan 穆清风：剑要快，心要正。要学剑说“学”，要晋阶说“晋阶”，先胜过你梁师兄再说。
+?sect:huashan 穆清风：剑要快，心要正。要学剑只管开口，要晋阶说“晋阶”，先胜过你梁师兄再说。
 ?!sect:none ?!sect:huashan 穆清风：你已有师门，华山不收二心之人。
 * 弟子想学华山剑法 -> huashan.mu.join ?sect:none
+* 请师父传授武功 -> world.sect.teach ?sect:huashan
 * 师父可有差遣？ -> huashan.mu.task ?sect:huashan
 * 告辞
 
@@ -221,6 +222,7 @@ do: give:w.mujian
 ---
 穆清风点点头，扔给你一柄木剑。
 穆清风：{姓名}，先从华山剑法、混元掌和华山心法练起。剑法不在多，在于精。
+* 请师父传授武功 -> world.sect.teach
 
 === dialog: huashan.mu.task
 ifnone: 穆清风：今天的差事都办完了，目前没有门派任务。明日再来吧。

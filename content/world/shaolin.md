@@ -206,9 +206,10 @@ talk: shaolin.huiming.talk
 === dialog: shaolin.huiming.talk
 ---
 ?sect:none 慧明禅师：阿弥陀佛。施主远道而来，是要礼佛，还是学武？
-?sect:shaolin 慧明禅师：善哉。习武先习心，切莫急躁。要学功夫说“学”，要晋阶说“晋阶”，须先过慧觉那一关。
+?sect:shaolin 慧明禅师：善哉。习武先习心，切莫急躁。要学功夫只管开口，要晋阶说“晋阶”，须先过慧觉那一关。
 ?!sect:none ?!sect:shaolin 慧明禅师：施主已有师门，老衲不便多言。
 * 弟子愿拜入少林 -> shaolin.huiming.join ?sect:none
+* 请师父传授武功 -> world.sect.teach ?sect:shaolin
 * 寺里可有需要帮忙的事？ -> shaolin.huiming.task ?sect:shaolin
 * 告辞
 
@@ -223,6 +224,7 @@ talk: shaolin.huiming.talk
 ---
 慧明禅师微微颔首，命小沙弥取来一件灰布短褂。
 慧明禅师：从今日起，你便是少林俗家弟子{姓名}。先学罗汉拳、金钟罩和少林心法吧。
+* 请师父传授武功 -> world.sect.teach
 
 === dialog: shaolin.huiming.task
 ifnone: 慧明禅师：今天的差事都办完了，目前没有门派任务。明日再来吧。

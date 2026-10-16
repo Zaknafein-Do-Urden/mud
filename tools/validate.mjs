@@ -62,7 +62,7 @@ function checkEffects(b, effects) {
     else if (kind === 'chapter') { if (!db.chapter[key]) err(b, `chapter 目标章节不存在: ${key}`); }
     else if (kind === 'fight') { if (!db.battle[key]) err(b, `fight 目标战斗不存在: ${key}`); }
     else if (kind === 'join') { if (!db.sect[key]) err(b, `join 目标门派不存在: ${key}`); }
-    else if (kind === 'learn') { if (!db.skill[key]) err(b, `learn 目标武功不存在: ${key}`); }
+    else if (kind === 'learn' || kind === 'sectlearn') { if (!db.skill[key]) err(b, `${kind} 目标武功不存在: ${key}`); }
     else if (kind === 'rep') { const [sect, n] = key.split(':'); if (!db.sect[sect] || Number.isNaN(Number(n))) err(b, `rep 格式应为 rep:门派:数值，却是: ${e}`); }
     else if (kind === 'potential') { if (Number.isNaN(Number(key))) err(b, `potential 需要数字: ${e}`); }
     else if (kind === 'heal') { /* 无参数 */ }

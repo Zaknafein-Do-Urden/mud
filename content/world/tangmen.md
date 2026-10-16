@@ -184,9 +184,10 @@ talk: tangmen.laolao.talk
 === dialog: tangmen.laolao.talk
 ---
 ?sect:none 唐姥姥：外人进唐家堡，要么是来求药，要么是来寻仇。你是哪样？
-?sect:tangmen 唐姥姥：暗器要准，心要狠，嘴要严。要学本事说“学”，要晋阶说“晋阶”，先赢了唐七。
+?sect:tangmen 唐姥姥：暗器要准，心要狠，嘴要严。想学本事，跟我说一声；要晋阶说“晋阶”，先赢了唐七。
 ?!sect:none ?!sect:tangmen 唐姥姥：别家的人，少在唐家堡打转。
 * 晚辈想投入唐门 -> tangmen.laolao.join ?sect:none
+* 请姥姥传授武功 -> world.sect.teach ?sect:tangmen
 * 姥姥可有差遣？ -> tangmen.laolao.task ?sect:tangmen
 * 告辞
 
@@ -201,6 +202,7 @@ talk: tangmen.laolao.talk
 ---
 唐姥姥从袖中摸出一枚铁蒺藜，放在你掌心。
 唐姥姥：{姓名}，从今天起你就是唐门的外姓门人。先学飞蝗石、千机手和唐门心法。
+* 请师父传授武功 -> world.sect.teach
 
 === dialog: tangmen.laolao.task
 ifnone: 唐姥姥：今天的差事都办完了，目前没有门派任务。明日再来吧。

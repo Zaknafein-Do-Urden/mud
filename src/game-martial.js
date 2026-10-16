@@ -200,6 +200,20 @@ export const martial = {
     this.autoEquip(sk.id);
   },
 
+  /** 学艺对话的选项（D-069）：本门已到阶位、还没学的武功；阶位不够的列在文字里 */
+  teachChoices(back) {
+    const p = this.state.player;
+    const sectId = this.sectOfMaster();
+    if (!sectId || p.sect?.id !== sectId) return [];
+    const ranks = sectRanks(this.db.sect[sectId]);
+    const todo = Object.values(this.db.skill).filter((s) => s.props.sect === sectId && p.skills[s.id] === undefined);
+    const label = (s) => `${s.props.name}（${s.props.kind}${s.props.stance ? '·' + s.props.stance : ''}）`;
+    const locked = todo.filter((s) => Number(s.props.rank ?? 0) > p.sect.rank);
+    if (locked.length) this.emit('say', '要更高的阶位才能学：' + locked.map((s) => `${label(s)}需${ranks[Number(s.props.rank)]?.name ?? '更高阶位'}`).join('、'));
+    return todo.filter((s) => Number(s.props.rank ?? 0) <= p.sect.rank)
+      .map((s) => ({ text: `学${label(s)}`, target: back, cond: [], effects: [`sectlearn:${s.id}`] }));
+  },
+
   /** 新学的武功：有空栏位就自动装上；内功只在不降级时自动替换 */
   autoEquip(id) {
     const p = this.state.player;
@@ -266,7 +280,7 @@ export const martial = {
     if (p.sect) { this.emit('err', `你已是${this.db.sect[p.sect.id]?.props.name}弟子，不能再拜入别派。`); return; }
     if (p.formerSects?.includes(id)) { this.emit('err', `你是${sect.props.name}的叛徒，人家不会再收你。`); return; }
     p.sect = { id, rep: 0, rank: 0 };
-    this.emit('story', `你拜入了${sect.props.name}，成为${sectRanks(sect)[0]?.name}。（输入 学 查看本门武学）`);
+    this.emit('story', `你拜入了${sect.props.name}，成为${sectRanks(sect)[0]?.name}。（和师父对话选"传授武功"，或输入 学，都可以学本门武功）`);
   },
 
   addRep(sectId, n) {

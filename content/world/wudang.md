@@ -213,9 +213,10 @@ talk: wudang.qingxu.talk
 === dialog: wudang.qingxu.talk
 ---
 ?sect:none 清虚道长：无量天尊。{男:小友|女:姑娘}上山，所为何事？
-?sect:wudang 清虚道长：练功要松，心要静。要学功夫说“学”，要晋阶说“晋阶”，得先和明月过过手。
+?sect:wudang 清虚道长：练功要松，心要静。要学功夫只管开口，要晋阶说“晋阶”，得先和明月过过手。
 ?!sect:none ?!sect:wudang 清虚道长：道友已有师承，贫道不便收录。
 * 弟子想拜入武当 -> wudang.qingxu.join ?sect:none
+* 请师父传授武功 -> world.sect.teach ?sect:wudang
 * 山上可有差事？ -> wudang.qingxu.task ?sect:wudang
 * 告辞
 
@@ -230,6 +231,7 @@ do: give:w.songwen
 ---
 清虚道长点点头，递给你一件青色道袍，又把一柄松纹古剑放在你手里。
 清虚道长：{姓名}，从今往后你便是武当记名弟子。先学太极拳、绵掌和纯阳无极功吧。
+* 请师父传授武功 -> world.sect.teach
 
 === dialog: wudang.qingxu.task
 ifnone: 清虚道长：今天的差事都办完了，目前没有门派任务。明日再来吧。

@@ -209,6 +209,7 @@ export class Game {
       else if (kind === 'money') this.addMoney(Number(key));
       else if (kind === 'pay') this.addMoney(-Number(key));
       else if (kind === 'travel') this.travel(key);
+      else if (kind === 'sectlearn') this.learn(key); // 向本门师父学艺（不要钱，规则同"学"命令）
       else if (kind === 'learn') {
         if (player.skills[key] === undefined) {
           player.skills[key] = 1;
@@ -471,6 +472,8 @@ export class Game {
     const m = this.merged(d);
     const pace = d.props.pace === 'slow' && !resume ? { pace: true } : undefined;
     this.emitLines(m.lines, 'say', pace);
+    // 门派学艺（D-069）：在本门师父面前，把眼下能学的武功列成选项，学完回到这里接着挑
+    if (d.props.teach === 'true') m.choices = [...this.teachChoices(id), ...m.choices];
     if (d.props.do && !resume) this.apply(words(d.props.do)); // 进入该对话即生效的效果（恢复时不重复）
     // do 里的 goto 可能触发了目标房间的剧情对话：那个对话接管，这里不再收尾（否则会把它关掉）
     if (this.dialogId !== id) return;

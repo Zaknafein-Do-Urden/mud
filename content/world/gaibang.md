@@ -202,8 +202,9 @@ talk: gaibang.lu.talk
 === dialog: gaibang.lu.talk
 ---
 ?sect:none 鲁有脚：嘿，看你的样子不像是来讨饭的。来我们这破庙做什么？
-?sect:gaibang 鲁有脚：好徒儿，今日有什么事？想学功夫就说“学”；声望够了就说“晋阶”，过了黎生那一关才算数。
+?sect:gaibang 鲁有脚：好徒儿，今日有什么事？想学功夫只管开口；声望够了就说“晋阶”，过了黎生那一关才算数。
 * 久仰丐帮威名，想拜入门下 -> gaibang.lu.join ?sect:none
+* 请师父传授武功 -> world.sect.teach ?sect:gaibang
 * 有什么差事给我做？ -> gaibang.lu.task ?sect:gaibang
 * 离开
 
@@ -217,7 +218,8 @@ talk: gaibang.lu.talk
 === dialog: gaibang.lu.joined
 ---
 鲁有脚哈哈大笑，从怀里掏出一只旧布袋，替你系在背上。
-鲁有脚：好！从今往后，你就是我丐帮的人了。先跟我学几手入门功夫——莲花掌、缠丝擒拿手、混天气功，说“学 莲花掌”便是。
+鲁有脚：好！从今往后，你就是我丐帮的人了。先跟我学几手入门功夫——莲花掌、缠丝擒拿手、混天气功，想学哪一门，跟我说一声便是。
+* 请师父传授武功 -> world.sect.teach
 
 === dialog: gaibang.lu.task
 ifnone: 鲁有脚：今天的差事都办完了，目前没有门派任务。明日再来吧。
