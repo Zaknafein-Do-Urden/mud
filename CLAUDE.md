@@ -13,6 +13,14 @@
 
 **[docs/WRITING.md](docs/WRITING.md)**：用户对剧情的全部要求（版权、章节结构、战斗、门槛、联机、武学秘籍的平衡、防丢规则、检查流程、各主线章节规划）。
 
+写天龙八部的会话再读 **[docs/TIANLONG.md](docs/TIANLONG.md)**（地图、门派关系、章节规划、多会话协作规则）。
+
+## 多个会话同时工作时
+
+- 只 `git add` 自己改的文件（写明路径），不要 `git add -A`；不要 checkout / stash / reset 别人正在改的文件。
+- 开发日志编号分段：主线会话接着 D-086 往后；天龙八部会话从 D-200 开始。以后再开新主线的会话，从 D-300、D-400 依次往后。
+- 共用的内容文件（index.json、world/arts.md、world/combos.md 等）只追加自己的小节。详见 docs/TIANLONG.md §6。
+
 ## 常用命令
 
 ```bash
