@@ -114,7 +114,7 @@ talk: linan.beggar.start
 ---
 ?!flag:world.beggar_friend 老乞丐：{男:这位小哥|女:这位姑娘}，行行好，赏口饭吃吧……
 ?flag:world.beggar_friend 老乞丐：嘿嘿，又是你。东西收好了没有？
-* 给他一文钱 -> linan.beggar.give ?money:1 ?!flag:world.beggar_friend !pay:1 !flag:world.beggar_friend
+* 给他一文钱 -> linan.beggar.give ?money:1 ?!flag:world.beggar_friend !pay:1
 * 打听会吹竹哨的人 -> linan.beggar.whistle
 * 打听丐帮 -> linan.beggar.gaibang
 * 离开
@@ -130,7 +130,7 @@ talk: linan.beggar.start
 ---
 老乞丐没有回答。他从破碗底下摸出一支竹哨，塞进你手里。
 老乞丐：天黑以后，去断桥。吹三声。别让任何人跟着你。
-* 收下竹哨 !give:bamboo_whistle !flag:world.got_whistle
+* 收下竹哨 !give:bamboo_whistle !flag:world.got_whistle !flag:world.beggar_friend
 
 === dialog: linan.beggar.whistle
 ---

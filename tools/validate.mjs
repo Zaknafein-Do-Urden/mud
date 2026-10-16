@@ -204,6 +204,58 @@ for (const id of Object.keys(db.room)) {
   if (id !== start && !referenced.has(id)) warns.push(`房间没有任何入口: ${id}`);
 }
 
+// 任务物品不能"中途离开对话就丢"（D-067）。没有 lock 的对话，玩家输入别的命令就离开了。
+{
+  const REWARD = /^(give|learn|cap):/;
+  const meaningful = (d) => d.choices.some((c) => c.target || c.effects.length);
+  const rewardChoice = (d) => d.choices.find((c) => c.effects.some((e) => REWARD.test(e)));
+  const reach = (start, fn) => {
+    const seen = new Set();
+    const stack = [start];
+    while (stack.length) {
+      const id = stack.pop();
+      const d = db.dialog[id];
+      if (!d || seen.has(id)) continue;
+      seen.add(id);
+      fn(d);
+      for (const c of d.choices) if (c.target) stack.push(c.target);
+    }
+  };
+  const mustLock = (d, why) => { if (d.props.lock !== 'true' && meaningful(d)) err(d, `${why}，玩家中途离开就再也回不来，对话要加 lock: true`); };
+  // 1. 只出现一次的入口（战斗结果、once 触发 / 使用）之后的剧情对话必须锁定
+  for (const b of Object.values(db.battle)) for (const k of ['win', 'lose']) if (b.props[k]) reach(b.props[k], (d) => mustLock(d, `跟在战斗 ${b.id} 的结果后面`));
+  for (const t of [...Object.values(db.trigger), ...Object.values(db.use ?? {})]) if (t.props.once === 'true' && t.props.dialog) reach(t.props.dialog, (d) => mustLock(d, `跟在一次性的 ${t.type} ${t.id} 后面`));
+  // 1b. 触发的剧情一旦设下关掉触发条件的标记（if 里的 !flag:X），之后的对话就不会再触发，也要锁定
+  for (const t of Object.values(db.trigger)) {
+    const off = words(t.props.if).filter((c) => c.startsWith('!flag:')).map((c) => c.slice(1));
+    if (!off.length || !t.props.dialog) continue;
+    const seen = new Set();
+    const walk = (id, closed) => {
+      const d = db.dialog[id];
+      if (!d || seen.has(id + closed)) return;
+      seen.add(id + closed);
+      const closedHere = closed || words(d.props.do).some((e) => off.includes(e));
+      if (closed) mustLock(d, `触发 ${t.id} 的条件已在前面关掉`);
+      for (const c of d.choices) if (c.target) walk(c.target, closedHere || c.effects.some((e) => off.includes(e)));
+    };
+    walk(t.props.dialog, false);
+  }
+  // 2. 进入对话就设了标记（do），奖励却放在选项里：先更新了状态，物品还没给
+  for (const d of Object.values(db.dialog)) {
+    const r = rewardChoice(d);
+    if (r && d.props.lock !== 'true' && words(d.props.do).some((e) => e.startsWith('flag:'))) err(d, `do 里先设了标记，选项「${r.text}」才给奖励。把奖励移到 do 里，或者加 lock: true`);
+  }
+  // 3. 选项设下的标记会让它自己消失（?!flag:X … !flag:X），后面的奖励又可能被跳过
+  for (const d of Object.values(db.dialog)) for (const c of d.choices) {
+    const hides = c.effects.filter((e) => e.startsWith('flag:')).some((e) => c.cond.includes('!' + e));
+    if (!hides || !c.target) continue;
+    reach(c.target, (x) => {
+      const r = rewardChoice(x);
+      if (r && x.props.lock !== 'true') err(d, `选项「${c.text}」先设了让自己消失的标记，奖励「${r.text}」却在之后可以离开的对话 ${x.id} 里。把标记和奖励放在同一个选项里`);
+    });
+  }
+}
+
 // 待写占位：剧情推进后要回头删掉，清单见 docs/TODO-CONTENT.md
 const PLACEHOLDER = /尚未编写|待续|敬请期待|开发中/;
 for (const [f] of files) {

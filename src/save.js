@@ -7,7 +7,7 @@ const PREFIX = 'wuxia-mud:'; // 同一 github.io 用户下所有项目共享 loc
 const SLOT = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('slot')) || '1';
 const SLOT_KEY = PREFIX + 'save:' + SLOT.replace(/[^\w-]/g, '');
 const EXPORT_TAG = 'WXMUD1';
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 export function newState(startRoom) {
   const now = Date.now();
@@ -52,6 +52,18 @@ const migrations = {
   5: (s) => ({ ...s, player: { talents: {}, ...s.player } }),
   // v7：兵器装备（D-057）。基本刀法、剑法后来改为去武馆学（D-061），不再补给
   6: (s) => ({ ...s, player: { equip: { weapon: null }, ...s.player } }),
+  // v8：修复"没点收下就离开对话、任务物品再也拿不到"的老存档（D-067）
+  7: (s) => {
+    const flags = { ...s.flags };
+    const inventory = { ...s.player.inventory };
+    // 老乞丐：给了钱、没收竹哨。清掉"已结识"，再给一文钱就能重来
+    if (flags['world.beggar_friend'] && !flags['world.got_whistle']) delete flags['world.beggar_friend'];
+    // 射雕第二章结尾没收腰牌：没有腰牌就问不到嘉兴的线索
+    if (flags['shediao.ch2_done'] && !flags['shediao.lead_jiaxing'] && !inventory['shediao.duan_token']) inventory['shediao.duan_token'] = 1;
+    // 竹哨第二章：进过暗室、没收燕翎剑
+    if (s.visited?.['feiyan.zhaji'] && !inventory['feiyan.yanling']) inventory['feiyan.yanling'] = 1;
+    return { ...s, flags, player: { ...s.player, inventory } };
+  },
 };
 
 /** 已开始的主线 id（用于决定加载哪些内容） */
