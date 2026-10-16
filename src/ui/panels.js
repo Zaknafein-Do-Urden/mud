@@ -235,7 +235,7 @@ export function initPanels(api) {
     if (tab === '主线') {
       for (const s of g.storyView()) {
         const box = el('div', 'pn-story');
-        box.append(el('h3', 'pn-name', `${s.name}${s.level ? `（建议武学 ${s.level} 级）` : ''}`));
+        box.append(el('h3', 'pn-name', `${s.name}${s.xiuwei ? `（建议修为 ${s.xiuwei}）` : ''}`));
         if (!s.started) {
           box.append(el('p', 'pn-hint', `尚未开始。${s.hint}`));
         } else {
@@ -248,7 +248,18 @@ export function initPanels(api) {
             list.append(li);
           }
           box.append(list);
-          if (s.goal) box.append(row(el('span', 'pn-k', '当前目标'), el('span', 'pn-goal', s.goal)));
+          if (s.goal) {
+            // 目标只显示做什么；点"提示"才显示具体怎么做（D-074）
+            const goal = el('span', 'pn-goal', s.goal);
+            box.append(row(el('span', 'pn-k', '当前目标'), goal));
+            if (s.goalHint) {
+              const tip = el('p', 'pn-hint pn-goal-hint', s.goalHint);
+              tip.hidden = true;
+              const btn = button('提示', () => { tip.hidden = !tip.hidden; btn.textContent = tip.hidden ? '提示' : '收起提示'; }, { cls: 'pn-tip' });
+              goal.append(btn);
+              box.append(tip);
+            }
+          }
         }
         body.append(box);
       }

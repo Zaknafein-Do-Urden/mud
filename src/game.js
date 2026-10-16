@@ -100,6 +100,10 @@ export class Game {
         this.help(); break;
       case 'hp': case 'score': case '状态':
         this.showStatus(); break;
+      case 'goal': case 'goals': case '目标':
+        this.showGoals(false); break;
+      case 'hint': case '提示':
+        this.showGoals(true); break;
       case 'skills': case '武功':
         this.showSkills(); break;
       case 'train': case '修炼': case '练':
@@ -530,6 +534,17 @@ export class Game {
     }
   }
 
+  /** 各条主线的当前目标；hints 为 true 时连具体做法一起显示（D-074） */
+  showGoals(hints) {
+    const lines = this.storyView().filter((s) => s.started && s.goal);
+    if (!lines.length) { this.emit('sys', '眼下没有在进行的主线。'); return; }
+    for (const s of lines) {
+      this.emit('sys', `【${s.name}】${s.goal}`);
+      if (hints && s.goalHint) this.emit('sys', `　提示：${s.goalHint}`);
+    }
+    if (!hints && lines.some((s) => s.goalHint)) this.emit('sys', '（不知道怎么做？输入 提示 查看。）');
+  }
+
   help() {
     [
       '【命令】',
@@ -543,6 +558,7 @@ export class Game {
       '  学 / 晋阶              在本门师父面前学艺、申请晋阶（晋阶要通过考核）',
       '  叛出师门               离开门派：本门武功等级减半且不能再提升',
       '  天赋 / 天赋 加 蛮力     查看、点选天赋（修为每 25 点得 1 个天赋点；天赋 重置 免费）',
+      '  目标 / 提示            查看各主线的当前目标；不知道怎么做时用 提示 看具体做法',
       '  休息                   在旅店休息，恢复气血（过去一天）',
       '  乘车 / 乘车 襄阳        在车马行坐马车去别的城市（路上可能遇到劫道）',
       '  行情 / 买 / 卖 / 货物   在市集看行情、买卖货物；货物装在马车上',

@@ -394,3 +394,7 @@ button.adopt { font-size: 12px; padding: 0 8px; margin-left: 6px; }
 
 /* NPC 队友（D-072） */
 .cb-mate.npc { color: var(--accent); }
+
+/* 目标提示（D-074） */
+.pn-tip { margin-left: 8px; font-size: 12px; padding: 0 8px; }
+.pn-goal-hint { margin: 4px 0 0; }

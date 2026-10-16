@@ -186,10 +186,12 @@ export const views = {
       });
       const goal = Object.values(this.db.goal ?? {}).find((g) => g.props.storyline === line.id && this.check(words(g.props.if)));
       return {
-        id: line.id, name: line.props.name, started, level: line.props.level ?? '',
+        id: line.id, name: line.props.name, started, xiuwei: (line.props.xiuwei ?? '').replace('-', '~'),
         brief: line.lines.map((l) => this.fmt(l.text)).join(''),
         hint: line.props.hint ?? '', chapters: chs,
-        goal: goal ? goal.lines.map((l) => this.fmt(l.text)).join('') : '',
+        // 目标只显示做什么（name），具体怎么做放在提示里，玩家点"提示"才看（D-074）
+        goal: goal ? goal.props.name ?? goal.lines.map((l) => this.fmt(l.text)).join('') : '',
+        goalHint: goal?.props.name ? goal.lines.map((l) => this.fmt(l.text)).join('') : '',
         loaded: chapters.length > 0,
       };
     });

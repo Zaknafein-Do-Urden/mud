@@ -151,6 +151,8 @@ for (const b of all) {
     for (const k of ['win', 'lose']) if (b.props[k] && !db.dialog[b.props[k]]) err(b, `${k} 对话不存在: ${b.props[k]}`);
     for (const id of parseList(b.props.allies)) if (!db.enemy[id]) err(b, `NPC 队友要用 enemy 块定义，找不到: ${id}`);
   }
+  if (b.type === 'goal' && !b.props.name) err(b, '目标要写 name（只显示做什么），正文写具体怎么做（点"提示"才显示，D-074）');
+  if (b.type === 'storyline' && b.props.level) err(b, '主线的建议等级改用 xiuwei: 起-止（建议修为，D-075）');
   if (b.type === 'sect') {
     // 用户规定：门派可以有侧重，但刚、巧、守三类外功至少各有一门
     const outer = Object.values(db.skill).filter((sk) => sk.props.sect === b.id && sk.props.kind === '外功');

@@ -3,7 +3,7 @@
 
 === storyline: shediao
 name: 射雕英雄传
-level: 1-40
+xiuwei: 10-150
 # 尚未开始时，在"江湖 → 主线"里给出的线索
 hint: 临安清风茶楼的说书先生消息灵通，不妨去听听"眼下的新鲜事"。
 ---
@@ -54,12 +54,14 @@ name: 牛家村
 # ---------------- 当前目标（D-045）：按顺序取第一个条件满足的 ----------------
 
 === goal: shediao.goal.1
+name: 去牛家村看看
 storyline: shediao
 if: flag:shediao.started !flag:shediao.invited !flag:shediao.ch1_done
 ---
-去临安城外的牛家村看看：出钱塘门往南到城外官道，再往东南。
+出钱塘门往南到城外官道，再往东南，就是牛家村。
 
 === goal: shediao.goal.2
+name: 赴郭啸天的酒约
 storyline: shediao
 if: flag:shediao.invited !flag:shediao.ch1_done
 ---
