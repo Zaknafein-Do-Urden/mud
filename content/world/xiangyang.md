@@ -73,7 +73,9 @@ ifnone: 王捕头：今天的差事都派完了，明天再来吧。
 * 有信要送去成都吗？ -> xiangyang.job.mail_chengdu ?!flag:world.job.mail_chengdu ?!today:world.job.mailday_xiangyang_chengdu
 * 有信要送去临安吗？ -> xiangyang.job.mail_linan ?!flag:world.job.mail_linan ?!today:world.job.mailday_xiangyang_linan
 * 有信要送去洛阳吗？ -> xiangyang.job.mail_luoyang ?!flag:world.job.mail_luoyang ?!today:world.job.mailday_xiangyang_luoyang
+* 有信要送去衡阳吗？ -> xiangyang.job.mail_hengyang ?!flag:world.job.mail_hengyang ?!today:world.job.mailday_xiangyang_hengyang
 * 交上成都衙门托付的书信 -> xiangyang.job.deliver_chengdu ?flag:world.job.mail_xiangyang_from_chengdu
+* 交上衡阳府托付的书信 -> xiangyang.job.deliver_hengyang ?flag:world.job.mail_xiangyang_from_hengyang
 * 交上临安衙门托付的书信 -> xiangyang.job.deliver_linan ?flag:world.job.mail_xiangyang_from_linan
 * 交上洛阳衙门托付的书信 -> xiangyang.job.deliver_luoyang ?flag:world.job.mail_xiangyang_from_luoyang
 * 离开
@@ -241,6 +243,25 @@ flag: world.job.bandit_xiangyang
 where: xiangyang.station
 ---
 襄阳衙门的差事：去襄阳车马行教训汉水边作乱的汉水水匪。赏钱 80 文。
+
+# 衡阳（笑傲江湖会话新增，D-310）
+=== dialog: xiangyang.job.mail_hengyang
+do: flag:world.job.mail_hengyang flag:world.job.mail_hengyang_from_xiangyang
+---
+公人取出一封火漆封口的文书：“送到衡阳府，六日路程，那边付你 125 文脚钱。”
+（差事：把书信送到衡阳府衙。坐马车 6 日可到）
+
+=== dialog: xiangyang.job.deliver_hengyang
+do: unflag:world.job.mail_xiangyang unflag:world.job.mail_xiangyang_from_hengyang money:125 potential:10 today:world.job.mailday_hengyang_xiangyang
+---
+公人拆开火漆看了一遍，数出 125 文：“衡阳那边这几日热闹得很罢？”
+
+=== quest: world.q.mail_xiangyang_hengyang
+name: 送信：襄阳 → 衡阳
+flag: world.job.mail_hengyang_from_xiangyang
+where: hengyang.office
+---
+把襄阳的书信送到衡阳府衙，脚钱 125 文。坐马车 6 日。
 
 === quest: world.q.mail_xiangyang_chengdu
 name: 送信：襄阳 → 成都

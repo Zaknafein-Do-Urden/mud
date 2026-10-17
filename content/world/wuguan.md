@@ -188,3 +188,25 @@ brief: 苏州武馆的教头，教基础武功。
 talk: world.wuguan.talk
 ---
 一个精瘦的汉子，说话慢条斯理，一动起手来却快得看不清。
+
+# ---------------- 笑傲江湖（衡阳）新增 ----------------
+
+=== patch: hengyang.market
+exits: 东=hengyang.wuguan
+
+=== room: hengyang.wuguan
+name: 衡阳·武馆
+exits: 西=hengyang.market
+npcs: hengyang.teacher
+train: true
+---
+院子里铺的是河沙，踩上去沙沙响，说是练步法最好。墙上挂着一排木剑，长短不一。
+教头说，衡阳城里会剑的人太多，武馆只教些粗浅的，免得砸了人家门派的招牌。
+在这里可以花钱学基础武功，也可以修炼。
+
+=== npc: hengyang.teacher
+name: 聂教头
+brief: 衡阳武馆的教头，教基础武功。
+talk: world.wuguan.talk
+---
+一个清瘦的老头，背有点驼，示范起招式来手腕却稳得出奇。

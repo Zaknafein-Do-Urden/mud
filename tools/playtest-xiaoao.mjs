@@ -204,24 +204,88 @@ function ch2(g, label, { how = 'qiao', ask = true, beatYu = false, side = false 
   if ((g.state.player.skillcap?.['xiaoao.fantian'] ?? 0) < 25) note(`${label}：翻天掌的上限没有提到 25`);
 }
 
+// ---------------- 第三章 ----------------
+
+function ch3(g, label, { how = 'qiao', meet = 'front', qin = 'out', ask = 'plan' } = {}) {
+  step(label + ' 第三章');
+  g.enter('hengyang.station');       // 坐车十日，这里直接到站
+  expectFlag(g, 'xiaoao.ch3', label);
+  pick(g, '先进城看看', label);
+  // 回雁楼
+  ex(g, '北', label);
+  ex(g, '东北', label);
+  expectRoom(g, 'xiaoao.hy.louyan', label);
+  pick(g, { front: '挡在林平之前面', hide: '支下楼', hu: '令狐冲怎么说' }[meet], label);
+  pick(g, '动手', label);
+  win(g, label + '/洪人雄');
+  expectFlag(g, 'xiaoao.c3_fight', label);
+  pick(g, '喝完这一碗', label);
+  // 刘府
+  ex(g, '西南', label);
+  ex(g, '西北', label);
+  expectRoom(g, 'xiaoao.hy.liufu', label);
+  pick(g, ask === 'plan' ? '明日之后有什么打算' : '为什么要金盆洗手', label);
+  pick(g, '听他说下去', label);
+  expectFlag(g, 'xiaoao.c3_liu', label);
+  if (qin) {                          // 可选支线：后园听琴
+    ex(g, '北', label);
+    expectRoom(g, 'xiaoao.hy.garden', label);
+    pick(g, qin === 'out' ? '悄悄退出去' : '咳嗽一声', label);
+    pick(g, '回前厅去', label);
+    expectFlag(g, 'xiaoao.c3_qin', label);
+    ex(g, '南', label);
+  }
+  // 盯梢的人：出府回到街口才触发（挂在街口，免得把递帖的选项顶掉）
+  ex(g, '东南', label);               // 刘府 → 街口
+  expectFlag(g, 'xiaoao.c3_tail', label);
+  // 江岸、废纸仓
+  ex(g, '北', label);                 // → 府衙
+  ex(g, '北', label);                 // → 江岸
+  expectRoom(g, 'xiaoao.hy.river', label);
+  if (how === 'party') g.party = { members: [{ id: 'friend' }] };
+  ex(g, '西', label);
+  expectRoom(g, 'xiaoao.hy.granary', label);
+  const opt = { qiao: '踩着纸垛', hp: '撞开正门', party: '和同伴分头' }[how];
+  if (!has(g, opt)) note(`${label}：门槛选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  pick(g, '看看他们在做什么', label);
+  if (how === 'party') g.party = null;
+  expectFlag(g, 'xiaoao.c3_in', label);
+  pick(g, '跳下去', label);
+  pick(g, '动手', label);
+  win(g, label + '/狄修');
+  expectFlag(g, 'xiaoao.c3_won', label);
+  expectItem(g, 'xiaoao.item.shouling', label);
+  pick(g, '回城去', label);
+  // 回街口收尾
+  ex(g, '东', label);
+  ex(g, '南', label);
+  ex(g, '南', label);
+  expectRoom(g, 'hengyang.center', label);
+  expectFlag(g, 'xiaoao.ch3_done', label);
+  if ((g.state.player.skillcap?.['xiaoao.fantian'] ?? 0) < 50) note(`${label}：翻天掌的上限没有提到 50`);
+}
+
 // ---------------- 路线 1：问清来路 → 站到身边 → 劝住 → 正面扑上去；第二章走"巧"那条门槛 ----------------
 {
   const label = '路线1';
-  const g = newGame({ skills: { 'base.zhang': 20 } }); // 小巧掌 20 级：巧类门槛
+  const g = newGame({ skills: { 'base.zhang': 30 } }); // 小巧掌 30 级：两章的巧类门槛都够
   hook(g, label);
   ch1(g, label, { ask: true, spare: true, block: false, baier: true });
   ch2(g, label, { how: 'qiao', ask: true, beatYu: false, side: false });
+  ch3(g, label, { how: 'qiao', meet: 'front', qin: 'out', ask: 'plan' });
 }
 
 // ---------------- 路线 2：先护姑娘 → 不劝 → 先抽跳板 → 不走支线；第二章硬闯 + 打赢余沧海 ----------------
 {
   const label = '路线2';
-  const g = newGame({ maxhpBoost: 60 }); // 气血上限够：撞开角门那条
+  const g = newGame({ maxhpBoost: 110 }); // 气血上限够：撞开角门、撞开仓门两条
   hook(g, label);
   ch1(g, label, { protect: true, spare: false, block: true, baier: false });
   if (!flag(g, 'xiaoao.c1_protect')) note(`${label}：护住卖酒姑娘的标记没有设上`);
   if (!flag(g, 'xiaoao.c1_block')) note(`${label}：抽掉跳板的标记没有设上`);
   ch2(g, label, { how: 'hp', ask: false, beatYu: true, side: true });
+  ch3(g, label, { how: 'hp', meet: 'hide', qin: 'in', ask: 'why' });
 }
 
 // ---------------- 路线 4：第二章组队门槛 ----------------
@@ -231,6 +295,7 @@ function ch2(g, label, { how = 'qiao', ask = true, beatYu = false, side = false 
   hook(g, label);
   ch1(g, label, { spare: true, baier: false });
   ch2(g, label, { how: 'party' });
+  ch3(g, label, { how: 'party', meet: 'hu', qin: null });
 }
 
 // ---------------- 路线 5：第二章门槛一条都不满足时，要有退路 ----------------
@@ -284,4 +349,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 笑傲江湖第一、二章，五条路线全部走通（门槛三选一、各处分支、可选支线、NPC 队友、必败战的输赢、打输重来）');
+console.log('✓ 笑傲江湖第一~三章，五条路线全部走通（两处门槛三选一、各处分支、两条可选支线、NPC 队友、必败战的输赢、打输重来）');

@@ -337,3 +337,14 @@ b: base.quan@10
 bonus: 1.6
 ---
 $A的掌风把$n推得仰了仰身，$B顺着这股风抢进去，一拳打在他空出来的胸口。
+
+# ---------------- 笑傲江湖（第三章：令狐冲）----------------
+
+=== combo: combo.xa_lhc_fantian
+name: 剑风掌影
+a: huashan.jianfa@20
+b: xiaoao.fantian@10
+bonus: 1.7
+effects: 破绽
+---
+$A的剑尖在$n眼前画了一个圈，$n的眼睛跟着剑走——$B的掌已经从圈底下穿过去，结结实实压在他胸口。
