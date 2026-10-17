@@ -94,15 +94,14 @@ function hook(g, label) {
   g.enter('fuzhou.station'); // 坐车八日，这里直接到站
   expectFlag(g, 'xiaoao.ch1', label);
   pick(g, '跟他去荔香楼', label);
+  expectRoom(g, 'xiaoao.fz.jiulou', label + '（陈七领你进城）');
 }
 
 // ---------------- 第一章 ----------------
 
 function ch1(g, label, { ask = false, protect = false, spare = true, block = false, baier = true } = {}) {
   step(label + ' 第一章');
-  ex(g, '北', label);          // 车马行 → 鼓楼前
-  ex(g, '东北', label);        // 鼓楼前 → 荔香楼
-  expectRoom(g, 'xiaoao.fz.jiulou', label);
+  expectRoom(g, 'xiaoao.fz.jiulou', label);   // 开场的过场已经把人带到荔香楼
   if (ask) pick(g, '哪一路', label);
   pick(g, protect ? '拉到身后' : '站到林平之身边', label);
   pick(g, '动手', label);
@@ -166,10 +165,7 @@ function ch2(g, label, { how = 'qiao', ask = true, beatYu = false, side = false 
   pick(g, '往后院去', label);
   if (how === 'party') g.party = null;
   expectFlag(g, 'xiaoao.c2_in', label);
-  // 后院
-  ex(g, '西', label);          // 向阳巷口 → 前厅
-  ex(g, '北', label);          // 前厅 → 后院
-  expectRoom(g, 'xiaoao.fz.yard', label);
+  expectRoom(g, 'xiaoao.fz.yard', label + '（过场把人带进后院）');
   pick(g, ask ? '先问他们在找什么' : '直接动手', label);
   pick(g, '动手', label);
   win(g, label + '/后院三人');
@@ -583,8 +579,6 @@ function ch8(g, label, { how = 'qiao', free = true, askRisk = true, beatRen = fa
   const label = '路线3';
   const g = newGame();
   hook(g, label);
-  ex(g, '北', label);
-  ex(g, '东北', label);
   pick(g, '站到林平之身边', label);
   pick(g, '动手', label);
   lose(g, label + '/青城弟子（故意打输）');
