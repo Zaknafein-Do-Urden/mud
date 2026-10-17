@@ -10,6 +10,7 @@
     "world/changan.md",
     "world/chengdu.md",
     "world/dali.md",
+    "world/suzhou.md",
     "world/fuzhou.md",
     "world/shaolin.md",
     "world/wudang.md",
@@ -64,7 +65,10 @@
         "tianlong/ch01.md",
         "tianlong/ch02.md",
         "tianlong/ch03.md",
-        "tianlong/ch04.md"
+        "tianlong/ch04.md",
+        "tianlong/ch05.md",
+        "tianlong/ch06.md",
+        "tianlong/ch07.md"
       ]
     }
   }

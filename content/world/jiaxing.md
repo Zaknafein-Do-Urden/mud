@@ -219,3 +219,28 @@ flag: world.job.mail_linan_from_jiaxing
 where: linan.yamen
 ---
 把嘉兴衙门的书信送到临安衙门，脚钱 45 文。坐马车 1 日。
+
+# ---------------- 天龙八部新增：嘉兴 ←→ 苏州 的送信差事 ----------------
+
+=== patch: jiaxing.officer.talk
+---
+* 有信要送去苏州吗？ -> jiaxing.job.mail_suzhou ?!flag:world.job.mail_suzhou ?!today:world.job.mailday_jiaxing_suzhou
+* 交上苏州府衙托付的书信 -> jiaxing.job.deliver_suzhou ?flag:world.job.mail_jiaxing_from_suzhou
+
+=== dialog: jiaxing.job.mail_suzhou
+do: flag:world.job.mail_suzhou flag:world.job.mail_suzhou_from_jiaxing
+---
+捕头从案上取过一封信：“往北一日就是苏州，送到府衙去，那边付你 45 文脚钱。”
+（差事：把书信送到苏州府衙。坐马车 1 日可到）
+
+=== dialog: jiaxing.job.deliver_suzhou
+do: unflag:world.job.mail_jiaxing unflag:world.job.mail_jiaxing_from_suzhou money:45 potential:10 today:world.job.mailday_suzhou_jiaxing
+---
+捕头认得那个火漆印，数了 45 文给你。
+
+=== quest: world.q.mail_jiaxing_suzhou
+name: 送信：嘉兴 → 苏州
+flag: world.job.mail_suzhou_from_jiaxing
+where: suzhou.office
+---
+把嘉兴衙门的书信送到苏州府衙，脚钱 45 文。坐马车 1 日。

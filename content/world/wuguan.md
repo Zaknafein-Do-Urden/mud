@@ -167,3 +167,24 @@ brief: 福州武馆的教头，教基础武功。
 talk: world.wuguan.talk
 ---
 一个膀大腰圆的汉子，早年在镖行走过南路，左眉毛上一道疤，说话嗓门极大。
+
+# ---------------- 天龙八部（苏州）新增 ----------------
+
+=== patch: suzhou.market
+exits: 南=suzhou.wuguan
+
+=== room: suzhou.wuguan
+name: 苏州·武馆
+exits: 北=suzhou.market
+npcs: suzhou.teacher
+train: true
+---
+院子不大，临着河，墙根下摆着一溜石锁。几个少年在河边的空地上打拳，拳风带起的灰尘落进水里。
+在这里可以花钱学基础武功，也可以修炼。
+
+=== npc: suzhou.teacher
+name: 范教头
+brief: 苏州武馆的教头，教基础武功。
+talk: world.wuguan.talk
+---
+一个精瘦的汉子，说话慢条斯理，一动起手来却快得看不清。

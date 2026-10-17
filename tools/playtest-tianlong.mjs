@@ -259,12 +259,112 @@ function ch4(g, label, { how = 'qiao', hide = true, beat = false } = {}) {
   if (cap !== '25') note(`${label}：一阳指的初始上限被改过了（${cap}），检查 POWER 规划`);
 }
 
+// ---------------- 第五章 ----------------
+
+function ch5(g, label, { pay = false, qin = true } = {}) {
+  step(label + ' 第五章');
+  g.enter('suzhou.station'); // 一路车马到苏州
+  expectFlag(g, 'tianlong.ch5', label);
+  pick(g, '先去绣市', label);
+  g.enter('suzhou.market');
+  pick(g, pay ? '掏出一串钱' : '过去搭把手', label);
+  pick(g, '他们往哪边去了', label);
+  expectFlag(g, 'tianlong.c5_clue', label);
+  g.enter('suzhou.station');
+  ex(g, '西', label);
+  expectRoom(g, 'tianlong.js.wharf', label);
+  pick(g, pay ? '我找慕容公子' : '我找一个被吐蕃和尚带走的朋友', label);
+  if (pay) pick(g, '接着说下去', label);
+  pick(g, '……', label);           // 上船
+  pick(g, '站到船头去', label);
+  win(g, label + '/太湖水匪');
+  expectRoom(g, 'tianlong.js.qinyun', label); // 靠岸的过场把人带过去
+  pick(g, '你是什么人', label);
+  pick(g, '去听香水榭', label);
+  expectFlag(g, 'tianlong.c5_azhu', label);
+  if (qin) { // 可选：听阿碧弹一曲
+    ex(g, '对话 阿碧', label);
+    pick(g, '听她弹一曲', label);
+    pick(g, '谢过她', label);
+    expectFlag(g, 'tianlong.c5_qin', label);
+  }
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.js.tingxiang', label);
+  pick(g, '到窗口看看', label);
+  pick(g, '迎上去', label);
+  win(g, label + '/一品堂');
+  pick(g, '问问阿朱', label);
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.ch5_done', label);
+}
+
+// ---------------- 第六章 ----------------
+
+function ch6(g, label, { how = 'qiao', by = 'cha' } = {}) {
+  step(label + ' 第六章');
+  g.enter('tianlong.js.qinyun');
+  expectFlag(g, 'tianlong.ch6', label);
+  pick(g, '我陪你去', label);
+  if (how === 'party') g.party = { members: [{ id: 'friend' }] };
+  ex(g, '西', label);
+  expectRoom(g, 'tianlong.js.manto_gate', label);
+  const opt = { qiao: '踩着花枝', nei: '一口气提到顶', party: '和同伴合力' }[how];
+  if (!has(g, opt)) note(`${label}：门槛选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  pick(g, '往里走', label);
+  if (how === 'party') g.party = null;
+  expectFlag(g, 'tianlong.c6_in', label);
+  ex(g, '西', label);
+  pick(g, '动手', label);
+  win(g, label + '/庄丁');
+  pick(g, '往北到听雨堂', label);
+  expectFlag(g, 'tianlong.c6_wu', label);
+  ex(g, '北', label);
+  pick(g, '挡在段誉前面', label);
+  win(g, label + '/总管');
+  pick(g, by === 'cha' ? '让段誉去说' : '让她看清楚一阳指', label);
+  pick(g, '……', label);
+  pick(g, '你见过很多武功秘籍', label);
+  pick(g, '你连这个也记得', label);
+  pick(g, '把少泽一路记下来', label);
+  expectFlag(g, 'tianlong.ch6_done', label);
+}
+
+// ---------------- 第七章 ----------------
+
+function ch7(g, label, { jiu = 'nei', go = true } = {}) {
+  step(label + ' 第七章');
+  g.enter('tianlong.js.qinyun');
+  expectFlag(g, 'tianlong.ch7', label);
+  pick(g, '北上无锡', label);
+  ex(g, '西北', label);
+  expectRoom(g, 'tianlong.wx.road', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.wx.songhe', label);
+  const opt = { nei: '陪他们喝，拿内息把酒逼出来', shi: '老老实实喝', kan: '不喝' }[jiu];
+  if (!has(g, opt)) note(`${label}：拼酒选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.c7_jiu', label);
+  pick(g, '和乔峰并肩', label);
+  win(g, label + '/一品堂（楼上）');
+  pick(g, '下楼去', label);
+  pick(g, '从中间破开', label);
+  win(g, label + '/一品堂统领');
+  pick(g, '……', label);
+  pick(g, go ? '我们和你一起去' : '这是你们帮里的事', label);
+  if (go) pick(g, '我跟你去', label); else pick(g, '……', label);
+  expectFlag(g, 'tianlong.ch7_done', label);
+  expectFlag(g, 'tianlong.met_qiaofeng', label);
+  expectFlag(g, 'tianlong.lead_xingzilin', label);
+}
+
 // ================= 路线一：正面硬来、巧路门槛、三月街、藏经、输给鸠摩智 =================
 {
   const label = '路线一';
   step(label + ' 开始');
   const g = newGame({
-    skills: { 'base.zhang': 45, 'base.zhaojia': 20, 'base.tuna': 40 },
+    skills: { 'base.zhang': 50, 'base.zhaojia': 20, 'base.tuna': 45 },
     inner: 'base.tuna',
   });
   hook(g, label);
@@ -273,6 +373,9 @@ function ch4(g, label, { how = 'qiao', hide = true, beat = false } = {}) {
   ch2End(g, label, { beat: false });
   ch3(g, label, { clue: 'market' });
   ch4(g, label, { how: 'qiao', hide: true, beat: false });
+  ch5(g, label, { pay: false });
+  ch6(g, label, { how: 'qiao', by: 'cha' });
+  ch7(g, label, { jiu: 'nei', go: true });
 }
 
 // ================= 路线二：偷袭、旁观、硬闯门槛、客栈、不藏经、打赢鸠摩智 =================
@@ -280,7 +383,7 @@ function ch4(g, label, { how = 'qiao', hide = true, beat = false } = {}) {
   const label = '路线二';
   step(label + ' 开始');
   const g = newGame({
-    skills: { 'base.zhang': 12, 'base.zhaojia': 20, 'base.tuna': 40 },
+    skills: { 'base.zhang': 12, 'base.zhaojia': 20, 'base.tuna': 45 },
     inner: 'base.tuna',
     maxhpBoost: 40, // 气血上限够走"抬横木"那条路
   });
@@ -290,6 +393,9 @@ function ch4(g, label, { how = 'qiao', hide = true, beat = false } = {}) {
   ch2End(g, label, { beat: true }); // 打赢必败战的那条分支
   ch3(g, label, { clue: 'inn' });
   ch4(g, label, { how: 'nei', hide: false, beat: true });
+  ch5(g, label, { pay: true, qin: false });
+  ch6(g, label, { how: 'nei', by: 'zhi' });
+  ch7(g, label, { jiu: 'shi', go: false });
 }
 
 // ================= 路线三：两处门槛都走组队那条路 =================
@@ -303,6 +409,9 @@ function ch4(g, label, { how = 'qiao', hide = true, beat = false } = {}) {
   ch2End(g, label, {});
   ch3(g, label, { clue: 'market' });
   ch4(g, label, { how: 'party', hide: true });
+  ch5(g, label, {});
+  ch6(g, label, { how: 'party' });
+  ch7(g, label, { jiu: 'kan' });
 }
 
 // ================= 路线四：功力不够时的"现在还不行"，以及打输重来 =================
@@ -378,4 +487,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 天龙八部四章、四条路线全部走通（门槛三选一、分支、必败战的输赢、打输重来）');
+console.log('✓ 天龙八部七章、四条路线全部走通（三处门槛三选一、各处分支、必败战的输赢、打输重来）');

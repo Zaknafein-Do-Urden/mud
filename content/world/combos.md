@@ -318,3 +318,22 @@ bonus: 1.4
 effects: 破绽
 ---
 $A一掌沉沉压住$n的上盘，$B的掌影从底下翻上来，像两根梁木把人夹在当中。
+
+# ---------------- 天龙八部：乔峰（第七章起的 NPC 队友）----------------
+
+=== combo: combo.tl_qiao_zhi
+name: 龙吟指影
+a: gaibang.xianglong@20
+b: tianlong.yiyangzhi@20
+bonus: 2.2
+effects: 内伤
+---
+$A一掌拍出，掌风把$n逼得横移半步；$B的指力早等在他落脚的那一点上。
+
+=== combo: combo.tl_qiao_quan
+name: 掌风借力
+a: gaibang.xianglong@20
+b: base.quan@10
+bonus: 1.6
+---
+$A的掌风把$n推得仰了仰身，$B顺着这股风抢进去，一拳打在他空出来的胸口。
