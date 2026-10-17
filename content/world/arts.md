@@ -321,6 +321,17 @@ omen: $N中指缓缓抬起，指尖对着空处划了半个圈……
 ---
 $N中指一引，「$招」，剑气扇面般扫开，当面的人一个也躲不过！
 
+=== move: tianlong.liumai.6
+skill: tianlong.liumai
+name: 少冲剑
+level: 140
+power: 62
+mp: 38
+effects: 内伤, 破绽
+omen: $N的右手小指微微一弹，指尖上没有光——只有一道看不见的风，直着过来……
+---
+$N小指一弹，「$招」，一线剑气透进$n的$部位，入肉三分而不见血！
+
 === move: tianlong.liumai.5
 skill: tianlong.liumai
 name: 关冲剑

@@ -58,7 +58,8 @@ for (const id of ids) {
   for (const [label, mk] of Object.entries(profiles)) {
     const b = createBattle(db, block, mk(), 12345);
     let note = '';
-    if (adaptive) note = `自适应气血 ×${adaptEnemyHp(db, b).toFixed(2)}`;
+    // 引擎里自适应只模拟 40 次，拟合误差有 ±8%；报表要稳，这里把样本提到 120（D-227）
+    if (adaptive) note = `自适应气血 ×${adaptEnemyHp(db, b, { n: 120 }).toFixed(2)}`;
     const rates = ACC.map((a) => simWinRate(db, b, a, n));
     console.log(id.padEnd(24), label, rates.map(pct).join('    '), ' ', note);
   }

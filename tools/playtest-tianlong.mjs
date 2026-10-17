@@ -64,7 +64,9 @@ function win(g, label) {
   for (let i = 0; i < 60 && g.state.battle; i++) {
     const b = g.state.battle;
     for (const u of b.units) {
-      if (u.side === 'e' && u.hp > 0) u.hp = 1; // 只压活着的，别把倒下的又救起来
+      // 只压活着的，别把倒下的又救起来；顺带把敌人的伤害清零：
+      // 关了自适应（MUD_SKIP_ADAPT）之后敌人不再减伤，后期敌人一回合就能把弱角色打死
+      if (u.side === 'e' && u.hp > 0) { u.hp = 1; u.dmgx = 0; }
       if (u.isPlayer) { u.mp = u.maxMp; u.hp = u.maxHp; }
     }
     ex(g, '1', label);
@@ -717,6 +719,143 @@ function ch20(g, label) {
   expectFlag(g, 'tianlong.ch20_done', label);
 }
 
+// ---------------- 第二十一章 ----------------
+
+function ch21(g, label, { ta = true } = {}) {
+  step(label + ' 第二十一章');
+  g.enter('luoyang.station');
+  expectFlag(g, 'tianlong.ch21', label);
+  pick(g, '先上少室山', label);
+  ex(g, '西北', label);
+  expectRoom(g, 'tianlong.ss.road', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.ss.ping', label);
+  ex(g, '北', label); // 山门
+  ex(g, '北', label); // 罗汉堂
+  expectRoom(g, 'shaolin.hall', label);
+  pick(g, '为什么', label);
+  pick(g, '退出罗汉堂', label);
+  expectFlag(g, 'tianlong.c21_asked', label);
+  if (ta) {
+    // 可选支线：塔林（D-210 的空当，走得到才算数）
+    ex(g, '南', label);
+    ex(g, '西', label);
+    expectRoom(g, 'tianlong.ss.ta', label);
+    pick(g, '……', label);
+    expectFlag(g, 'tianlong.c21_ta', label);
+    ex(g, '东', label);
+    ex(g, '南', label);
+  } else {
+    ex(g, '南', label);
+    ex(g, '南', label);
+  }
+  expectRoom(g, 'tianlong.ss.ping', label);
+  pick(g, '不让', label);
+  pick(g, '迎上去', label);
+  win(g, label + '/摩云子');
+  pick(g, '他怎么会在这里', label);
+  pick(g, '接下这一场', label);
+  win(g, label + '/庄聚贤');
+  pick(g, '等他起来', label);
+  pick(g, '下山', label);
+  expectFlag(g, 'tianlong.ch21_done', label);
+}
+
+// ---------------- 第二十二章 ----------------
+
+function ch22(g, label, { how = 'pai', quan = 'li' } = {}) {
+  step(label + ' 第二十二章');
+  g.enter('luoyang.station');
+  expectFlag(g, 'tianlong.ch22', label);
+  pick(g, '往东北，过桑干河', label);
+  ex(g, '东北', label);
+  expectRoom(g, 'tianlong.nj.ford', label);
+  const opt = { pai: '亮出南院的金牌', mian: '贴上阿朱的人皮面具', ying: '不亮也不装' }[how];
+  if (!has(g, opt)) note(`${label}：渡口没有「${opt}」这条路（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  if (how === 'ying') {
+    pick(g, '那就动手', label);
+    win(g, label + '/渡口');
+  }
+  pick(g, '过河', label);
+  expectFlag(g, 'tianlong.c22_ford', label);
+  ex(g, '东北', label);
+  expectRoom(g, 'tianlong.nj.city', label);
+  pick(g, '寅时三刻，我们去', label);
+  ex(g, '南', label);
+  expectRoom(g, 'tianlong.nj.yuan', label);
+  pick(g, '把人引开，我来', label);
+  win(g, label + '/萧阿鲁');
+  pick(g, '下井', label);
+  expectRoom(g, 'tianlong.nj.under', label);
+  const q = { li: '这一战总要打', qing: '阿紫的脚', chai: '我不劝了' }[quan];
+  if (!has(g, q)) note(`${label}：井底没有「${q}」这条劝法（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, q, label);
+  pick(g, quan === 'chai' ? '另一条链子' : '伸手', label);
+  pick(g, '上井', label);
+  expectRoom(g, 'tianlong.nj.yuan', label);
+  pick(g, '那就一起打', label);
+  win(g, label + '/耶律莫哥');
+  expectFlag(g, 'tianlong.ch22_done', label);
+}
+
+// ---------------- 第二十三章 ----------------
+
+function ch23(g, label, { oath = 'bai' } = {}) {
+  step(label + ' 第二十三章');
+  g.enter('changan.station');
+  expectFlag(g, 'tianlong.ch23', label);
+  pick(g, '走到他前头去', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.ym.road', label);
+  pick(g, '跟上去', label);
+  win(g, label + '/辽军游骑');
+  pick(g, '往北到石壁', label);
+  expectRoom(g, 'tianlong.ym.wall', label);
+  const o = { bai: '一同跪下去', zheng: '站着，做个见证', jiu: '一句话不说' }[oath];
+  if (!has(g, o)) note(`${label}：石壁下没有「${o}」这条路（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, o, label);
+  pick(g, oath === 'bai' ? '起来' : '看着他们起来', label);
+  pick(g, '跟上去', label);
+  expectRoom(g, 'tianlong.ym.field', label);
+  pick(g, '和他一起冲', label);
+  win(g, label + '/耶律莫哥（雪原）');
+  pick(g, '等', label);
+  pick(g, '大哥', label);
+  pick(g, '拦住他', label);
+  pick(g, '……', label);
+  pick(g, '记下', label);
+  expectFlag(g, 'tianlong.ch23_done', label);
+  expectSkill(g, 'tianlong.liumai', label);
+}
+
+// ---------------- 第二十四章 ----------------
+
+function ch24(g, label) {
+  step(label + ' 第二十四章');
+  g.enter('suzhou.station');
+  expectFlag(g, 'tianlong.ch24', label);
+  pick(g, '雇船去参合庄', label);
+  ex(g, '东', label);
+  expectRoom(g, 'tianlong.ch.zhuang', label);
+  pick(g, '杏黄衫子的人呢', label);
+  pick(g, '往北，去水阁', label);
+  expectRoom(g, 'tianlong.ch.ge', label);
+  pick(g, '桥上只容两个人', label);
+  win(g, label + '/摩云子（水阁）');
+  pick(g, '她什么时候送的单子', label);
+  pick(g, '去坟上看看', label);
+  expectRoom(g, 'tianlong.ch.fen', label);
+  pick(g, '这是第三次', label);
+  pick(g, '接下', label);
+  win(g, label + '/慕容复（祖坟）');
+  pick(g, '……', label);
+  pick(g, '走到她旁边', label);
+  pick(g, '下坡', label);
+  expectFlag(g, 'tianlong.ch24_done', label);
+  expectFlag(g, 'tianlong.tl_done', label);
+}
+
 // ================= 路线一：正面硬来、巧路门槛、三月街、藏经、输给鸠摩智 =================
 {
   const label = '路线一';
@@ -748,6 +887,10 @@ function ch20(g, label) {
   ch18(g, label, { how: 'qiao' });
   ch19(g, label);
   ch20(g, label);
+  ch21(g, label, { ta: true });
+  ch22(g, label, { how: 'pai', quan: 'li' });
+  ch23(g, label, { oath: 'bai' });
+  ch24(g, label);
 }
 
 // ================= 路线二：偷袭、旁观、硬闯门槛、客栈、不藏经、打赢鸠摩智 =================
@@ -782,6 +925,10 @@ function ch20(g, label) {
   ch18(g, label, { how: 'nei' });
   ch19(g, label);
   ch20(g, label);
+  ch21(g, label, { ta: false });
+  ch22(g, label, { how: 'mian', quan: 'qing' });
+  ch23(g, label, { oath: 'zheng' });
+  ch24(g, label);
 }
 
 // ================= 路线三：两处门槛都走组队那条路 =================
@@ -811,6 +958,10 @@ function ch20(g, label) {
   ch18(g, label, { how: 'party' });
   ch19(g, label);
   ch20(g, label);
+  ch21(g, label, { ta: true });
+  ch22(g, label, { how: 'ying', quan: 'chai' });
+  ch23(g, label, { oath: 'jiu' });
+  ch24(g, label);
 }
 
 // ================= 路线四：功力不够时的"现在还不行"，以及打输重来 =================
@@ -896,4 +1047,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 天龙八部二十章、四条路线全部走通（四处门槛三选一、各处分支、必败战的输赢、打输重来）');
+console.log('✓ 天龙八部二十四章、四条路线全部走通（四处门槛三选一、各处分支、必败战的输赢、打输重来）');
