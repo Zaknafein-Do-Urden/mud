@@ -325,21 +325,71 @@ function ch4(g, label, { how = 'qiao', expose = true, grass = false, beatFei = f
   expectRoom(g, 'hengyang.center', label + '（章节之后能回城）');
 }
 
+// ---------------- 第五章 ----------------
+
+function ch5(g, label, { how = 'qiao', meet = 'drink', ask = true } = {}) {
+  step(label + ' 第五章');
+  g.enter('changan.station');        // 衡阳一路坐车到长安
+  expectFlag(g, 'xiaoao.ch5', label);
+  pick(g, '往东南的野店去', label);
+  ex(g, '东南', label);
+  expectRoom(g, 'xiaoao.hs.dian', label);
+  if (ask) pick(g, '哪一门的', label);
+  if (meet === 'drink') {
+    pick(g, '陪他喝', label);
+    pick(g, '两个人一起上', label);
+    win(g, label + '/醉后的田伯光');
+  } else {
+    pick(g, '直接拦下他', label);
+    pick(g, '迎上去', label);
+    if (meet === 'beat') win(g, label + '/田伯光（硬要打赢）'); else lose(g, label + '/田伯光');
+  }
+  if (meet === 'beat' && !flag(g, 'xiaoao.beat_tian')) note(`${label}：逼退田伯光没有记下标记`);
+  pick(g, '扶那小师父起来', label);
+  expectFlag(g, 'xiaoao.c5_save', label);
+  // 千尺幢：门槛三选一
+  if (how === 'party') g.party = { members: [{ id: 'friend' }] };
+  ex(g, '东', label);
+  expectRoom(g, 'huashan.gate', label);
+  const opt = { qiao: '踩着石窝', hp: '攀铁索', party: '和同伴一前一后' }[how];
+  if (!has(g, opt)) note(`${label}：门槛选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  pick(g, '上去', label);
+  if (how === 'party') g.party = null;
+  expectFlag(g, 'xiaoao.c5_up', label);
+  expectRoom(g, 'xiaoao.hs.rock', label + '（过场把人带上崖顶）');
+  // 玉女峰
+  ex(g, '北', label);
+  expectRoom(g, 'xiaoao.hs.yunu', label);
+  expectFlag(g, 'xiaoao.c5_yue', label);
+  pick(g, '道明来意', label);
+  pick(g, '接招', label);
+  win(g, label + '/劳德诺');
+  pick(g, '道谢', label);
+  expectFlag(g, 'xiaoao.ch5_done', label);
+  expectSkill(g, 'xiaoao.yangxin', label);
+  // 章节结束后还下得了山
+  ex(g, '南', label);
+  ex(g, '西南', label);
+  expectRoom(g, 'huashan.gate', label + '（章节之后能下山）');
+}
+
 // ---------------- 路线 1：问清来路 → 站到身边 → 劝住 → 正面扑上去；第二章走"巧"那条门槛 ----------------
 {
   const label = '路线1';
-  const g = newGame({ skills: { 'base.zhang': 40 } }); // 小巧掌 40 级：二、三、四章的巧类门槛都够
+  const g = newGame({ skills: { 'base.zhang': 50 } }); // 小巧掌 50 级：二~五章的巧类门槛都够
   hook(g, label);
   ch1(g, label, { ask: true, spare: true, block: false, baier: true });
   ch2(g, label, { how: 'qiao', ask: true, beatYu: false, side: false });
   ch3(g, label, { how: 'qiao', meet: 'front', qin: 'out', ask: 'plan' });
   ch4(g, label, { how: 'qiao', expose: true, grass: false, beatFei: false });
+  ch5(g, label, { how: 'qiao', meet: 'drink', ask: true });
 }
 
 // ---------------- 路线 2：先护姑娘 → 不劝 → 先抽跳板 → 不走支线；第二章硬闯 + 打赢余沧海 ----------------
 {
   const label = '路线2';
-  const g = newGame({ maxhpBoost: 200 }); // 气血上限够：角门、仓门、水缸三道硬闯的门槛
+  const g = newGame({ maxhpBoost: 260 }); // 气血上限够：角门、仓门、水缸、铁索四道硬闯的门槛
   hook(g, label);
   ch1(g, label, { protect: true, spare: false, block: true, baier: false });
   if (!flag(g, 'xiaoao.c1_protect')) note(`${label}：护住卖酒姑娘的标记没有设上`);
@@ -347,6 +397,7 @@ function ch4(g, label, { how = 'qiao', expose = true, grass = false, beatFei = f
   ch2(g, label, { how: 'hp', ask: false, beatYu: true, side: true });
   ch3(g, label, { how: 'hp', meet: 'hide', qin: 'in', ask: 'why' });
   ch4(g, label, { how: 'hp', expose: false, grass: true, beatFei: true });
+  ch5(g, label, { how: 'hp', meet: 'beat', ask: false });
 }
 
 // ---------------- 路线 4：第二章组队门槛 ----------------
@@ -358,6 +409,7 @@ function ch4(g, label, { how = 'qiao', expose = true, grass = false, beatFei = f
   ch2(g, label, { how: 'party' });
   ch3(g, label, { how: 'party', meet: 'hu', qin: null });
   ch4(g, label, { how: 'party', expose: true, grass: true, beatFei: false });
+  ch5(g, label, { how: 'party', meet: 'front', ask: false });
 }
 
 // ---------------- 路线 5：第二章门槛一条都不满足时，要有退路 ----------------
@@ -411,4 +463,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 笑傲江湖第一~四章，五条路线全部走通（三处门槛三选一、各处分支、两条可选支线、NPC 队友、两场必败战的输赢、打输重来）');
+console.log('✓ 笑傲江湖第一~五章，五条路线全部走通（四处门槛三选一、各处分支、两条可选支线、NPC 队友、三场必败战的输赢、打输重来）');
