@@ -16,7 +16,8 @@ const db = emptyDb();
 const files = [...index.world, ...Object.values(index.storylines).flatMap((s) => [...(s.hook ?? []), ...(s.files ?? [])])];
 for (const f of files) addBlocks(db, parse(readFileSync(join(root, f), 'utf8'), f), f);
 
-// 三种角色：开局（基础武功 10 级）、入门（门派武功 15 级）、二袋（门派武功 25 级上下）
+// 四种角色：开局（基础武功 10 级）、入门（门派武功 15 级）、二袋（门派武功 25 级上下）、
+// 后期（门派四阶上下、内功 60：主线走到十几章的玩家才有的功力，D-222）
 const profiles = {
   // 开局：已在武馆学了小巧掌、沾衣十八跌、养气诀（D-061），各 10 级
   开局: () => {
@@ -35,6 +36,13 @@ const profiles = {
     const p = newPlayer('x');
     Object.assign(p.skills, { 'base.zhang': 10, 'base.zhaojia': 10, 'base.tuna': 10, 'gaibang.huntian': 20, 'gaibang.lianhua': 25, 'gaibang.chansi': 25, 'gaibang.xiaoyao': 20 });
     p.loadout = { outer: ['gaibang.lianhua', 'gaibang.xiaoyao', 'gaibang.chansi'], inner: 'gaibang.huntian', light: null };
+    return p;
+  },
+  // 后期：门派武功练到四阶上下，内功 60。天龙第八章往后的剧情战，要按这一档看才有意义
+  后期: () => {
+    const p = newPlayer('x');
+    Object.assign(p.skills, { 'base.zhang': 20, 'base.zhaojia': 20, 'base.tuna': 20, 'gaibang.huntian': 60, 'gaibang.lianhua': 60, 'gaibang.chansi': 55, 'gaibang.xiaoyao': 55, 'gaibang.qianli': 40 });
+    p.loadout = { outer: ['gaibang.lianhua', 'gaibang.xiaoyao', 'gaibang.chansi'], inner: 'gaibang.huntian', light: 'gaibang.qianli' };
     return p;
   },
 };

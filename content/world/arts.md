@@ -215,6 +215,17 @@ omen: $N拇指一竖，周身衣袂无风自动……
 ---
 $N拇指疾点，「$招」，一股剑气沉雄浑厚，隔空撞在$n$部位上！
 
+=== move: tianlong.liumai.4
+skill: tianlong.liumai
+name: 中冲剑
+level: 60
+power: 46
+mp: 26
+effects: 群攻
+omen: $N中指缓缓抬起，指尖对着空处划了半个圈……
+---
+$N中指一引，「$招」，剑气扇面般扫开，当面的人一个也躲不过！
+
 # ---------------- 修罗刀（NPC 专用：木婉清）----------------
 
 === skill: tianlong.xiuluo

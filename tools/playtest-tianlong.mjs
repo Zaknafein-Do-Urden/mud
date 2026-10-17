@@ -18,7 +18,7 @@ const problems = [];
 const step = (s) => { if (process.env.PLAYTEST_VERBOSE) console.log('  · ' + s); };
 const note = (s) => problems.push(s);
 
-function newGame({ skills = {}, inner = null, light = null, maxhpBoost = 0 } = {}) {
+function newGame({ skills = {}, inner = null, light = null, maxhpBoost = 0, sect = null } = {}) {
   const db = emptyDb();
   for (const f of files) addBlocks(db, parse(readFileSync(join(root, f), 'utf8'), f), f);
   const st = newState(db.meta.game.props.start);
@@ -29,6 +29,7 @@ function newGame({ skills = {}, inner = null, light = null, maxhpBoost = 0 } = {
     light,
   };
   st.player.money = 5000;
+  if (sect) st.player.sect = { id: sect, rep: 0, rank: 1 };
   if (maxhpBoost) st.player.attrs.根骨 += maxhpBoost; // 抬高气血上限，用来走"硬闯"那条门槛
   const g = new Game(db, st);
   g.enter(st.player.room);
@@ -359,6 +360,89 @@ function ch7(g, label, { jiu = 'nei', go = true } = {}) {
   expectFlag(g, 'tianlong.lead_xingzilin', label);
 }
 
+// ---------------- 第八章 ----------------
+
+function ch8(g, label, { side = 'qiao' } = {}) {
+  step(label + ' 第八章');
+  g.enter('tianlong.wx.road');
+  expectFlag(g, 'tianlong.ch8', label);
+  pick(g, '往东进林子', label);
+  ex(g, '东', label);
+  expectRoom(g, 'tianlong.xz.lin', label);
+  const opt = { kan: '哪边都不站', qiao: '我们站乔峰那一边', bang: '本帮的事' }[side];
+  if (!has(g, opt)) note(`${label}：林口选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  pick(g, '往里走', label);
+  expectFlag(g, 'tianlong.c8_in', label);
+  pick(g, '背靠背', label);
+  win(g, label + '/叛乱弟子');
+  pick(g, '往火堆那边看', label);
+  pick(g, '看着乔峰', label);
+  pick(g, '……', label);
+  pick(g, '挡在乔峰前面', label);
+  win(g, label + '/谭公谭婆赵钱孙');
+  pick(g, '……', label);
+  pick(g, '我跟你去', label);
+  expectFlag(g, 'tianlong.ch8_done', label);
+  expectFlag(g, 'tianlong.lead_daitou', label);
+}
+
+// ---------------- 第九章 ----------------
+
+function ch9(g, label, { ask = 'qiao' } = {}) {
+  step(label + ' 第九章');
+  g.enter('luoyang.station');
+  expectFlag(g, 'tianlong.ch9', label);
+  pick(g, '往北去少室山下', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.hn.road', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.hn.hut', label);
+  pick(g, ask === 'qiao' ? '那就让他自己来见我' : '大师，三十年前那块石头上的孩子', label);
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.c9_asked', label);
+  pick(g, '看那个小沙弥', label);
+  pick(g, '背靠草庵', label);
+  win(g, label + '/黑衣人');
+  pick(g, '……', label);
+  pick(g, '扶她进屋', label);
+  pick(g, '接住他', label);
+  win(g, label + '/黑衣人头目');
+  pick(g, '看看那个油布包', label);
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.ch9_done', label);
+  if (!g.state.player.inventory['tianlong.mask']) note(`${label}：没拿到阿朱的人皮面具`);
+}
+
+// ---------------- 第十章 ----------------
+
+function ch10(g, label, { dang = true } = {}) {
+  step(label + ' 第十章');
+  g.enter('luoyang.station');
+  expectFlag(g, 'tianlong.ch10', label);
+  pick(g, '一起进去', label);
+  ex(g, '东', label);
+  expectRoom(g, 'tianlong.jx.gate', label);
+  pick(g, '跟进去', label);
+  pick(g, '往东进厅', label);
+  expectFlag(g, 'tianlong.c10_in', label);
+  ex(g, '东', label);
+  expectRoom(g, 'tianlong.jx.hall', label);
+  pick(g, dang ? '替他挡一碗' : '看着他喝', label);
+  if (dang) pick(g, '看着他接着喝', label);
+  expectFlag(g, 'tianlong.c10_jue', label);
+  pick(g, '挡住这一片', label);
+  win(g, label + '/中原群豪');
+  pick(g, '杀到西跨院去', label); // 过场对话把人带进跨院
+  expectRoom(g, 'tianlong.jx.west', label);
+  pick(g, '兄弟俩交给你', label);
+  win(g, label + '/游氏兄弟');
+  pick(g, '回头看', label);
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.ch10_done', label);
+  expectFlag(g, 'tianlong.lead_yanmen', label);
+}
+
 // ================= 路线一：正面硬来、巧路门槛、三月街、藏经、输给鸠摩智 =================
 {
   const label = '路线一';
@@ -376,6 +460,9 @@ function ch7(g, label, { jiu = 'nei', go = true } = {}) {
   ch5(g, label, { pay: false });
   ch6(g, label, { how: 'qiao', by: 'cha' });
   ch7(g, label, { jiu: 'nei', go: true });
+  ch8(g, label, { side: 'qiao' });
+  ch9(g, label, { ask: 'qiao' });
+  ch10(g, label, { dang: true });
 }
 
 // ================= 路线二：偷袭、旁观、硬闯门槛、客栈、不藏经、打赢鸠摩智 =================
@@ -396,13 +483,16 @@ function ch7(g, label, { jiu = 'nei', go = true } = {}) {
   ch5(g, label, { pay: true, qin: false });
   ch6(g, label, { how: 'nei', by: 'zhi' });
   ch7(g, label, { jiu: 'shi', go: false });
+  ch8(g, label, { side: 'kan' });
+  ch9(g, label, { ask: 'shuo' });
+  ch10(g, label, { dang: false });
 }
 
 // ================= 路线三：两处门槛都走组队那条路 =================
 {
   const label = '路线三';
   step(label + ' 开始');
-  const g = newGame({ skills: { 'base.zhaojia': 20, 'base.tuna': 40 }, inner: 'base.tuna' });
+  const g = newGame({ skills: { 'base.zhaojia': 20, 'base.tuna': 40 }, inner: 'base.tuna', sect: 'gaibang' });
   hook(g, label);
   ch1(g, label, {});
   ch2(g, label, { how: 'party' });
@@ -412,6 +502,9 @@ function ch7(g, label, { jiu = 'nei', go = true } = {}) {
   ch5(g, label, {});
   ch6(g, label, { how: 'party' });
   ch7(g, label, { jiu: 'kan' });
+  ch8(g, label, { side: 'bang' }); // 丐帮弟子专属选项
+  ch9(g, label, {});
+  ch10(g, label, {});
 }
 
 // ================= 路线四：功力不够时的"现在还不行"，以及打输重来 =================
@@ -487,4 +580,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 天龙八部七章、四条路线全部走通（三处门槛三选一、各处分支、必败战的输赢、打输重来）');
+console.log('✓ 天龙八部十章、四条路线全部走通（三处门槛三选一、各处分支、必败战的输赢、打输重来）');
