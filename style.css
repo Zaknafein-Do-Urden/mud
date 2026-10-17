@@ -462,3 +462,12 @@ button.adopt { font-size: 12px; padding: 0 8px; margin-left: 6px; }
 
 /* 灰色但能点的选项（D-099）：如声望不够的"申请晋阶"，点了说明原因 */
 button.choice.blocked { color: var(--muted); border-style: dashed; }
+
+/* ---- 剧情暂停（D-101）：停在"点击或按空格继续"时，别的按钮都点不到 ---- */
+body.pacing .top-nav, body.pacing #quick, body.pacing #side, body.pacing #combat, body.pacing #party {
+  pointer-events: none;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+#output .more.nudge { animation: nudge 0.5s ease-in-out 2; }
+@keyframes nudge { 50% { color: var(--accent); transform: translateX(4px); } }

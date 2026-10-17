@@ -47,10 +47,12 @@ function pump() {
       moreMarker.className = 'more';
       moreMarker.textContent = '▼ 点击或按空格继续';
       output.append(moreMarker);
+      document.body.classList.add('pacing'); // 剧情暂停：别的按钮都点不到（D-101）
       break;
     }
   }
   if (!queue.length) {
+    document.body.classList.remove('pacing');
     output.append(Object.assign(document.createElement('div'), { className: 'gap' }));
     refreshQuick();
   }
@@ -59,6 +61,15 @@ function pump() {
 
 function flush() {
   while (queue.length) pump();
+}
+
+/** 剧情暂停时点了别处：让"点击或按空格继续"闪一下，提示该点哪里（D-101） */
+function nudge() {
+  if (!moreMarker) return;
+  moreMarker.classList.remove('nudge');
+  void moreMarker.offsetWidth; // 重新触发动画
+  moreMarker.classList.add('nudge');
+  moreMarker.addEventListener('animationend', (e) => e.target.classList.remove('nudge'), { once: true });
 }
 
 let choiceBox = null;
@@ -130,7 +141,8 @@ function partyCommand(cmd) {
 }
 
 async function run(cmd) {
-  flush();
+  // 剧情逐段显示、停在"点击或按空格继续"时，不接受别的命令（D-101）。以前会先把剩下的剧情一口气倒完再执行
+  if (queue.length) { nudge(); return []; }
   if (partyCommand(cmd)) { print([]); refreshQuick(); return []; }
   // 旧的对话选项失效
   output.querySelectorAll('.choices button').forEach((b) => { b.disabled = true; });
@@ -391,7 +403,9 @@ function start(state, isNew) {
 $('input-form').addEventListener('submit', (e) => {
   e.preventDefault();
   const cmd = input.value.trim();
-  if (!cmd) { if (queue.length) pump(); return; }
+  // 剧情暂停中：回车只算"继续"，输入框里的字留着，等剧情走完再发（D-101）
+  if (queue.length) { pump(); return; }
+  if (!cmd) return;
   history.push(cmd);
   historyPos = history.length;
   input.value = '';
@@ -442,6 +456,14 @@ $('system-toggle').addEventListener('click', () => $('system-dialog').showModal(
 $('system-close').addEventListener('click', () => $('system-dialog').close());
 for (const id of ['btn-export', 'btn-import', 'btn-new']) $(id).addEventListener('click', () => $('system-dialog').close(), { capture: true });
 $('journal-toggle').addEventListener('click', () => panels.open('journal'));
+
+// 剧情暂停中：点文字区的任何地方（包括链接）都只算"继续"，不触发链接本身（D-101）
+output.addEventListener('click', (e) => {
+  if (!queue.length) return;
+  e.preventDefault();
+  e.stopPropagation();
+  pump();
+}, true);
 
 output.addEventListener('click', (e) => {
   const adopt = e.target.closest('button.adopt');

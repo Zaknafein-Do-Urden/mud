@@ -16,6 +16,9 @@ function bar(value, max, cls) {
   return b;
 }
 
+/** 玩家最后点选的敌人（D-100）：面板每次刷新都会重画，选择记在这里，不随重画丢失；换一场新战斗时清掉 */
+const picked = { key: null, round: 0, sig: '' };
+
 /**
  * @param {HTMLElement} root
  * @param {ReturnType<import('../game.js').Game['combatView']>} view
@@ -24,7 +27,13 @@ function bar(value, max, cls) {
 export function renderCombat(root, view, run, secondsLeft = 0) {
   root.replaceChildren();
   const alive = view.enemies.filter((e) => !e.dead);
-  let target = alive.find((e) => e.key === view.target) ?? alive[0];
+  // 换了一场新的战斗（回合数变小，或敌人名单不同）就清掉
+  const sig = view.enemies.map((e) => `${e.key}:${e.name}:${e.maxHp}`).join('|');
+  if (view.round < picked.round || sig !== picked.sig) picked.key = null;
+  picked.round = view.round;
+  picked.sig = sig;
+  // 默认目标：最后点选的敌人 → 上回合攻击的敌人 → 第一个活着的敌人
+  let target = alive.find((e) => e.key === picked.key) ?? alive.find((e) => e.key === view.target) ?? alive[0];
   // 守招 / 辅助招式的目标（D-064）：默认自己
   let ally = (view.allies ?? []).find((a) => a.self) ?? null;
 
@@ -38,6 +47,7 @@ export function renderCombat(root, view, run, secondsLeft = 0) {
     row.title = alive.length > 1 ? '点击选为目标' : '';
     row.addEventListener('click', () => {
       target = e;
+      picked.key = e.key;
       foes.querySelectorAll('.cb-foe').forEach((r) => r.classList.remove('sel'));
       row.classList.add('sel');
     });

@@ -381,7 +381,8 @@ export function setPlayerIntent(db, b, input, pid = 'host') {
     target = (foes[Number(t) - 1] ?? foes.find((f) => f.name === t))?.key;
     if (!target) return '没有这个对手。';
   } else target = foes.find((f) => f.key === me.lastTarget)?.key ?? foes[0].key;
-  me.lastTarget = target;
+  // 只有攻招才记成"上次打的对手"；守招的目标是自己或队友，记进去会让下回合默认目标跳回第一个敌人（D-100）
+  if (m.stance !== '守') me.lastTarget = target;
   me.intent = { type: 'move', move: m.id, stance: m.stance, target };
   return null;
 }
