@@ -232,7 +232,9 @@ ifnone: 张捕头：今天的差事都派完了，明天再来吧。
 * 要不要去客栈查查外乡人？ -> linan.job.patrol ?!flag:world.job.patrol_linan ?!today:world.job.patrol_linan
 * 有信要送去嘉兴吗？ -> linan.job.mail_jiaxing ?!flag:world.job.mail_jiaxing ?!today:world.job.mailday_linan_jiaxing
 * 有信要送去襄阳吗？ -> linan.job.mail_xiangyang ?!flag:world.job.mail_xiangyang ?!today:world.job.mailday_linan_xiangyang
+* 有信要送去福州吗？ -> linan.job.mail_fuzhou ?!flag:world.job.mail_fuzhou ?!today:world.job.mailday_linan_fuzhou
 * 交上嘉兴衙门托付的书信 -> linan.job.deliver_jiaxing ?flag:world.job.mail_linan_from_jiaxing
+* 交上福州府托付的书信 -> linan.job.deliver_fuzhou ?flag:world.job.mail_linan_from_fuzhou
 * 交上襄阳衙门托付的书信 -> linan.job.deliver_xiangyang ?flag:world.job.mail_linan_from_xiangyang
 * 离开
 
@@ -253,6 +255,18 @@ do: flag:world.job.mail_xiangyang flag:world.job.mail_xiangyang_from_linan
 ---
 张捕头递给你一个封了火漆的信封：“送到襄阳的安抚使司，那边自会付你 135 文脚钱。”
 （差事：把书信送到襄阳衙门。坐马车 7 日可到）
+
+# 福州（笑傲江湖会话新增，D-300）
+=== dialog: linan.job.mail_fuzhou
+do: flag:world.job.mail_fuzhou flag:world.job.mail_fuzhou_from_linan
+---
+张捕头从案上抽出一封厚厚的公文：“这一封要送到福州府。八日路程，脚钱 170 文，路上留神些——闽地那条道近来不太平。”
+（差事：把书信送到福州府衙。坐马车 8 日可到）
+
+=== dialog: linan.job.deliver_fuzhou
+do: unflag:world.job.mail_linan unflag:world.job.mail_linan_from_fuzhou money:170 potential:10 today:world.job.mailday_fuzhou_linan
+---
+张捕头拆开火漆看了看，数了 170 文钱给你：“从福州一路过来，辛苦。”
 
 === dialog: linan.job.deliver_jiaxing
 do: unflag:world.job.mail_linan unflag:world.job.mail_linan_from_jiaxing money:45 potential:10 today:world.job.mailday_jiaxing_linan
@@ -325,6 +339,13 @@ flag: world.job.mail_xiangyang_from_linan
 where: xiangyang.office
 ---
 把临安府的书信送到襄阳衙门，脚钱 135 文。坐马车 7 日。
+
+=== quest: world.q.mail_linan_fuzhou
+name: 送信：临安 → 福州
+flag: world.job.mail_fuzhou_from_linan
+where: fuzhou.office
+---
+把临安府的书信送到福州府衙，脚钱 170 文。坐马车 8 日。
 
 # ---------------- 每日差事：飞贼、查访客栈（D-054）----------------
 

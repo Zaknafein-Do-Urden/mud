@@ -280,3 +280,41 @@ bonus: 1.5
 effects: 破绽
 ---
 $A一指点在$n肩头，$n半边身子一麻，$B的拳头正好砸在他僵住的那一侧。
+
+# ================= 笑傲江湖 =================
+# NPC 队友林平之（第一章起）用辟邪剑法，配玩家这时很可能会的武功（D-072）。
+
+=== combo: combo.xa_lin_jian
+name: 双剑分花
+a: xiaoao.pixie@5
+b: base.jian@10
+bonus: 1.5
+effects: 破绽
+---
+$A的剑尖挑开$n的门户，$B的剑跟着从那道缝里送进去，两剑一前一后，像一朵花被从中剖开。
+
+=== combo: combo.xa_lin_quan
+name: 剑引拳随
+a: xiaoao.pixie@5
+b: base.quan@10
+bonus: 1.4
+---
+$A一剑逼得$n仰身躲闪，$B的拳头早就候在他仰身的那个地方。
+
+=== combo: combo.xa_lin_fantian
+name: 翻天剑雨
+a: xiaoao.pixie@10
+b: xiaoao.fantian@5
+bonus: 1.6
+effects: 内伤
+---
+$B一掌把$n的身子拍得一歪，$A的剑雨劈头盖脸地落下来——这是福威镖局走镖时一掌一剑的老路数。
+
+=== combo: combo.xa_fantian_zhang
+name: 双掌压梁
+a: xiaoao.fantian@5
+b: base.zhang@10
+bonus: 1.4
+effects: 破绽
+---
+$A一掌沉沉压住$n的上盘，$B的掌影从底下翻上来，像两根梁木把人夹在当中。

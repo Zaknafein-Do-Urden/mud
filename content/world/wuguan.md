@@ -146,3 +146,24 @@ brief: 大理武馆的教头，教基础武功。
 talk: world.wuguan.talk
 ---
 一个黑瘦精悍的汉子，手背上一道旧刀疤，说话不多，示范起来却极有耐心。
+
+# ---------------- 笑傲江湖（福州）新增 ----------------
+
+=== patch: fuzhou.market
+exits: 东=fuzhou.wuguan
+
+=== room: fuzhou.wuguan
+name: 福州·武馆
+exits: 西=fuzhou.market
+npcs: fuzhou.teacher
+train: true
+---
+院子正中立着一排木桩，桩头都被打得起了毛。墙上挂着十几面镖旗，是各家镖局托武馆代为招人的招牌。
+在这里可以花钱学基础武功，也可以修炼。
+
+=== npc: fuzhou.teacher
+name: 郑教头
+brief: 福州武馆的教头，教基础武功。
+talk: world.wuguan.talk
+---
+一个膀大腰圆的汉子，早年在镖行走过南路，左眉毛上一道疤，说话嗓门极大。

@@ -10,6 +10,7 @@
     "world/changan.md",
     "world/chengdu.md",
     "world/dali.md",
+    "world/fuzhou.md",
     "world/shaolin.md",
     "world/wudang.md",
     "world/huashan.md",
@@ -44,6 +45,14 @@
         "feiyan/ch02.md",
         "feiyan/ch03.md",
         "feiyan/ch04.md"
+      ]
+    },
+    "xiaoao": {
+      "hook": [
+        "xiaoao/hook.md"
+      ],
+      "files": [
+        "xiaoao/ch01.md"
       ]
     },
     "tianlong": {
