@@ -66,7 +66,7 @@ function checkEffects(b, effects) {
     else if (kind === 'learn' || kind === 'sectlearn') { if (!db.skill[key]) err(b, `${kind} 目标武功不存在: ${key}`); }
     else if (kind === 'rep') { const [sect, n] = key.split(':'); if (!db.sect[sect] || Number.isNaN(Number(n))) err(b, `rep 格式应为 rep:门派:数值，却是: ${e}`); }
     else if (kind === 'potential') { if (Number.isNaN(Number(key))) err(b, `potential 需要数字: ${e}`); }
-    else if (kind === 'heal' || kind === 'promote') { /* 无参数 */ }
+    else if (kind === 'heal' || kind === 'promote' || kind === 'escort') { /* 无参数 */ }
     else if (kind === 'money' || kind === 'pay') { if (Number.isNaN(Number(key))) err(b, `${kind} 需要数字: ${e}`); }
     else if (kind === 'travel') { if (!db.city[key]) err(b, `travel 目标城市不存在: ${key}`); }
     else if (kind === 'today') { if (!key) err(b, 'today 需要一个键名'); }

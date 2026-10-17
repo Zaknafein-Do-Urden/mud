@@ -66,6 +66,18 @@ potential: 10
 ---
 蒙着脸的汉子，手里提着明晃晃的钢刀。
 
+# 镖师（D-104）：在车马行雇了护送，遇上劫匪时作为 NPC 队友并肩作战。escort: true，武功等级跟劫匪一样按货值缩放
+=== enemy: world.ally.biaoshi
+weapon: 刀
+weaponName: 鬼头刀
+name: 镖师
+escort: true
+attrs: 根骨=16, 身法=13, 悟性=12
+skills: base.dao=1, base.quan=1, base.zhaojia=1, base.tuna=1
+ai: 刚=3, 守=2
+---
+镖局里走惯了长路的汉子，一口鬼头刀，一面镖旗，见了劫匪眼睛都不眨。
+
 # ---------------- 天龙八部（大理）新增 ----------------
 
 === goods: dianma

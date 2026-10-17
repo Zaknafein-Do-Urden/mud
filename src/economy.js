@@ -79,6 +79,13 @@ export function robberyChance(days, value) {
   return Math.min(0.65, 0.03 * days + 0.5 * (value / (value + 5000)));
 }
 
+/** 雇镖师护送的价钱（D-104）：50 文起，加货值的 8% */
+export function escortFee(value) {
+  return Math.round(50 + value * 0.08);
+}
+/** 有镖师护送时，被劫的概率乘这个系数 */
+export const ESCORT_RATE = 0.4;
+
 /** 劫匪的水平与人数：取决于货物价值加身上现钱 */
 export function robbers(total) {
   const level = Math.min(90, Math.round(4 + 3 * Math.sqrt(total / 100)));

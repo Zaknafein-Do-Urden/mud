@@ -180,7 +180,32 @@ export class Game {
     });
   }
 
+  /**
+   * 执行效果。效果里有设标记的，前后各检查一次各章的完成条件：
+   * 从没完成变成完成的章节，给当前门派加声望（D-103）。这样老存档里早已完成的章节不会重复奖励。
+   */
   apply(effects) {
+    const watch = effects.some((e) => e.startsWith('flag:'));
+    const before = watch ? this.doneChapters() : null;
+    this.applyEffects(effects);
+    if (watch) for (const id of this.doneChapters()) if (!before.has(id)) this.chapterRep(id);
+  }
+
+  doneChapters() {
+    return new Set(Object.values(this.db.chapter).filter((c) => c.props.done && this.check(words(c.props.done))).map((c) => c.id));
+  }
+
+  /** 主线章节完成：门派声望约等于两个每日任务（一阶 60、二阶 70、三阶起 90，D-103） */
+  chapterRep(chapterId) {
+    const p = this.state.player;
+    if (!p.sect) return;
+    const rep = [60, 70, 90][Math.min(p.sect.rank, 2)];
+    const sect = this.db.sect[p.sect.id]?.props.name ?? '';
+    this.emit('sys', `你在江湖上的作为传回了${sect}，同门都与有荣焉。`);
+    this.addRep(p.sect.id, rep);
+  }
+
+  applyEffects(effects) {
     const { flags, player } = this.state;
     for (const e of effects) {
       const [kind, key] = splitOnce(e);
@@ -221,6 +246,7 @@ export class Game {
       else if (kind === 'travel') this.travel(key);
       else if (kind === 'sectlearn') this.learn(key); // 向本门师父学艺（不要钱，规则同"学"命令）
       else if (kind === 'promote') this.promote(); // 向本门师父申请晋阶（D-099，规则同"晋阶"命令）
+      else if (kind === 'escort') this.hireEscort(); // 车马行雇镖师（D-104）
       else if (kind === 'learn') {
         if (player.skills[key] === undefined) {
           player.skills[key] = 1;
@@ -553,7 +579,8 @@ export class Game {
     if (c.target) {
       this.locked = locked;
       this.showDialog(c.target);
-    } else {
+    } else if (!this.dialog) {
+      // 效果里已经打开了新的对话（雇完镖师回到车马行列表、坐车到站触发剧情……）就不收尾，否则会把它关掉（D-104）
       this.endDialog();
     }
   }

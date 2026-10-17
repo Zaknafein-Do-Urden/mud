@@ -10,7 +10,24 @@
 * 学养气诀（内功，40 文） ?!learned:base.tuna ?money:40 !pay:40 !learn:base.tuna
 * 学五虎断门刀（刀法，要有刀，80 文） ?!learned:base.dao ?money:80 !pay:80 !learn:base.dao
 * 学三才剑（剑法，要有剑，80 文） ?!learned:base.jian ?money:80 !pay:80 !learn:base.jian
+* 请教头陪练一个时辰（200 文，潜能 +30；每天一次） -> world.wuguan.spar1 ?money:200 ?!today:world.wuguan_spar
+* 请教头倾囊指点（1000 文，潜能 +120；每天一次） -> world.wuguan.spar2 ?money:1000 ?!today:world.wuguan_spar
 * 告辞
+
+# 陪练（D-104）：花钱换潜能，给后期的钱一个去处。每天只能练一次（两档共用一个次数）
+=== dialog: world.wuguan.spar1
+pace: slow
+do: pay:200 potential:30 today:world.wuguan_spar
+---
+教头脱了外衣，和你在场子里拆了一个时辰的招。你打得满身是汗，他却气都不喘。
+教头：底子还行，就是收招慢了半拍。回去多琢磨。
+
+=== dialog: world.wuguan.spar2
+pace: slow
+do: pay:1000 potential:120 today:world.wuguan_spar
+---
+教头关了武馆的大门，把压箱底的东西一样一样拿出来，拆给你看、陪你练，从午后一直练到掌灯。
+教头：这些年我走过的弯路，今天都告诉你了。剩下的，靠你自己。
 
 === patch: linan.market
 exits: 北=linan.wuguan

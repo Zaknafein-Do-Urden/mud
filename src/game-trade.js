@@ -1,6 +1,6 @@
 // 引擎的经济部分：金钱、市场、钱庄、马车。以方法的形式并入 Game（见 game.js 末尾）。
 
-import { goodsPrice, goodsLocal, cargoUnits, cargoValue, robberyChance, robbers, routesOf, cityOfRoom, CARGO_CAP, SELL_RATE } from './economy.js';
+import { escortFee, ESCORT_RATE, goodsPrice, goodsLocal, cargoUnits, cargoValue, robberyChance, robbers, routesOf, cityOfRoom, CARGO_CAP, SELL_RATE } from './economy.js';
 import { createScaledBattle, beginRound, enemiesOf } from './combat.js';
 
 const ALL = ['全部', 'all'];
@@ -148,14 +148,31 @@ export const trade = {
     }
     this.emit('sys', `车把式：客官要去哪里？（身上 ${this.state.player.money ?? 0} 文，车上货物 ${units} 件）`);
     const choices = Object.entries(routes).map(([id, days]) => ({
-      text: `${this.db.city[id].props.name}　${days} 日路程`,
+      text: `${this.db.city[id].props.name}　${days} 日路程${this.state.escort ? '（镖师随行）' : ''}`,
       target: null, cond: [], effects: [`travel:${id}`],
     }));
+    // 雇镖师（D-104）：车上有货时才有意义；雇了只管下一趟
+    const value = cargoValue(this.db, this.state.player.cargo);
+    if (value > 0 && !this.state.escort) {
+      const fee = escortFee(value);
+      const c = { text: `雇镖师护送下一趟（${fee} 文：被劫的机会少一大半，遇上了镖师帮你打）`, target: null, cond: [`money:${fee}`], effects: ['escort'] };
+      choices.unshift((this.state.player.money ?? 0) >= fee ? c : { ...c, disabled: true });
+    }
     choices.push({ text: '不坐了', target: null, cond: [], effects: [] });
     this.dialog = choices;
     this.dialogId = null;
     delete this.state.dialog;
     this.emitChoices();
+  },
+
+  /** 雇镖师护送下一趟（D-104），雇完回到车马行的目的地列表 */
+  hireEscort() {
+    const fee = escortFee(cargoValue(this.db, this.state.player.cargo));
+    if ((this.state.player.money ?? 0) < fee) { this.emit('err', '钱不够。'); return; }
+    this.addMoney(-fee);
+    this.state.escort = true;
+    this.emit('sys', '镖局派了一个精壮的镖师跟车，镖旗插在车辕上。他只管这一趟。');
+    this.showStation();
   },
 
   travel(to) {
@@ -167,16 +184,20 @@ export const trade = {
     const dest = this.db.city[to];
     this.emit('story', `你坐上马车，往${dest.props.name}去了。`);
 
-    // 劫道：货越值钱越容易被盯上；劫匪的强弱看货物加身上现钱（D-040）
+    // 劫道：货越值钱越容易被盯上；劫匪的强弱看货物加身上现钱（D-040）。雇了镖师，机会少一大半（D-104）
     const value = cargoValue(this.db, p.cargo);
-    if (Math.random() < robberyChance(days, value)) {
+    const escort = !!this.state.escort;
+    delete this.state.escort; // 镖师只管这一趟
+    if (Math.random() < robberyChance(days, value) * (escort ? ESCORT_RATE : 1)) {
       const { level, count } = robbers(value + (p.money ?? 0));
       const foe = Object.keys(this.db.enemy).find((id) => this.db.enemy[id].props.robber === 'true');
       if (foe) {
         this.normalizeHp();
+        const guard = escort ? Object.keys(this.db.enemy).find((id) => this.db.enemy[id].props.escort === 'true') : null;
         this.state.battle = createScaledBattle(this.db, Array(count).fill(foe), level,
-          { players: this.partyPlayers(), robbery: { to }, noFlee: true }, (Date.now() ^ (Math.random() * 1e9)) | 0);
+          { players: this.partyPlayers(), robbery: { to }, noFlee: true, allies: guard ? [guard] : [] }, (Date.now() ^ (Math.random() * 1e9)) | 0);
         this.emit('desc', '走到半路，前面林子里一声呼哨，几条汉子拦住了马车。');
+        if (guard) this.emit('desc', '镖师把镖旗往车辕上一插，抽出刀来，站到了你身边。');
         this.emit('combat', `——遭遇劫道！${enemiesOf(this.state.battle).map((e) => e.name).join('、')}——`);
         beginRound(this.db, this.state.battle, (cls, text, extra) => this.emit(cls, text, extra));
         return;

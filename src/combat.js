@@ -797,7 +797,14 @@ export function createScaledBattle(db, foeIds, level, meta, seed) {
   const pUnits = playerUnits(db, meta.players);
   delete meta.players;
   scaleForParty(units, pUnits.length);
-  return { id: '__scaled__', ...meta, seed: seed | 0, round: 0, foeLv: lv, units: [...pUnits, ...units], over: null };
+  // 随行的 NPC 队友（如镖师，D-104）：和敌人一样按等级缩放，站在玩家一边
+  const allyUnits = (meta.allies ?? []).map((id, i) => {
+    const a = db.enemy[id];
+    const scaled = { ...a, props: { ...a.props, skills: Object.keys(parseNums(a.props.skills)).map((s) => `${s}=${lv}`).join(', '), attrs: `根骨=${14 + Math.floor(lv / 4)}, 身法=${12 + Math.floor(lv / 5)}, 悟性=12` } };
+    return { ...enemyUnit(db, scaled, i), key: 'a' + i, side: 'p', isAlly: true };
+  });
+  delete meta.allies;
+  return { id: '__scaled__', ...meta, seed: seed | 0, round: 0, foeLv: lv, units: [...pUnits, ...allyUnits, ...units], over: null };
 }
 
 // ---- 难度模拟（D-051）----
@@ -842,18 +849,34 @@ export function simWinRate(db, b, accuracy, n = 40) {
  * 按玩家当前的功力调整敌人气血：使猜对率 accuracy 的玩家胜率约为 target（D-051）。
  * 用二分法找气血倍率。返回最终倍率。
  */
+/** 自适应时敌人气血最多放大到几倍（D-102）：再多就成了打不动的肉盾 */
+export const ADAPT_HP_CAP = 3;
+
 export function adaptEnemyHp(db, b, { accuracy = 0.8, target = 0.65, n = 40, dmgx = 0.45 } = {}) {
   // 先降低敌人伤害、再按胜率找气血：战斗更长，胜负更取决于猜对率而不是运气
   for (const e of enemiesOf(b)) e.dmgx = dmgx;
   const base = enemiesOf(b).map((e) => e.maxHp);
   const apply = (bt, m) => enemiesOf(bt).forEach((e, i) => { e.maxHp = Math.max(1, Math.round(base[i] * m)); e.hp = e.maxHp; });
+  const setDmg = (bt, d) => enemiesOf(bt).forEach((e) => { e.dmgx = d; });
+  const winAt = (hp, d) => { const t = structuredClone(b); apply(t, hp); setDmg(t, d); return simWinRate(db, t, accuracy, n); };
   let lo = 0.1;
-  let hi = 20;
+  let hi = ADAPT_HP_CAP;
+  // 气血放到封顶还是太容易（敌人太弱）：气血就停在封顶，改为加强敌人的伤害（D-102）。
+  // 以前气血可以放大到 20 倍，弱小的杂兵会变成上千血的肉盾，打起来又长又闷
+  if (winAt(hi, dmgx) >= target) {
+    let dlo = dmgx;
+    let dhi = 8;
+    for (let step = 0; step < 10; step++) {
+      const mid = Math.sqrt(dlo * dhi);
+      if (winAt(hi, mid) >= target) dlo = mid; else dhi = mid;
+    }
+    apply(b, hi);
+    setDmg(b, dlo);
+    return hi;
+  }
   for (let step = 0; step < 10; step++) {
     const mid = Math.sqrt(lo * hi);
-    const t = structuredClone(b);
-    apply(t, mid);
-    if (simWinRate(db, t, accuracy, n) >= target) lo = mid; else hi = mid;
+    if (winAt(mid, dmgx) >= target) lo = mid; else hi = mid;
   }
   apply(b, lo);
   return lo;
