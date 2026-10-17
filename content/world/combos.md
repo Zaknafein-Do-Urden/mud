@@ -398,3 +398,21 @@ effects: 破绽
 ---
 $A和$B两杆枪一上一下，枪花交错，杨家枪的拦、拿、扎同时到了，$n顾得了上顾不了下。
 
+=== combo: combo.luoying_nanshan
+name: 桃林樵歌
+a: shediao.luoying@10
+b: shediao.nanshan@10
+bonus: 1.6
+effects: 破绽
+---
+$A的掌影像满树桃花飘落，晃得$n眼花缭乱；$B就在花影里结结实实地劈下一掌。一虚一实，一巧一拙。
+
+=== combo: combo.luoying_yuenv
+name: 花影剑声
+a: shediao.luoying@10
+b: shediao.yuenv@10
+bonus: 1.5
+effects: 点穴
+---
+$A的落英掌和$B的越女剑都是一个"巧"字，一个如花落，一个如燕回，$n左支右绌，被点中了穴道。
+

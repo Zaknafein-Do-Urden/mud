@@ -132,6 +132,59 @@ omen: $N掌势一收，整个人稳得像一棵老松……
 ---
 $N蓄势良久，「$招」一掌推出，掌力绵绵不绝，$n只觉得像撞上了一座山！
 
+# ---------------- 落英神剑掌：射雕第九章起，黄蓉所授（桃花岛武学，上限随剧情放开，结局 100）----------------
+
+=== skill: shediao.luoying
+name: 落英神剑掌
+kind: 外功
+stance: 巧
+cap: 25
+---
+桃花岛的掌法，掌影翻飞，虚实相生，像满树桃花被风吹落。招式里藏着剑意，所以叫"神剑掌"。
+
+=== move: shediao.luoying.1
+skill: shediao.luoying
+name: 落英缤纷
+level: 0
+power: 26
+mp: 9
+omen: $N双掌翩翩翻动，掌影像花瓣一样飘了过来……|$N身形一转，衣袂飘飘……
+---
+$N掌影纷飞，「$招」，十几道掌影里只有一道是真的，正拍在$n$部位！
+
+=== move: shediao.luoying.2
+skill: shediao.luoying
+name: 桃花漫天
+level: 25
+power: 32
+mp: 12
+effects: 破绽
+omen: $N双掌一错，掌影忽然多了一倍……
+---
+$N身随掌走，「$招」，掌影铺天盖地罩下来，$n看得眼花缭乱，露出了空门！
+
+=== move: shediao.luoying.3
+skill: shediao.luoying
+name: 奇门落英
+level: 50
+power: 40
+mp: 16
+effects: 点穴
+omen: $N脚下踏着古怪的步子，转眼绕到了你身侧……
+---
+$N步法暗合奇门，「$招」，一掌从意想不到的方位拂出，正点在$n$部位的穴道上！
+
+=== move: shediao.luoying.4
+skill: shediao.luoying
+name: 神剑落英
+level: 80
+power: 50
+mp: 22
+effects: 破绽, 群攻
+omen: $N双掌并起如剑，掌风里隐隐有剑啸之声……
+---
+$N以掌作剑，「$招」，掌风化作漫天剑气，像一场桃花雨落在所有对手身上！
+
 # ================= 天龙八部 =================
 # 剧情传授的三门（凌波微步、北冥神功、一阳指）上限随章节用 cap: 提高，见 docs/POWER.md §5。
 # 六脉神剑、修罗刀只给 NPC 队友用，不传授玩家（定义在这里是因为合击要认得它们，D-083）。
