@@ -3,7 +3,8 @@
 
 import { maxMp, skillCap, trainCost, sectRanks, expNeed, MAX_OUTER, movesOf, innerOf, innerBonus, isWeaponItem, weaponOf } from './character.js';
 import { parseList } from './content.js';
-import { TALENT_TREE, talentPointsTotal, talentPointsSpent, canAddTalent, xiuwei, xiuweiToNext, tal } from './talents.js';
+import { TALENT_TREE, talentPointsSpent, canAddTalent, tal } from './talents.js';
+import { xiuwei } from './combat.js';
 import { cargoUnits, CARGO_CAP } from './economy.js';
 
 const words = (s = '') => s.split(/[\s,]+/).filter(Boolean);
@@ -29,7 +30,7 @@ export const views = {
       name: p.name, gender: p.gender, attrs: p.attrs,
       hp: p.hp, maxHp: this.hpMax(), mp: maxMp(this.db, p),
       potential: p.potential, money: p.money ?? 0, bank: p.bank ?? 0, day: this.state.day ?? 1,
-      xiuwei: xiuwei(p),
+      xiuwei: xiuwei(this.db, p),
       sect: sect ? {
         id: sect.id, name: sect.props.name, rank: ranks[p.sect.rank]?.name, rep: p.sect.rep,
         next: ranks[p.sect.rank + 1] ?? null,
@@ -132,8 +133,7 @@ export const views = {
     const need = sk.props.weapon && sk.props.weapon !== '拳' && sk.props.weapon !== '暗器' ? sk.props.weapon : '';
     const w = weaponOf(this.db, p);
     const wb = need && w?.props.weapon === need ? Number(w.props.bonus ?? 0) : 0;
-    const talent = 1 + 0.04 * (stance === '刚' ? tal(p, 'manli') : stance === '巧' ? tal(p, 'ruili') : 0);
-    const est = Math.round(power * (1 + lv * 0.02) * innerBonus(inner.lv, inner.skill, stance) * (talent + wb / 100));
+    const est = Math.round(power * (1 + lv * 0.02) * innerBonus(inner.lv, inner.skill, stance) * (1 + wb / 100));
     const level = Number(m.props.level ?? 0);
     const effects = parseList(m.props.effects).map((e) => EFFECT_TEXT[e.split(':')[0]] ?? e);
     const lines = [`${m.props.name}（${stance}）　${level <= lv ? '已领悟' : `${level} 级领悟`}`, `威力 ${power}　耗内力 ${m.props.mp ?? 0}${need ? `　需要${need}` : ''}`];
@@ -168,13 +168,13 @@ export const views = {
 
   talentView() {
     const p = this.state.player;
-    const total = talentPointsTotal(p);
+    const { rank, lines, total } = this.talentPoints();
     const spent = talentPointsSpent(p);
     return {
-      xiuwei: xiuwei(p), total, free: total - spent, toNext: xiuweiToNext(p),
+      total, free: total - spent, rank, lines,
       branches: TALENT_TREE.map((b) => ({
-        id: b.id, name: b.name, stance: b.stance,
-        nodes: b.nodes.map((n) => ({ id: n.id, name: n.name, desc: n.desc, max: n.max, lv: tal(p, n.id), why: canAddTalent(p, n.id) })),
+        id: b.id, name: b.name, desc: b.desc,
+        nodes: b.nodes.map((n) => ({ id: n.id, name: n.name, desc: n.desc, max: n.max, lv: tal(p, n.id), why: canAddTalent(p, n.id, total) })),
       })),
     };
   },

@@ -30,7 +30,7 @@ const kv = (k, v) => { const d = el('div', 'pn-kv'); d.append(el('span', 'pn-k',
 /** 先天属性的作用（D-092）：电脑上悬停显示，手机上点一下展开 */
 const ATTR_INFO = {
   根骨: (x) => `气血上限 +${x * 5}、内力上限 +${x * 2}（每点根骨气血 +5、内力 +2）。`,
-  身法: (x) => `出手先后：同一阶段（先巧招、后刚招）里身法高的先出手。装备轻功每 4 级再 +1，天赋"迅捷"每级 +2。`,
+  身法: (x) => `出手先后：同一阶段（先巧招、后刚招）里身法高的先出手。装备轻功每 4 级再 +1。`,
   悟性: (x) => `修炼武功花的潜能 ×${(20 / x).toFixed(2).replace(/\.?0+$/, '')}（悟性越高越省）；对手出虚招、藏招时，每回合有 ${x * 2}% 的机会看穿（天赋"慧眼"每级再 +10%）。`,
 };
 function attrRow(attrs) {
@@ -112,7 +112,7 @@ export function initPanels(api) {
         kv('内力上限', `${v.mp}（每场战斗开始时回满）`),
         attrRow(v.attrs),
         kv('兵器', v.weapon),
-        kv('修为', `${v.xiuwei}（所有武功等级之和）`),
+        kv('修为', `${v.xiuwei}（刚、巧、守三势最狠一招的攻击值之和，加气血上限的五分之一）`),
         kv('潜能', `${v.potential}（用于修炼武功）`),
         kv('钱财', `身上 ${v.money} 文　钱庄 ${v.bank} 文`),
         kv('日子', `第 ${v.day} 日`),
@@ -204,13 +204,13 @@ export function initPanels(api) {
     if (tab === '天赋') {
       const v = g.talentView();
       body.append(row(
-        el('span', 'pn-hint', `修为 ${v.xiuwei}　天赋点 ${v.free} / ${v.total}　（再长 ${v.toNext} 点修为得下一点）`),
+        el('span', 'pn-hint', `天赋点 ${v.free} / ${v.total}（门派阶位 ${v.rank} 点，走完的主线 ${v.lines} 条）　门派每晋升一阶、每走完一条主线各得 1 点`),
         button('重置天赋', () => { if (confirm('退回全部天赋点？（免费）')) act('天赋 重置'); }),
       ));
       const tree = el('div', 'pn-tree');
       for (const br of v.branches) {
-        const col = el('div', `pn-branch st-${br.stance}`);
-        col.append(el('h4', 'pn-sub', `${br.name}（${br.stance}）`));
+        const col = el('div', `pn-branch br-${br.id}`);
+        col.append(el('h4', 'pn-sub', br.name), el('p', 'pn-hint', br.desc));
         for (const n of br.nodes) {
           const b = button('', () => act(`天赋 加 ${n.id}`), { cls: 'pn-node' + (n.lv ? ' on' : ''), disabled: !!n.why, title: n.why ?? '点击加一级' });
           b.append(el('span', 'pn-node-name', `${n.name}　${n.lv}/${n.max}`), el('span', 'pn-node-desc', n.desc));

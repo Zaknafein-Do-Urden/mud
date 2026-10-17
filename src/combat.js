@@ -277,7 +277,8 @@ export function beginRound(db, b, emit) {
     if (rand(b) * 100 < u.obscure) {
       emit('omen', fill(pick(b, OMEN_VAGUE), { N: u.name }));
       for (const me of playersOf(b).filter(alive)) {
-        if (sees(me)) emit('hint', `你看穿了${u.name}的意图：这一招是${STANCE_HINT[real]}（${real}）。`, { to: me.pid });
+        // 洞察先机（D-107）：藏招对他无效
+        if (tal(me, 'xianji') || sees(me)) emit('hint', `你看穿了${u.name}的意图：这一招是${STANCE_HINT[real]}（${real}）。`, { to: me.pid });
       }
       continue;
     }
@@ -292,7 +293,16 @@ export function beginRound(db, b, emit) {
         if (sees(me)) emit('hint', `你察觉${u.name}的气息与架势并不相合……`, { to: me.pid });
       }
     }
-  }  // NPC 队友在敌人之后出招，并公开（D-072）
+  }
+  // 料敌（D-107）：看出每个对手这一招打谁
+  for (const me of playersOf(b).filter((x) => alive(x) && tal(x, 'liaodi'))) {
+    for (const u of enemiesOf(b).filter(alive)) {
+      if (u.intent?.type !== 'move' || u.intent.stance === '守') continue;
+      const t = b.units.find((x) => x.key === u.intent.target);
+      if (t) emit('hint', `（料敌）${u.name}这一招是冲着${t === me ? '你' : t.name}来的。`, { to: me.pid });
+    }
+  }
+  // NPC 队友在敌人之后出招，并公开（D-072）
   for (const u of b.units.filter((x) => x.isAlly && alive(x))) {
     u.intent = u.status.点穴 ? { type: 'stunned' } : chooseAllyIntent(db, b, u);
     announceAlly(db, b, u, emit);
@@ -365,7 +375,7 @@ export function setPlayerIntent(db, b, input, pid = 'host') {
   const m = moves[Number(a) - 1];
   if (!m) return '没有这一招。输入招式编号，0 为调息。';
   if (!canUse(me, m)) return `施展「${m.name}」需要${m.weapon}${me.disarmed ? '（你的兵器被打飞了，可以换一件，或者用拳脚功夫）' : ''}。`;
-  if (m.mp > me.mp) return `内力不足（需要 ${m.mp}，现有 ${me.mp}）。可以输入 0 调息。`;
+  if (m.mp > me.mp && !(tal(me, 'qichen') && me.hp > (m.mp - me.mp) * 2)) return `内力不足（需要 ${m.mp}，现有 ${me.mp}）。可以输入 0 调息。`; // 气沉丹田可以拿气血补（D-107）
   const foes = enemiesOf(b).filter(alive);
   let target;
   if (m.stance === '守') {
@@ -400,7 +410,7 @@ export function resolveRound(db, b, emit) {
 
   // ① 被点穴的、调息的
   for (const u of units) {
-    if (u.status.点穴) { u.intent = { type: 'stunned' }; delete u.status.点穴; }
+    if (u.status.点穴) { u.intent = { type: 'stunned' }; if (--u.status.点穴 <= 0) delete u.status.点穴; }
     if (u.intent?.type === 'stunned') {
       if (u.isPlayer) emit('fx', '你穴道受制，动弹不得！');
       posture[u.key] = '无';
@@ -411,10 +421,13 @@ export function resolveRound(db, b, emit) {
       emit('fx', `${sayN(u)}从行囊里抽出${it.props.name}，握在手中。`);
     } else if (u.intent?.type === 'rest') {
       // 吸内可能让内力暂时高过上限，这里不能回成负数
-      const gain = Math.max(0, Math.min(u.maxMp - u.mp, Math.round(u.maxMp * (REST_RATE + 0.03 * tal(u, 'tuna') + (hasTrait(u, '回旋') ? 0.05 : 0)))));
+      const gain = Math.max(0, Math.min(u.maxMp - u.mp, Math.round(u.maxMp * (REST_RATE + (hasTrait(u, '回旋') ? 0.05 : 0)))));
       u.mp += gain;
       posture[u.key] = '无';
-      emit('fx', `${sayN(u)}盘膝调息，内力略有恢复。（内力 +${gain}）`);
+      // 调息疗伤（D-107）：同时恢复气血
+      const heal = Math.min(u.maxHp - u.hp, Math.round(u.maxHp * 0.04 * tal(u, 'liaoshang')));
+      u.hp += heal;
+      emit('fx', `${sayN(u)}盘膝调息，内力略有恢复。（内力 +${gain}${heal > 0 ? `，气血 +${heal}` : ''}）`);
     }
   }
 
@@ -422,7 +435,7 @@ export function resolveRound(db, b, emit) {
   for (const u of units) {
     if (u.intent?.type !== 'move' || u.intent.stance !== '守') continue;
     const m = moveInfo(db, u.intent.move);
-    if (u.mp < m.mp) { posture[u.key] = '无'; emit('fx', `${sayN(u)}内力不济，守势未能摆开。`); continue; }
+    if (u.mp < m.mp && !payWithHp(u, m, emit)) { posture[u.key] = '无'; emit('fx', `${sayN(u)}内力不济，守势未能摆开。`); continue; }
     u.mp -= m.mp;
     if (u.used) u.used[m.skill] = (u.used[m.skill] ?? 0) + 1;
     posture[u.key] = '守';
@@ -449,7 +462,7 @@ export function resolveRound(db, b, emit) {
   for (const u of order) {
     if (!alive(u)) continue;
     const m = moveInfo(db, u.intent.move);
-    if (u.mp < m.mp) { emit('fx', `${sayN(u)}内力不济，招式使到一半便泄了气。`); continue; }
+    if (u.mp < m.mp && !payWithHp(u, m, emit)) { emit('fx', `${sayN(u)}内力不济，招式使到一半便泄了气。`); continue; }
     u.mp -= m.mp;
     if (u.used) u.used[m.skill] = (u.used[m.skill] ?? 0) + 1;
     let target = byKey[u.intent.target];
@@ -457,9 +470,11 @@ export function resolveRound(db, b, emit) {
     if (!target) continue;
     // 护法：改打护法者
     const guard = byKey[protects[target.key]];
+    let guardScale = 1;
     if (guard && alive(guard) && guard !== u) {
       emit('fx', `${guard.name}抢上一步，挡在${target.name}身前。`);
       target = guard;
+      guardScale = 1 - 0.2 * tal(guard, 'hufa'); // 护法（D-107）
     }
     if (m.effects.some((e) => e.split(':')[0] === '群攻')) {
       // 群攻：打到所有对手，多人时每人六成伤害（D-081）
@@ -470,7 +485,7 @@ export function resolveRound(db, b, emit) {
         if (i === 1) emit('tag', '这一招波及了所有对手！');
         attack(db, b, u, t, m, posture[t.key] ?? '无', emit, { scale, quiet: i > 0, primary: i === 0 });
       });
-    } else attack(db, b, u, target, m, posture[target.key] ?? '无', emit);
+    } else attack(db, b, u, target, m, posture[target.key] ?? '无', emit, { scale: guardScale });
     if (enemiesOf(b).every((e) => !alive(e)) || playersOf(b).every((p) => !alive(p))) break;
   }
 
@@ -479,6 +494,14 @@ export function resolveRound(db, b, emit) {
 
   // ⑤ 回合结束：内伤
   for (const u of b.units) if (u.isPlayer && alive(u)) u.rounds++;
+  // 生生不息（D-107）：队里有人点了，全队每回合回一点气血；小周天：自己每回合回一点内力
+  for (const side of ['p', 'e']) {
+    const team = b.units.filter((x) => x.side === side && alive(x));
+    if (!team.some((x) => tal(x, 'shengsheng'))) continue;
+    for (const x of team) x.hp = Math.min(x.maxHp, x.hp + Math.round(x.maxHp * 0.02));
+    emit('fx', side === 'p' ? '一股暖意流遍周身，伤势缓了一缓。（生生不息）' : '对面的气色缓了过来。');
+  }
+  for (const u of b.units.filter((x) => alive(x) && tal(x, 'zhoutian'))) u.mp = Math.min(u.maxMp, u.mp + Math.round(u.maxMp * 0.02 * tal(u, 'zhoutian')));
   for (const u of b.units.filter(alive)) {
     if (u.status.护体 > 0 && --u.status.护体 <= 0) delete u.status.护体;
     if (u.status.内伤 > 0) {
@@ -493,6 +516,31 @@ export function resolveRound(db, b, emit) {
 
   if (enemiesOf(b).every((e) => !alive(e))) b.over = 'win';
   else if (playersOf(b).every((p) => !alive(p))) b.over = 'lose';
+  // 金创（D-107）：打赢后全队回 20% 气血
+  if (b.over === 'win' && teamOf(b).some((x) => tal(x, 'jinchuang'))) {
+    for (const x of teamOf(b).filter(alive)) x.hp = Math.min(x.maxHp, x.hp + Math.round(x.maxHp * 0.2));
+    emit('fx', '战罢，你取出金创药，给众人裹好了伤。（金创：气血恢复两成）');
+  }
+}
+
+/** u 的招克制了 target（D-107）：后发制人让对手露出破绽，吐纳回内力 */
+function countered(b, u, target, emit) {
+  if (alive(target) && !target.status.破绽 && rand(b) < 0.2 * tal(u, 'houfa')) {
+    target.status.破绽 = 1;
+    emit('fx', `${u.name}看准了空当，${target.name}露出了破绽。（后发制人）`);
+  }
+  const t = tal(u, 'tuna');
+  if (t && alive(u)) u.mp = Math.min(u.maxMp, u.mp + Math.round(u.maxMp * 0.03 * t));
+}
+
+/** 气沉丹田（D-107）：内力不够时，不足的部分用两倍气血代替；气血不够就不行 */
+function payWithHp(u, m, emit) {
+  const cost = (m.mp - u.mp) * 2;
+  if (!tal(u, 'qichen') || u.hp <= cost) return false;
+  u.hp -= cost;
+  u.mp = m.mp;
+  emit('fx', `${u.name}内力已竭，硬提一口真气，以气血催动招式。（气血 -${cost}）`);
+  return true;
 }
 
 /** 赤手空拳的敌人用了带兵器的武功时，用这些描述代替 */
@@ -520,10 +568,9 @@ const AOE_RATE = 0.6;
 /** 一招的攻击值：伤害公式里克制、护体、随机之前的部分（自适应也用它估算强度，D-106） */
 function attackValue(db, u, m) {
   const innerSk = u.innerId ? db.skill[u.innerId] : null;
-  const talentPower = 1 + 0.04 * (m.stance === '刚' ? tal(u, 'manli') : tal(u, 'ruili'))
-    + (u.isPlayer && m.weapon === u.wtype && !u.disarmed ? u.wbonus / 100 : 0) // 兵器加成（D-057）
+  const bonus = 1 + (u.isPlayer && m.weapon === u.wtype && !u.disarmed ? u.wbonus / 100 : 0) // 兵器加成（D-057）
     + (m.stance === '巧' ? (u.lightLv ?? 0) * 0.003 : 0); // 轻功：巧招 +0.3% / 级（D-062）
-  return m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, m.stance) * talentPower;
+  return m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, m.stance) * bonus;
 }
 
 function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
@@ -533,15 +580,13 @@ function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
   const innerSk = u.innerId ? db.skill[u.innerId] : null;
   const value = attackValue(db, u, m);
   let mult = MULT[m.stance][tPosture] ?? 1;
-  // 天赋对克制倍率的修正（D-044）
-  if (m.stance === '刚' && tPosture === '守') {
-    if (tal(u, 'pojia')) mult = 1.8;
-    if (tal(target, 'taishan')) mult *= 1.3 / 1.5;
+  // 轻功（D-062）：无势（调息、换兵器）时受伤倍率随轻功等级从 ×1.2 降到 ×1.0；回旋特性、定神天赋（D-107）直接免去
+  if (tPosture === '无') mult = hasTrait(target, '回旋') || tal(target, 'dingshen') ? 1.0 : Math.max(1.0, mult - (target.lightLv ?? 0) * 0.004);
+  // 凌空（D-107）：被克制时有机会闪开
+  if (mult > 1 && tPosture !== '无' && rand(b) < 0.08 * tal(target, 'lingkong')) {
+    emit('tag', fill('$n身子一飘，竟从招底下闪了开去！（凌空）', ctx));
+    return;
   }
-  if (m.stance === '刚' && tPosture === '巧' && tal(u, 'wangqian')) mult = 0.65;
-  if (m.stance === '巧' && tPosture === '守' && tal(u, 'youren')) mult = 0.65;
-  // 轻功（D-062）：无势（调息、换兵器）时受伤倍率随轻功等级从 ×1.2 降到 ×1.0；回旋特性直接免去
-  if (tPosture === '无') mult = hasTrait(target, '回旋') ? 1.0 : Math.max(1.0, mult - (target.lightLv ?? 0) * 0.004);
   // 燕回巢：巧招不再被守势克制
   const unblockable = m.stance === '巧' && tPosture === '守' && hasTrait(u, '燕回巢');
   if (unblockable) mult = 1.0;
@@ -560,16 +605,29 @@ function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
   else if (tPosture === '无') emit('tag', fill('$n门户大开，结结实实挨了这一下。', ctx));
   target.hp = Math.max(0, target.hp - dmg);
   emit('hit', `${target.name}${woundText(dmg / target.maxHp)}。（气血 -${dmg}）`, { target: target.key });
+  // 背水（D-107）：每场一次，致命一击留一口气
+  if (target.hp <= 0 && tal(target, 'beishui') && !target.beishui) {
+    target.hp = 1;
+    target.beishui = true;
+    emit('fx', `${target.name}眼前一黑，却硬生生咬牙站住了！（背水）`);
+  }
   if (u.side === 'p' && opts.primary !== false) u.roundHit = { target: target.key, dmg, raw, mult, skill: m.skill }; // 玩家和 NPC 队友都记，合击用
 
+  // 克制了对手：后发制人、吐纳（D-107）
+  if (mult > 1 && tPosture !== '无' && opts.primary !== false) countered(b, u, target, emit);
+  // 截脉（D-107）：没被克制时有机会顺势点穴
+  if (mult >= 1 && alive(target) && opts.primary !== false && !target.status.点穴 && !m.effects.some((e) => e.startsWith('点穴')) && rand(b) < 0.06 * tal(u, 'jiemai')) {
+    target.status.点穴 = tal(u, 'fengxue') ? 2 : 1;
+    emit('fx', `${u.name}顺势一截，点中了${target.name}的穴道！（截脉）`);
+  }
   // 招式附加效果：只在没有被克制时生效；群攻只作用在主目标身上
   if (mult >= 1 && alive(target) && opts.primary !== false) {
     for (const e of m.effects) {
       const [kind, k] = e.split(':');
-      if (kind === '内伤') { target.status.内伤 = 3; target.status.内伤dot = Math.max(3, Math.round(dmg * 0.2 * (1 + 0.25 * tal(u, 'zhongchuang')))); emit('fx', `${target.name}受了内伤。`); }
-      else if (kind === '点穴') { target.status.点穴 = 1; emit('fx', `${target.name}被点中穴道，下一回合动弹不得！`); }
+      if (kind === '内伤') { target.status.内伤 = 3 + 2 * tal(u, 'zhongchuang'); target.status.内伤dot = Math.max(3, Math.round(dmg * 0.2)); emit('fx', `${target.name}受了内伤。`); }
+      else if (kind === '点穴') { target.status.点穴 = tal(u, 'fengxue') ? 2 : 1; emit('fx', `${target.name}被点中穴道，${tal(u, 'fengxue') ? '接下来两回合' : '下一回合'}动弹不得！`); }
       else if (kind === '破绽') { target.status.破绽 = 1; emit('fx', `${target.name}露出了破绽。`); }
-      else if (kind === '缴械') tryDisarm(b, u, target, num(k, 20), emit);
+      else if (kind === '缴械') tryDisarm(b, u, target, num(k, 20) + 15 * tal(u, 'xiebing'), emit);
       else if (kind === '吸内' || kind === '化内') {
         const drain = Math.min(target.mp, Math.round(dmg * num(k, 1)));
         target.mp -= drain;
@@ -604,9 +662,13 @@ function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
     if (gm) {
       const tInner = target.innerId ? db.skill[target.innerId] : null;
       const counter = gm.power * (1 + (target.skills[gm.skill] ?? 0) * 0.02) * innerBonus(target.innerLv, tInner, '守');
-      const cd = Math.max(1, Math.round(counter * (100 / (100 + u.innerLv)) * (1 + 0.25 * tal(target, 'fanzhen')) * (tal(u, 'youren') ? 0.5 : 1)));
+      const cd = Math.max(1, Math.round(counter * (100 / (100 + u.innerLv))));
       u.hp = Math.max(0, u.hp - cd);
       emit('tag', `反震之力直透${u.name}臂膀！（气血 -${cd}）`);
+      // 守化解了巧招，也算克制：后发制人、吐纳；借力吸走对手内力（D-107）
+      countered(b, target, u, emit);
+      const drain = Math.min(u.mp, Math.round(cd * 0.25 * tal(target, 'jieli')));
+      if (drain > 0) { u.mp -= drain; target.mp = Math.min(target.maxMp, target.mp + drain); emit('fx', `${target.name}借着反震之势，吸走了${u.name}的内力。（内力 +${drain}）`); }
       const dis = gm.effects.find((e) => e.startsWith('缴械'));
       if (dis) tryDisarm(b, target, u, num(dis.split(':')[1], 20), emit);
       if (!alive(u)) emit('fx', `${u.name}倒在地上。`);
@@ -618,7 +680,8 @@ function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
 /** 辅助招式的效果（D-064）。数值与招式威力、武功等级、内功挂钩 */
 function applySupport(db, u, target, m, emit) {
   const innerSk = u.innerId ? db.skill[u.innerId] : null;
-  const value = m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, '守');
+  // 妙手（D-107）：疗伤、回气效果更好
+  const value = m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, '守') * (1 + 0.2 * tal(u, 'miaoshou'));
   const who = target === u ? '你' : target.name;
   for (const e of m.effects) {
     const [kind, k] = e.split(':');
@@ -909,6 +972,17 @@ function exchange(p, e, odds, acc, pArmor, eArmor) {
   // 被点穴的一回合：自己不出手，对方的招打在门户大开的身上（×1.2）
   return { toFoe: toFoe * (1 - meStunned), toMe: toMe * (1 - foeStunned) * (1 + 0.2 * meStunned), reflect };
 }
+
+/**
+ * 修为（D-107）：刚、巧、守三势各自最狠一招的攻击值之和，加上气血上限的五分之一。
+ * 学得再多，一场里用的也就是每势最狠的那招，所以不看武功等级之和。敌人用同一个公式，可以直接比较。
+ */
+export function unitXiuwei(db, u) {
+  const best = stanceBest(db, u);
+  return Math.round(best.刚 + best.巧 + best.守 + u.maxHp / 5);
+}
+export const xiuwei = (db, p) => unitXiuwei(db, playerUnit(db, p));
+export const enemyXiuwei = (db, foeId) => unitXiuwei(db, enemyUnit(db, db.enemy[foeId], 0));
 
 /** 自适应的刻度（D-106）：设计时假定玩家猜对几成；按这个猜对率，几回合打完全部敌人；打完时掉了多少比例的气血 */
 export const ADAPT_ACC = 0.6;

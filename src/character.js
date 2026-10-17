@@ -1,6 +1,5 @@
 // 角色数值：派生属性、武功上限、装备栏。纯函数，供引擎和战斗使用。见 COMBAT.md §2、SECT.md §4。
 
-import { tal } from './talents.js';
 
 export const STANCES = ['刚', '巧', '守'];
 export const MAX_OUTER = 4;
@@ -62,7 +61,7 @@ function innerSum(db, p, prop, dflt) {
 }
 
 export function maxHp(db, p) {
-  return Math.round((100 + p.attrs.根骨 * 5 + innerSum(db, p, 'hp', 6)) * (1 + 0.05 * tal(p, 'tiegu')));
+  return Math.round(100 + p.attrs.根骨 * 5 + innerSum(db, p, 'hp', 6));
 }
 
 export function maxMp(db, p) {
@@ -77,7 +76,7 @@ export function bestInnerLv(db, p) {
 /** 身法：先天身法 + 轻功等级 / 4 */
 export function speed(db, p) {
   const id = p.loadout.light;
-  return p.attrs.身法 + (id ? Math.floor((p.skills[id] ?? 0) / 4) : 0) + 2 * tal(p, 'xunjie');
+  return p.attrs.身法 + (id ? Math.floor((p.skills[id] ?? 0) / 4) : 0);
 }
 
 /** 内功威力加成（含亲和势） */

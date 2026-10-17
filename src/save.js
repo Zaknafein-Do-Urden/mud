@@ -7,7 +7,7 @@ const PREFIX = 'wuxia-mud:'; // 同一 github.io 用户下所有项目共享 loc
 const SLOT = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('slot')) || '1';
 const SLOT_KEY = PREFIX + 'save:' + SLOT.replace(/[^\w-]/g, '');
 const EXPORT_TAG = 'WXMUD1';
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 export function newState(startRoom) {
   const now = Date.now();
@@ -75,6 +75,8 @@ const migrations = {
     if (f['shediao.ch5_done']) { skillcap['quanzhen.jianfa'] = Math.max(skillcap['quanzhen.jianfa'] ?? 0, 40); skillcap['shediao.yangqiang'] = Math.max(skillcap['shediao.yangqiang'] ?? 0, 30); }
     return { ...s, player: { ...s.player, inventory, skills, skillcap } };
   },
+  // v10：天赋树重做成五条机制线，天赋点改由门派阶位和走完的主线给（D-107）。旧天赋全部退回
+  9: (s) => ({ ...s, player: { ...s.player, talents: {} } }),
 };
 
 /** 已开始的主线 id（用于决定加载哪些内容） */

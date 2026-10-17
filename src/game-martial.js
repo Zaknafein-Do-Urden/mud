@@ -1,8 +1,8 @@
 // 引擎的武学部分：战斗、门派、修炼、旅店。以方法的形式并入 Game（见 game.js 末尾）。
 
 import { maxHp, maxMp, skillCap, trainCost, sectRanks, bestInnerLv, MAX_OUTER, movesOf, expNeed, expPerUse, gainExp, isWeaponItem, weaponOf, ARMED } from './character.js';
-import { TALENT_TREE, talentPointsTotal, talentPointsSpent, canAddTalent, findTalent, xiuwei, xiuweiToNext, tal } from './talents.js';
-import { adaptEnemyHp, teamOf } from './combat.js';
+import { TALENT_TREE, talentPointsSpent, canAddTalent, findTalent, tal } from './talents.js';
+import { adaptEnemyHp, teamOf, xiuwei } from './combat.js';
 import { todayStr } from './game.js';
 import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, playersOf, enemiesOf, hpText, moveInfo, canUse, comboHint } from './combat.js';
 
@@ -138,14 +138,35 @@ export const martial = {
 
   // ---- 天赋（D-044）----
 
-  /** 天赋 / 天赋 加 蛮力 / 天赋 重置 */
+  /**
+   * 天赋点（D-107）：门派每晋升一阶 1 点（叛出师门全部收回），每走完一条主线 1 点。
+   * 返回 { rank, lines, total }
+   */
+  talentPoints() {
+    const p = this.state.player;
+    const rank = p.sect?.rank ?? 0;
+    const lines = this.doneStorylines().size;
+    return { rank, lines, total: rank + lines };
+  },
+
+  /** 天赋点变少了（叛出师门）、已点的超过了总数：全部退回重新点（D-107） */
+  fitTalents() {
+    const p = this.state.player;
+    if (talentPointsSpent(p) <= this.talentPoints().total) return;
+    p.talents = {};
+    this.normalizeHp();
+    this.emit('sys', '你的天赋点少了，已点的天赋全部退回，请重新分配。');
+  },
+
+  /** 天赋 / 天赋 加 截脉 / 天赋 重置 */
   talentCmd(arg) {
     const p = this.state.player;
     p.talents ??= {};
+    this.fitTalents();
     const [op, name] = arg.split(/\s+/);
     if (op === '加' || op === 'add') {
       const n = findTalent(name ?? '');
-      const why = n ? canAddTalent(p, n.id) : '没有这个天赋。';
+      const why = n ? canAddTalent(p, n.id, this.talentPoints().total) : '没有这个天赋。';
       if (why) { this.emit('err', why); return; }
       p.talents[n.id] = tal(p, n.id) + 1;
       this.normalizeHp();
@@ -158,10 +179,10 @@ export const martial = {
       this.emit('sys', '你静坐冥想，将所悟重新梳理了一遍。（天赋点已全部退回）');
       return;
     }
-    const free = talentPointsTotal(p) - talentPointsSpent(p);
-    this.emit('sys', `【天赋】修为 ${xiuwei(p)}　可用天赋点 ${free}（再提升 ${xiuweiToNext(p)} 点修为得下一点）`);
+    const pts = this.talentPoints();
+    this.emit('sys', `【天赋】可用天赋点 ${pts.total - talentPointsSpent(p)} / ${pts.total}（门派阶位 ${pts.rank} 点，走完的主线 ${pts.lines} 条）。门派每晋升一阶、每走完一条主线各得 1 点。`);
     for (const br of TALENT_TREE) {
-      this.emit('sys', `${br.name}（${br.stance}）：` + br.nodes.map((n) => `${n.name} ${tal(p, n.id)}/${n.max}`).join('　'));
+      this.emit('sys', `${br.name}（${br.desc}）：` + br.nodes.map((n) => `${n.name} ${tal(p, n.id)}/${n.max}`).join('　'));
     }
     this.emit('sys', '天赋 加 天赋名 / 天赋 重置（免费）。也可以在"人物 → 天赋"里点选。');
   },
@@ -294,6 +315,7 @@ export const martial = {
     p.sect = null;
     this.normalizeHp();
     this.emit('story', `你解下背上的布袋，放在地上，头也不回地走了。从此你与${sect.props.name}再无瓜葛。`);
+    this.fitTalents(); // 门派阶位给的天赋点全部收回（D-107）
   },
 
   joinSect(id) {
@@ -424,7 +446,7 @@ export const martial = {
       this.state.daily[`promote.${b.exam.sect}`] = todayStr();
       p.hp = Math.max(p.hp, 1);
       this.emit('combat', '——考核通过！——');
-      this.emit('story', `师父点了点头：“好，从今日起，你便是本门${ranks[b.exam.rank]?.name}了。”`);
+      this.emit('story', `师父点了点头：“好，从今日起，你便是本门${ranks[b.exam.rank]?.name}了。”（天赋点 +1）`);
     } else {
       p.hp = Math.max(1, p.hp, Math.round(this.hpMax() * 0.3));
       this.emit('combat', result === 'flee' ? '——你认输了。——' : '——考核未过。——');
@@ -456,7 +478,7 @@ export const martial = {
         if (hint?.foe) { const foes = enemiesOf(b).filter((e) => e.hp > 0); const k = foes.findIndex((e) => e.key === hint.foe); hint.foeN = k + 1; hint.foeName = foes[k]?.name; }
         // 悬停说明（D-096）：和武功页同一份招式说明（威力、内力、估算伤害、效果）
         const tip = this.db.move[m.id] ? this.moveTip(this.db.skill[m.skill], this.db.move[m.id], m.lv).tip : '';
-        return { n: i + 1, name: m.name, skillName: m.skillName, stance: m.stance, mp: m.mp, effects: m.effects, usable: m.mp <= me.mp && armedOk, need: armedOk ? '' : `需要${m.weapon}`, support: m.support, combo: hint, tip };
+        return { n: i + 1, name: m.name, skillName: m.skillName, stance: m.stance, mp: m.mp, effects: m.effects, usable: (m.mp <= me.mp || (tal(me, 'qichen') && me.hp > (m.mp - me.mp) * 2)) && armedOk, need: armedOk ? '' : `需要${m.weapon}`, support: m.support, combo: hint, tip };
       }),
       // 兵器：手里的、被打飞的、可以换上的（D-057）
       weapon: me.disarmed ? null : me.wname,

@@ -6,6 +6,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse, addBlocks, emptyDb, parseMap, parseList, splitLinks } from '../src/content.js';
 import { checkStoryGrants } from '../src/power.js';
+import { enemyXiuwei } from '../src/combat.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'content');
 const index = JSON.parse(readFileSync(join(root, 'index.json'), 'utf8'));
@@ -166,6 +167,7 @@ for (const b of all) {
   }
   if (b.type === 'goal' && !b.props.name) err(b, '目标要写 name（只显示做什么），正文写具体怎么做（点"提示"才显示，D-074）');
   if (b.type === 'storyline' && b.props.level) err(b, '主线的建议等级改用 xiuwei: 起-止（建议修为，D-075）');
+  if (b.type === 'storyline' && b.props.done) checkConds(b, b.props.done.split(/\s+/));
   if (b.type === 'sect') {
     // 用户规定：门派可以有侧重，但刚、巧、守三类外功至少各有一门
     const outer = Object.values(db.skill).filter((sk) => sk.props.sect === b.id && sk.props.kind === '外功');
@@ -287,6 +289,19 @@ for (const g of Object.values(db.goods)) {
   for (const r of checkStoryGrants(db, storylines, byFile)) {
     if (!r.ok) errors.push(`${r.file} [${r.where}] ${db.skill[r.skill].props.name}上限 ${r.cap} 的威力是 ${r.wp}，超过了到这一章为止必须打赢的最强战斗力 ${r.cp}。降低上限，或者放到更晚的章节（node tools/power.mjs 看详情）`);
   }
+}
+
+// 主线的建议修为（D-107）：按本主线必须打赢的战斗里最强敌人的修为（同一个公式：三势最狠一招 + 气血 / 5）自动算出，
+// 写在 storyline 的 xiuwei 上。写了新章节就照提示改。完结的主线写 done（走完给 1 个天赋点）
+for (const [id, s] of Object.entries(index.storylines)) {
+  const line = db.storyline[id];
+  if (!line) continue;
+  const mine = new Set(s.files ?? []);
+  const xs = Object.values(db.battle).filter((b) => mine.has(b.file) && !b.props.lose)
+    .map((b) => Math.max(...parseList(b.props.enemies).filter((e) => db.enemy[e]).map((e) => enemyXiuwei(db, e))));
+  if (!xs.length) continue;
+  const want = `${Math.floor(Math.min(...xs) / 10) * 10}-${Math.ceil(Math.max(...xs) / 10) * 10}`;
+  if ((line.props.xiuwei ?? '').replace(/\s/g, '') !== want) warns.push(`${line.file} 主线「${line.props.name}」的建议修为应为 xiuwei: ${want}（按必须打赢的战斗里最强敌人的修为算，D-107），现在写的是 ${line.props.xiuwei ?? '（没写）'}`);
 }
 
 // 待写占位：剧情推进后要回头删掉，清单见 docs/TODO-CONTENT.md

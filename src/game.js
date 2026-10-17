@@ -8,7 +8,8 @@ import { trade } from './game-trade.js';
 import { views } from './game-views.js';
 import { party } from './game-party.js';
 import { skillCap, bestInnerLv, isWeaponItem } from './character.js';
-import { xiuwei, tal } from './talents.js';
+import { tal } from './talents.js';
+import { xiuwei } from './combat.js';
 
 const DIR_ALIAS = {
   n: '北', s: '南', e: '东', w: '西', u: '上', d: '下',
@@ -166,7 +167,7 @@ export class Game {
       else if (kind === 'today') ok = this.state.daily?.[key] === todayStr();
       // 战力门槛（D-060）
       else if (kind === 'maxhp') ok = this.hpMax() >= Number(key);
-      else if (kind === 'xiuwei') ok = xiuwei(player) >= Number(key);
+      else if (kind === 'xiuwei') ok = xiuwei(this.db, player) >= Number(key);
       else if (kind === 'inner') ok = bestInnerLv(this.db, player) >= Number(key);
       else if (kind === 'stance') {
         const [st, lv] = splitOnce(key);
@@ -187,8 +188,19 @@ export class Game {
   apply(effects) {
     const watch = effects.some((e) => e.startsWith('flag:'));
     const before = watch ? this.doneChapters() : null;
+    const linesBefore = watch ? this.doneStorylines() : null;
     this.applyEffects(effects);
-    if (watch) for (const id of this.doneChapters()) if (!before.has(id)) this.chapterRep(id);
+    if (!watch) return;
+    for (const id of this.doneChapters()) if (!before.has(id)) this.chapterRep(id);
+    // 走完一条主线：天赋点 +1（D-107）
+    for (const id of this.doneStorylines()) {
+      if (!linesBefore.has(id)) this.emit('story', `【${this.db.storyline[id].props.name}】全篇终。你对武学的领悟又深了一层。（天赋点 +1）`);
+    }
+  }
+
+  /** 已经走完的主线：storyline 块的 done 条件成立（D-107） */
+  doneStorylines() {
+    return new Set(Object.values(this.db.storyline).filter((s) => s.props.done && this.check(words(s.props.done))).map((s) => s.id));
   }
 
   doneChapters() {
@@ -608,7 +620,7 @@ export class Game {
       '  修炼 武功名            在旅店或本门驻地消耗潜能提升武功',
       '  学 / 晋阶              在本门师父面前学艺、申请晋阶（晋阶要通过考核）',
       '  叛出师门               离开门派：本门武功等级减半且不能再提升',
-      '  天赋 / 天赋 加 蛮力     查看、点选天赋（修为每 25 点得 1 个天赋点；天赋 重置 免费）',
+      '  天赋 / 天赋 加 截脉     查看、点选天赋（门派每晋升一阶、每走完一条主线各得 1 点；天赋 重置 免费）',
       '  目标 / 提示            查看各主线的当前目标；不知道怎么做时用 提示 看具体做法',
       '  休息                   在旅店休息，恢复气血（过去一天）',
       '  乘车 / 乘车 襄阳        在车马行坐马车去别的城市（路上可能遇到劫道）',
