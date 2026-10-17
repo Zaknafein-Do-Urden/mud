@@ -368,3 +368,33 @@ bonus: 1.6
 effects: 内伤
 ---
 $A的剑绕到$n侧后，逼得他转身来挡；$B的掌已经等在他转过来的那一面，一掌按实。
+
+# ---------------- 射雕英雄传（第六章起：郭靖）----------------
+
+=== combo: combo.nanshan_pair
+name: 樵歌互答
+a: shediao.nanshan@10
+b: shediao.nanshan@10
+bonus: 1.5
+effects: 内伤
+---
+$A一掌劈下，$B一掌跟上，两路南山掌法一前一后，像两个樵夫轮流抡斧，一下一下全砍在$n身上。
+
+=== combo: combo.nanshan_yang
+name: 开山断岳
+a: shediao.nanshan@10
+b: shediao.yangqiang@20
+bonus: 1.6
+effects: 破绽
+---
+$A的掌力把$n的门户砸开一道缝，$B的枪尖就从那道缝里扎了进去。
+
+=== combo: combo.yang_pair
+name: 双枪会
+a: shediao.yangqiang@20
+b: shediao.yangqiang@20
+bonus: 1.6
+effects: 破绽
+---
+$A和$B两杆枪一上一下，枪花交错，杨家枪的拦、拿、扎同时到了，$n顾得了上顾不了下。
+
