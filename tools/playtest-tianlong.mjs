@@ -530,6 +530,84 @@ function ch13(g, label) {
   expectFlag(g, 'tianlong.lead_liaodi', label);
 }
 
+// ---------------- 第十四章 ----------------
+
+function ch14(g, label) {
+  step(label + ' 第十四章');
+  g.enter('tianlong.sw.camp');
+  expectFlag(g, 'tianlong.ch14', label);
+  pick(g, '一起去', label);
+  ex(g, '东北', label);
+  expectRoom(g, 'tianlong.ld.road', label);
+  ex(g, '东北', label);
+  expectRoom(g, 'tianlong.ld.hunt', label);
+  pick(g, '跟上去', label);
+  win(g, label + '/皮室军');
+  pick(g, '接住这一骑', label);
+  win(g, label + '/楚王');
+  expectFlag(g, 'tianlong.c14_saved', label);
+  pick(g, '进金帐', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.ld.tent', label);
+  pick(g, '看着他们', label);
+  pick(g, '收下金牌', label);
+  pick(g, '……', label);
+  pick(g, '……', label);
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.ch14_done', label);
+  if (!g.state.player.inventory['tianlong.goldtoken']) note(`${label}：没拿到南院的金牌`);
+}
+
+// ---------------- 第十五章 ----------------
+
+function ch15(g, label) {
+  step(label + ' 第十五章');
+  g.enter('luoyang.station');
+  expectFlag(g, 'tianlong.ch15', label);
+  pick(g, '一起上山', label);
+  ex(g, '西北', label);
+  expectRoom(g, 'tianlong.ss.road', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.ss.ping', label);
+  pick(g, '挡在阿紫前面', label);
+  pick(g, '接下他这一手', label);
+  win(g, label + '/丁春秋');
+  expectFlag(g, 'tianlong.c15_ding', label);
+  pick(g, '看过去', label);
+  pick(g, '接住他', label);
+  win(g, label + '/庄聚贤');
+  pick(g, '……', label);
+  pick(g, '追上去', label);
+  expectFlag(g, 'tianlong.ch15_done', label);
+}
+
+// ---------------- 第十六章 ----------------
+
+function ch16(g, label, { rang = false } = {}) {
+  step(label + ' 第十六章');
+  g.enter('tianlong.ss.ping');
+  expectFlag(g, 'tianlong.ch16', label);
+  pick(g, '一起去后山', label);
+  ex(g, '北', label);
+  expectRoom(g, 'shaolin.gate', label);
+  ex(g, '东', label);
+  expectRoom(g, 'shaolin.hill', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.ss.back', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.ss.ge', label);
+  pick(g, '……', label);
+  pick(g, '……', label);
+  pick(g, rang ? '这是他们两家的事' : '我不让', label);
+  pick(g, rang ? '接着' : '那就试试', label);
+  win(g, label + '/慕容复');
+  pick(g, '……', label);
+  pick(g, '……', label);
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.ch16_done', label);
+  expectFlag(g, 'tianlong.lead_xuzhu', label);
+}
+
 // ================= 路线一：正面硬来、巧路门槛、三月街、藏经、输给鸠摩智 =================
 {
   const label = '路线一';
@@ -553,6 +631,9 @@ function ch13(g, label) {
   ch11(g, label, { answer: 'hu' });
   ch12(g, label, { ask: false, see: 'chin' });
   ch13(g, label);
+  ch14(g, label);
+  ch15(g, label);
+  ch16(g, label, { rang: false });
 }
 
 // ================= 路线二：偷袭、旁观、硬闯门槛、客栈、不藏经、打赢鸠摩智 =================
@@ -579,6 +660,9 @@ function ch13(g, label) {
   ch11(g, label, { answer: 'bu' });
   ch12(g, label, { ask: true, see: 'suoyi' });
   ch13(g, label);
+  ch14(g, label);
+  ch15(g, label);
+  ch16(g, label, { rang: true });
 }
 
 // ================= 路线三：两处门槛都走组队那条路 =================
@@ -601,6 +685,9 @@ function ch13(g, label) {
   ch11(g, label, {});
   ch12(g, label, {});
   ch13(g, label);
+  ch14(g, label);
+  ch15(g, label);
+  ch16(g, label, {});
 }
 
 // ================= 路线四：功力不够时的"现在还不行"，以及打输重来 =================
@@ -676,4 +763,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 天龙八部十三章、四条路线全部走通（三处门槛三选一、各处分支、必败战的输赢、打输重来）');
+console.log('✓ 天龙八部十六章、四条路线全部走通（三处门槛三选一、各处分支、必败战的输赢、打输重来）');
