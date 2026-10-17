@@ -4,6 +4,7 @@
 === storyline: shediao
 name: 射雕英雄传
 xiuwei: 60-450
+milestones: flag:shediao.mo.mei_won, flag:shediao.th.mei_won
 # 尚未开始时，在"江湖 → 主线"里给出的线索
 hint: 临安清风茶楼的说书先生消息灵通，不妨去听听"眼下的新鲜事"。
 ---

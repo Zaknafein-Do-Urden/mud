@@ -139,13 +139,13 @@ export const martial = {
   // ---- 天赋（D-044）----
 
   /**
-   * 天赋点（D-107）：门派每晋升一阶 1 点（叛出师门全部收回），每走完一条主线 1 点。
-   * 返回 { rank, lines, total }
+   * 天赋点（D-107、D-108）：门派每晋升一阶 1 点（叛出师门全部收回）；每条主线 3 点（见 storyTalents）。
+   * 返回 { rank, lines, total }，lines 是主线给的点数
    */
   talentPoints() {
     const p = this.state.player;
     const rank = p.sect?.rank ?? 0;
-    const lines = this.doneStorylines().size;
+    const lines = this.storyTalents().size;
     return { rank, lines, total: rank + lines };
   },
 
@@ -180,7 +180,7 @@ export const martial = {
       return;
     }
     const pts = this.talentPoints();
-    this.emit('sys', `【天赋】可用天赋点 ${pts.total - talentPointsSpent(p)} / ${pts.total}（门派阶位 ${pts.rank} 点，走完的主线 ${pts.lines} 条）。门派每晋升一阶、每走完一条主线各得 1 点。`);
+    this.emit('sys', `【天赋】可用天赋点 ${pts.total - talentPointsSpent(p)} / ${pts.total}（门派阶位 ${pts.rank} 点，主线 ${pts.lines} 点）。门派每晋升一阶得 1 点；每条主线走到三成、七成左右和完结时各得 1 点。`);
     for (const br of TALENT_TREE) {
       this.emit('sys', `${br.name}（${br.desc}）：` + br.nodes.map((n) => `${n.name} ${tal(p, n.id)}/${n.max}`).join('　'));
     }

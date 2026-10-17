@@ -5,6 +5,7 @@
 === storyline: tianlong
 name: 天龙八部
 xiuwei: 100-800
+milestones: flag:tianlong.c9.toumu_won, flag:tianlong.c15.ding_won
 done: flag:tianlong.ch24_done
 # 尚未开始时，在“江湖 → 主线”里给出的线索
 hint: 成都车马行里有个常跑南边的马锅头，他的车队三天后又要往大理去。

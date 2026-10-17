@@ -188,19 +188,31 @@ export class Game {
   apply(effects) {
     const watch = effects.some((e) => e.startsWith('flag:'));
     const before = watch ? this.doneChapters() : null;
-    const linesBefore = watch ? this.doneStorylines() : null;
+    const talentsBefore = watch ? this.storyTalents() : null;
     this.applyEffects(effects);
     if (!watch) return;
     for (const id of this.doneChapters()) if (!before.has(id)) this.chapterRep(id);
-    // 走完一条主线：天赋点 +1（D-107）
-    for (const id of this.doneStorylines()) {
-      if (!linesBefore.has(id)) this.emit('story', `【${this.db.storyline[id].props.name}】全篇终。你对武学的领悟又深了一层。（天赋点 +1）`);
+    // 主线的三个天赋点（D-108）：三成左右、七成左右的重要战斗之后各 1 点，完结 1 点
+    for (const key of this.storyTalents()) {
+      if (talentsBefore.has(key)) continue;
+      const [id, which] = key.split('#');
+      const name = this.db.storyline[id].props.name;
+      this.emit('story', which === 'done' ? `【${name}】全篇终。你对武学的领悟又深了一层。（天赋点 +1）` : `历经此战，你对武学的领悟又深了一层。（${name}：天赋点 +1）`);
     }
   }
 
-  /** 已经走完的主线：storyline 块的 done 条件成立（D-107） */
-  doneStorylines() {
-    return new Set(Object.values(this.db.storyline).filter((s) => s.props.done && this.check(words(s.props.done))).map((s) => s.id));
+  /**
+   * 主线给的天赋点（D-108）：每条主线 3 点。storyline 块的 milestones（逗号分隔的两个条件，
+   * 一般是三成左右、七成左右那一章重要战斗的胜利标记）各 1 点，done（完结条件）1 点。
+   * 返回已经拿到的点的集合，元素是"主线id#0""主线id#1""主线id#done"。
+   */
+  storyTalents() {
+    const got = new Set();
+    for (const s of Object.values(this.db.storyline)) {
+      parseList(s.props.milestones ?? '').forEach((c, i) => { if (this.check(words(c))) got.add(`${s.id}#${i}`); });
+      if (s.props.done && this.check(words(s.props.done))) got.add(`${s.id}#done`);
+    }
+    return got;
   }
 
   doneChapters() {
@@ -620,7 +632,7 @@ export class Game {
       '  修炼 武功名            在旅店或本门驻地消耗潜能提升武功',
       '  学 / 晋阶              在本门师父面前学艺、申请晋阶（晋阶要通过考核）',
       '  叛出师门               离开门派：本门武功等级减半且不能再提升',
-      '  天赋 / 天赋 加 截脉     查看、点选天赋（门派每晋升一阶、每走完一条主线各得 1 点；天赋 重置 免费）',
+      '  天赋 / 天赋 加 截脉     查看、点选天赋（门派每晋升一阶 1 点，每条主线 3 点；天赋 重置 免费）',
       '  目标 / 提示            查看各主线的当前目标；不知道怎么做时用 提示 看具体做法',
       '  休息                   在旅店休息，恢复气血（过去一天）',
       '  乘车 / 乘车 襄阳        在车马行坐马车去别的城市（路上可能遇到劫道）',

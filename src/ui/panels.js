@@ -204,7 +204,7 @@ export function initPanels(api) {
     if (tab === '天赋') {
       const v = g.talentView();
       body.append(row(
-        el('span', 'pn-hint', `天赋点 ${v.free} / ${v.total}（门派阶位 ${v.rank} 点，走完的主线 ${v.lines} 条）　门派每晋升一阶、每走完一条主线各得 1 点`),
+        el('span', 'pn-hint', `天赋点 ${v.free} / ${v.total}（门派阶位 ${v.rank} 点，主线 ${v.lines} 点）　门派每晋升一阶得 1 点；每条主线走到三成、七成左右和完结时各得 1 点`),
         button('重置天赋', () => { if (confirm('退回全部天赋点？（免费）')) act('天赋 重置'); }),
       ));
       const tree = el('div', 'pn-tree');

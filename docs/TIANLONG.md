@@ -32,7 +32,7 @@
 | 主线 id | `tianlong`。目录 `content/tianlong/`：`hook.md`（开端，总是加载，保持精简）＋ `ch01.md`、`ch02.md`…… |
 | 登记 | `content/index.json` 的 `storylines` 里加 `"tianlong": { "hook": ["tianlong/hook.md"], "files": [...] }`，章节按剧情顺序排 |
 | 标记 | 只能写 `tianlong.*`；可以读 `world.*`、门派、其他主线的标记 |
-| `storyline` 块 | `name: 天龙八部`、`xiuwei: 起-止`（建议修为，按 validate 的提示写，D-107）、完结后写 `done:`、`hint:`（尚未开始时藏在"提示"里的线索，不要太直白）、正文一句话简介 |
+| `storyline` 块 | `name: 天龙八部`、`xiuwei: 起-止`（建议修为，按 validate 的提示写，D-107）、`milestones:`（三成、七成左右的重要战斗胜利标记）和完结后的 `done:`（D-108）、`hint:`（尚未开始时藏在"提示"里的线索，不要太直白）、正文一句话简介 |
 | 开端 | 在共享地图上挂一个入口（参考 `content/shediao/hook.md`：用 `patch` 给某个 NPC 的对话加选项，入口对话里 `!start:tianlong`） |
 | 文字 | 全部原创，章节名原创（"第N章　四个字"），不摘抄原著（WRITING.md §1） |
 | 玩家 | 原创角色，与段誉、乔峰、虚竹同行、相助或对立；原著大走向不改 |

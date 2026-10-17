@@ -42,6 +42,7 @@
 name: 射雕英雄传
 hook: linan.teahouse          # 开端在哪里触发（比如茶楼听书）
 xiuwei: 60-450                # 建议修为，江湖面板显示"建议修为 60~450"（D-075）。按本主线必胜战里最强敌人的修为算，validate 会提示该写多少（D-107）
+milestones: flag:shediao.mo.mei_won, flag:shediao.th.mei_won   # 三成左右、七成左右那一章重要战斗的胜利标记，各给 1 个天赋点（D-108）
 done: flag:shediao.chN_done   # 完结条件：写了终章才加，走完给 1 个天赋点（D-107）
 ---
 一句话简介，显示在"江湖传闻"里。

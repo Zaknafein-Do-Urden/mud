@@ -1,6 +1,6 @@
 // 天赋树（D-044，D-107 重做）：不再是给刚、巧、守加数值，而是五条"机制"线：
 // 制敌（控制对手）、医术（回复自己和队友）、洞察（看穿招式）、应变（化险为夷）、内息（内力的运用）。
-// 天赋点来自门派阶位和走完的主线（D-107），每条线约 7 点，终局大约能点满两条。
+// 天赋点来自门派阶位和主线进度（D-107、D-108），每条线 7 点，终局能点满两条多。
 // 天赋的效果需要代码配合（战斗公式里的钩子），所以定义写在代码里而不是内容文件里。
 
 /** 每条线的天赋按顺序解锁：必须先点前一个（至少 1 级）才能点后一个 */
@@ -68,7 +68,7 @@ export function canAddTalent(p, id, total) {
   const n = NODE[id];
   if (!n) return '没有这个天赋。';
   if (tal(p, id) >= n.max) return `${n.name}已经点满了。`;
-  if (talentPointsSpent(p) >= total) return '天赋点不足。门派每晋升一阶、每走完一条主线，各得 1 点。';
+  if (talentPointsSpent(p) >= total) return '天赋点不足。门派每晋升一阶得 1 点；每条主线走到三成、七成左右和完结时各得 1 点。';
   if (n.index > 0 && !tal(p, n.branch.nodes[n.index - 1].id)) return `要先点"${n.branch.nodes[n.index - 1].name}"。`;
   return null;
 }

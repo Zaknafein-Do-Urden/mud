@@ -168,6 +168,11 @@ for (const b of all) {
   if (b.type === 'goal' && !b.props.name) err(b, '目标要写 name（只显示做什么），正文写具体怎么做（点"提示"才显示，D-074）');
   if (b.type === 'storyline' && b.props.level) err(b, '主线的建议等级改用 xiuwei: 起-止（建议修为，D-075）');
   if (b.type === 'storyline' && b.props.done) checkConds(b, b.props.done.split(/\s+/));
+  if (b.type === 'storyline' && b.props.milestones) {
+    const ms = parseList(b.props.milestones);
+    if (ms.length > 2) err(b, 'milestones 最多两个（三成左右、七成左右各一个；完结那 1 点写在 done，D-108）');
+    for (const c of ms) checkConds(b, c.split(/\s+/));
+  }
   if (b.type === 'sect') {
     // 用户规定：门派可以有侧重，但刚、巧、守三类外功至少各有一门
     const outer = Object.values(db.skill).filter((sk) => sk.props.sect === b.id && sk.props.kind === '外功');

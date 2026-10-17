@@ -4,6 +4,7 @@
 === storyline: feiyan
 name: 竹哨
 xiuwei: 110-250
+milestones: flag:feiyan.c1.won, flag:feiyan.c3.xywon
 done: flag:feiyan.ch4_done
 # 尚未开始时的提示按阶段给（下面的 pre 目标，D-097），这一句只在都不满足时兜底
 hint: 师父临终说：去临安，找一个会吹竹哨的人。
