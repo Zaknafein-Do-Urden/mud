@@ -461,10 +461,62 @@ function ch7(g, label, { how = 'qin', askBox = true } = {}) {
   if ((g.state.player.skillcap?.['xiaoao.hengshan'] ?? 0) < 90) note(`${label}：衡山剑法上限没有提到 90`);
 }
 
+// ---------------- 第八章 ----------------
+
+function ch8(g, label, { how = 'qiao', free = true, askRisk = true, beatRen = false } = {}) {
+  step(label + ' 第八章');
+  g.enter('linan.lake');
+  expectFlag(g, 'xiaoao.ch8', label);
+  pick(g, '跟他回梅庄去', label);
+  // 竹林
+  ex(g, '西', label);
+  ex(g, '西', label);
+  ex(g, '北', label);
+  expectRoom(g, 'xiaoao.mz.bamboo', label);
+  if (askRisk) pick(g, '底下那个人出来了会怎样', label);
+  pick(g, '帮他撬开石板', label);
+  expectFlag(g, 'xiaoao.c8_open', label);
+  // 甬道：门槛三选一
+  if (how === 'party') g.party = { members: [{ id: 'friend' }] };
+  ex(g, '北', label);
+  expectRoom(g, 'xiaoao.mz.cellar', label);
+  const opt = { qiao: '从槽缝里', hp: '整根拔出来', party: '一左一右' }[how];
+  if (!has(g, opt)) note(`${label}：门槛选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  pick(g, '推开铁门', label);
+  if (how === 'party') g.party = null;
+  expectFlag(g, 'xiaoao.c8_in', label);
+  // 地牢
+  ex(g, '北', label);
+  expectRoom(g, 'xiaoao.mz.jail', label);
+  pick(g, '报上名字', label);
+  pick(g, '接住他', label);
+  win(g, label + '/黑白子');
+  expectFlag(g, 'xiaoao.c8_fight', label);
+  pick(g, '不怕', label);
+  pick(g, '撑住', label);
+  if (beatRen) win(g, label + '/任我行（硬要挣脱）'); else lose(g, label + '/任我行');
+  if (beatRen && !flag(g, 'xiaoao.beat_ren')) note(`${label}：挣脱任我行没有记下标记`);
+  pick(g, '听他说下去', label);
+  // 放还是不放
+  if (free) {
+    pick(g, '开锁', label);
+    expectFlag(g, 'xiaoao.c8_free', label);
+    pick(g, '追上去看', label);
+    expectSkill(g, 'xiaoao.xixing', label);
+  } else {
+    pick(g, '不开', label);
+    expectFlag(g, 'xiaoao.c8_keep', label);
+    pick(g, '上去', label);
+    if ((g.state.player.skillcap?.['xiaoao.yangxin'] ?? 0) < 100) note(`${label}：不开锁那条路，养心诀上限没有提到 100`);
+  }
+  expectFlag(g, 'xiaoao.ch8_done', label);
+}
+
 // ---------------- 路线 1：问清来路 → 站到身边 → 劝住 → 正面扑上去；第二章走"巧"那条门槛 ----------------
 {
   const label = '路线1';
-  const g = newGame({ skills: { 'base.zhang': 70 } }); // 小巧掌 70 级：二~七章的巧类门槛都够
+  const g = newGame({ skills: { 'base.zhang': 80 } }); // 小巧掌 80 级：二~八章的巧类门槛都够
   hook(g, label);
   ch1(g, label, { ask: true, spare: true, block: false, baier: true });
   ch2(g, label, { how: 'qiao', ask: true, beatYu: false, side: false });
@@ -473,12 +525,13 @@ function ch7(g, label, { how = 'qin', askBox = true } = {}) {
   ch5(g, label, { how: 'qiao', meet: 'drink', ask: true });
   ch6(g, label, { how: 'qiao', ambush: true, askWall: true, beatFeng: false });
   ch7(g, label, { how: 'qin', askBox: true });   // 绢谱叩门
+  ch8(g, label, { how: 'qiao', free: true, askRisk: true, beatRen: false });  // 开锁放人
 }
 
 // ---------------- 路线 2：先护姑娘 → 不劝 → 先抽跳板 → 不走支线；第二章硬闯 + 打赢余沧海 ----------------
 {
   const label = '路线2';
-  const g = newGame({ maxhpBoost: 420 }); // 气血上限够：一路硬闯的门槛，直到梅庄拼酒
+  const g = newGame({ maxhpBoost: 520 }); // 气血上限够：一路硬闯的门槛，直到地牢的铁闩
   hook(g, label);
   ch1(g, label, { protect: true, spare: false, block: true, baier: false });
   if (!flag(g, 'xiaoao.c1_protect')) note(`${label}：护住卖酒姑娘的标记没有设上`);
@@ -489,6 +542,7 @@ function ch7(g, label, { how = 'qin', askBox = true } = {}) {
   ch5(g, label, { how: 'hp', meet: 'beat', ask: false });
   ch6(g, label, { how: 'hp', ambush: false, askWall: false, beatFeng: true });
   ch7(g, label, { how: 'jiu', askBox: false });  // 拼酒进门
+  ch8(g, label, { how: 'hp', free: false, askRisk: false, beatRen: true });   // 不开锁
 }
 
 // ---------------- 路线 4：第二章组队门槛 ----------------
@@ -503,6 +557,7 @@ function ch7(g, label, { how = 'qin', askBox = true } = {}) {
   ch5(g, label, { how: 'party', meet: 'front', ask: false });
   ch6(g, label, { how: 'party', ambush: true, askWall: false, beatFeng: false });
   ch7(g, label, { how: 'party', askBox: true }); // 两人对弈进门
+  ch8(g, label, { how: 'party', free: true, askRisk: true, beatRen: false });
 }
 
 // ---------------- 路线 5：第二章门槛一条都不满足时，要有退路 ----------------
@@ -556,4 +611,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 笑傲江湖第一~七章，五条路线全部走通（六处门槛、各处分支、两条可选支线、NPC 队友、四场必败战的输赢、打输重来）');
+console.log('✓ 笑傲江湖第一~八章，五条路线全部走通（七处门槛、放人与不放人两种收场、各处分支、NPC 队友、五场必败战的输赢、打输重来）');
