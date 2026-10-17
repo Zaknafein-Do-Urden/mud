@@ -202,6 +202,22 @@ export const martial = {
     this.autoEquip(sk.id);
   },
 
+  /**
+   * 晋阶选项（D-099）：只出现在本门师父自己的对话里；已是最高阶时不出现。
+   * 声望够了可以点（走"晋阶"命令的规则：每天一次、要过考核）；不够时选项是灰的，点了提示还差多少。
+   */
+  promoteChoice(dialogId) {
+    const p = this.state.player;
+    if (!p.sect) return null;
+    const master = this.npcsHere().find((n) => n.props.teaches === p.sect.id && n.props.talk === dialogId);
+    if (!master) return null;
+    const next = sectRanks(this.db.sect[p.sect.id])[p.sect.rank + 1];
+    if (!next) return null;
+    const text = `申请晋阶（升${next.name}，需声望 ${next.rep}，你有 ${p.sect.rep}）`;
+    if (p.sect.rep < next.rep) return { text, target: null, cond: [], effects: [], blocked: `声望不够：晋升${next.name}要 ${next.rep} 点声望，你现在有 ${p.sect.rep}，还差 ${next.rep - p.sect.rep}。多做门派差事吧。` };
+    return { text, target: null, cond: [], effects: ['promote'] };
+  },
+
   /** 学艺对话的选项（D-069）：本门已到阶位、还没学的武功；阶位不够的列在文字里 */
   teachChoices(back) {
     const p = this.state.player;

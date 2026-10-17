@@ -459,3 +459,6 @@ button.adopt { font-size: 12px; padding: 0 8px; margin-left: 6px; }
 .tutorial-body ul { margin: 0 0 8px; padding-left: 20px; }
 .tt-rule { text-align: center; font-size: 16px; background: var(--panel); border-radius: 4px; padding: 6px; }
 .tt-rule .st-刚 { color: var(--st-gang); } .tt-rule .st-巧 { color: var(--st-qiao); } .tt-rule .st-守 { color: var(--st-shou); }
+
+/* 灰色但能点的选项（D-099）：如声望不够的"申请晋阶"，点了说明原因 */
+button.choice.blocked { color: var(--muted); border-style: dashed; }

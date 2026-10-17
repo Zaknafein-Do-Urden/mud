@@ -220,6 +220,7 @@ export class Game {
       else if (kind === 'pay') this.addMoney(-Number(key));
       else if (kind === 'travel') this.travel(key);
       else if (kind === 'sectlearn') this.learn(key); // 向本门师父学艺（不要钱，规则同"学"命令）
+      else if (kind === 'promote') this.promote(); // 向本门师父申请晋阶（D-099，规则同"晋阶"命令）
       else if (kind === 'learn') {
         if (player.skills[key] === undefined) {
           player.skills[key] = 1;
@@ -485,6 +486,12 @@ export class Game {
     this.emitLines(m.lines, 'say', pace);
     // 门派学艺（D-069）：在本门师父面前，把眼下能学的武功列成选项，学完回到这里接着挑
     if (d.props.teach === 'true') m.choices = [...this.teachChoices(id), ...m.choices];
+    // 晋阶（D-099）：本门师父的对话里自动加"申请晋阶"，插在"离开"类选项前面；最高阶时没有
+    const promo = this.promoteChoice(id);
+    if (promo) {
+      const leave = (c) => !c.target && !c.effects.length;
+      m.choices = [...m.choices.filter((c) => !leave(c)), promo, ...m.choices.filter(leave)];
+    }
     if (d.props.do && !resume) this.apply(words(d.props.do)); // 进入该对话即生效的效果（恢复时不重复）
     // do 里的 goto 可能触发了目标房间的剧情对话：那个对话接管，这里不再收尾（否则会把它关掉）
     if (this.dialogId !== id) return;
@@ -499,7 +506,7 @@ export class Game {
   }
 
   emitChoices() {
-    this.dialog.forEach((c, i) => this.emit('choice', c.disabled ? `${c.text}（钱不够）` : c.text, { n: i + 1, disabled: !!c.disabled }));
+    this.dialog.forEach((c, i) => this.emit('choice', c.disabled ? `${c.text}（钱不够）` : c.text, { n: i + 1, disabled: !!c.disabled, blocked: !!c.blocked }));
   }
 
   /** 条件里不满足的只有"钱够不够"（money:） */
@@ -536,6 +543,8 @@ export class Game {
     const c = this.dialog[n - 1];
     if (!c) { this.emit('err', '没有这个选项。'); this.emitChoices(); return; }
     if (c.disabled) { this.emit('err', '钱不够。'); this.emitChoices(); return; }
+    // 灰色但能点的选项（D-099）：点了说明为什么不行，对话不结束
+    if (c.blocked) { this.emit('err', c.blocked); this.emitChoices(); return; }
     this.emit('echo', `> ${c.text}`);
     const locked = this.locked;
     this.dialog = null;

@@ -63,7 +63,7 @@ function flush() {
 
 let choiceBox = null;
 
-function render({ cls, text, n, cmd, disabled }) {
+function render({ cls, text, n, cmd, disabled, blocked }) {
   if (cls === 'choice') {
     if (!choiceBox) {
       choiceBox = document.createElement('div');
@@ -74,6 +74,7 @@ function render({ cls, text, n, cmd, disabled }) {
     b.className = 'choice';
     b.dataset.choice = n;
     b.disabled = !!disabled; // 买不起的选项：灰色不能点（D-078）
+    if (blocked) b.classList.add('blocked'); // 灰色但能点：点了说明原因（D-099）
     b.append(`${n}. `, renderText(text, (id) => game.kindOf(id)));
     choiceBox.append(b);
     return;
