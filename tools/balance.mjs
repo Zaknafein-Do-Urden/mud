@@ -58,8 +58,8 @@ for (const id of ids) {
   for (const [label, mk] of Object.entries(profiles)) {
     const b = createBattle(db, block, mk(), 12345);
     let note = '';
-    // 引擎里自适应只模拟 40 次，拟合误差有 ±8%；报表要稳，这里把样本提到 120（D-227）
-    if (adaptive) note = `自适应气血 ×${adaptEnemyHp(db, b, { n: 120 }).toFixed(2)}`;
+    // 自适应 D-106 起不再模拟，按三势最强一招和气血直接算（D-227 的样本数问题随之不存在）
+    if (adaptive) note = `自适应气血 ×${adaptEnemyHp(db, b).toFixed(2)}　伤害 ×${(b.units.find((u) => u.side === 'e')?.dmgx ?? 1).toFixed(2)}`;
     const rates = ACC.map((a) => simWinRate(db, b, a, n));
     console.log(id.padEnd(24), label, rates.map(pct).join('    '), ' ', note);
   }

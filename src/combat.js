@@ -517,15 +517,21 @@ function actText(b, u, m) {
 const AOE_RATE = 0.6;
 
 /** opts：scale 伤害比例（群攻）、quiet 不再重复出招描述、primary 是否主目标（只有主目标吃附加效果、记合击） */
+/** 一招的攻击值：伤害公式里克制、护体、随机之前的部分（自适应也用它估算强度，D-106） */
+function attackValue(db, u, m) {
+  const innerSk = u.innerId ? db.skill[u.innerId] : null;
+  const talentPower = 1 + 0.04 * (m.stance === '刚' ? tal(u, 'manli') : tal(u, 'ruili'))
+    + (u.isPlayer && m.weapon === u.wtype && !u.disarmed ? u.wbonus / 100 : 0) // 兵器加成（D-057）
+    + (m.stance === '巧' ? (u.lightLv ?? 0) * 0.003 : 0); // 轻功：巧招 +0.3% / 级（D-062）
+  return m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, m.stance) * talentPower;
+}
+
 function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
   const ctx = { N: u.name, n: target.name, move: m.name, part: pick(b, PARTS), W: u.weaponName };
   if (!opts.quiet) emit('act', fill(actText(b, u, m), ctx));
 
   const innerSk = u.innerId ? db.skill[u.innerId] : null;
-  const talentPower = 1 + 0.04 * (m.stance === '刚' ? tal(u, 'manli') : tal(u, 'ruili'))
-    + (u.isPlayer && m.weapon === u.wtype && !u.disarmed ? u.wbonus / 100 : 0) // 兵器加成（D-057）
-    + (m.stance === '巧' ? (u.lightLv ?? 0) * 0.003 : 0); // 轻功：巧招 +0.3% / 级（D-062）
-  const value = m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, m.stance) * talentPower;
+  const value = attackValue(db, u, m);
   let mult = MULT[m.stance][tPosture] ?? 1;
   // 天赋对克制倍率的修正（D-044）
   if (m.stance === '刚' && tPosture === '守') {
@@ -846,38 +852,116 @@ export function simWinRate(db, b, accuracy, n = 40) {
 }
 
 /**
- * 按玩家当前的功力调整敌人气血：使猜对率 accuracy 的玩家胜率约为 target（D-051）。
- * 用二分法找气血倍率。返回最终倍率。
+ * 单位的强度（D-106）：刚、巧、守三势各取最强一招的攻击值。
+ * 学了再多武功，一场战斗里真正用的也就是每一势最狠的那一招，所以不看武功等级之和。
  */
-/** 自适应时敌人气血最多放大到几倍（D-102）：再多就成了打不动的肉盾 */
-export const ADAPT_HP_CAP = 3;
+export function stanceBest(db, u) {
+  return Object.fromEntries(Object.entries(stanceMoves(db, u)).map(([st, m]) => [st, m ? attackValue(db, u, m) : 0]));
+}
 
-export function adaptEnemyHp(db, b, { accuracy = 0.8, target = 0.65, n = 40, dmgx = 0.45 } = {}) {
-  // 先降低敌人伤害、再按胜率找气血：战斗更长，胜负更取决于猜对率而不是运气
-  for (const e of enemiesOf(b)) e.dmgx = dmgx;
-  const base = enemiesOf(b).map((e) => e.maxHp);
-  const apply = (bt, m) => enemiesOf(bt).forEach((e, i) => { e.maxHp = Math.max(1, Math.round(base[i] * m)); e.hp = e.maxHp; });
-  const setDmg = (bt, d) => enemiesOf(bt).forEach((e) => { e.dmgx = d; });
-  const winAt = (hp, d) => { const t = structuredClone(b); apply(t, hp); setDmg(t, d); return simWinRate(db, t, accuracy, n); };
-  let lo = 0.1;
-  let hi = ADAPT_HP_CAP;
-  // 气血放到封顶还是太容易（敌人太弱）：气血就停在封顶，改为加强敌人的伤害（D-102）。
-  // 以前气血可以放大到 20 倍，弱小的杂兵会变成上千血的肉盾，打起来又长又闷
-  if (winAt(hi, dmgx) >= target) {
-    let dlo = dmgx;
-    let dhi = 8;
-    for (let step = 0; step < 10; step++) {
-      const mid = Math.sqrt(dlo * dhi);
-      if (winAt(hi, mid) >= target) dlo = mid; else dhi = mid;
+/** 三势各自最狠的那一招（招式本身，算附加效果用） */
+function stanceMoves(db, u) {
+  const top = { 刚: null, 巧: null, 守: null };
+  for (const m of unitMoves(db, u)) {
+    if (m.support || !canUse(u, m) || m.mp > u.maxMp || !(m.stance in top)) continue;
+    if (!top[m.stance] || attackValue(db, u, m) > attackValue(db, u, top[m.stance])) top[m.stance] = m;
+  }
+  return top;
+}
+
+/** 招式附加效果折算（D-106）：只在没被克制时生效。内伤三回合掉血约多出六成，破绽让下一下多三成 */
+const effectExtra = (m) => (m?.effects ?? []).reduce((s, e) => s + ({ 内伤: 0.6, 破绽: 0.3 }[e.split(':')[0]] ?? 0), 0);
+const stuns = (m) => (m?.effects ?? []).some((e) => e.startsWith('点穴'));
+const meanOut = (best) => (best.刚 + best.巧 + best.守) / 3;
+const armorOf = (u) => 100 / (100 + (u.innerLv ?? 0));
+
+/** 敌人各势出招的概率：和 chooseEnemyIntent 一样，只在它有招的势里按 ai 权重挑（没写的势权重 1） */
+function stanceOdds(db, e, best) {
+  const w = STANCES.map((st) => (best[st] > 0 ? e.ai?.[st] ?? 1 : 0));
+  const sum = w.reduce((a, c) => a + c, 0) || 1;
+  return Object.fromEntries(STANCES.map((st, i) => [st, w[i] / sum]));
+}
+
+/**
+ * 一回合的期望交换（D-106）：敌人按 odds 出招，玩家以 acc 的机会出克制它的势、否则在另外两势里随便出，
+ * 各自用这一势最狠的一招。按真实的克制规则：刚克守、巧克刚各 ×1.5，被克 ×0.5；守化解巧招，反震回去的是守招的攻击值。
+ * 返回 { toFoe：玩家打敌人，toMe：敌人打玩家（要乘敌人伤害倍率的部分），reflect：反震给玩家的（不乘） }
+ */
+function exchange(p, e, odds, acc, pArmor, eArmor) {
+  let toFoe = 0; let toMe = 0; let reflect = 0; let meStunned = 0; let foeStunned = 0;
+  for (const es of STANCES) {
+    if (!odds[es]) continue;
+    for (const ps of STANCES) {
+      const pr = odds[es] * (ps === COUNTER[es] ? acc : (1 - acc) / 2);
+      if (!pr) continue;
+      if (ps !== '守') {
+        const mult = MULT[ps][es] ?? 1;
+        toFoe += pr * p.best[ps] * mult * eArmor * (mult >= 1 ? 1 + effectExtra(p.moves[ps]) : 1);
+        if (mult >= 1 && stuns(p.moves[ps])) foeStunned += pr;
+      } else if (es === '巧') toFoe += pr * p.best.守 * eArmor; // 守化解巧招，反震
+      if (es !== '守') {
+        const mult = MULT[es][ps] ?? 1;
+        toMe += pr * e.best[es] * mult * pArmor * (mult >= 1 ? 1 + effectExtra(e.moves[es]) : 1);
+        if (mult >= 1 && stuns(e.moves[es])) meStunned += pr;
+      } else if (ps === '巧') reflect += pr * e.best.守 * pArmor;
     }
-    apply(b, hi);
-    setDmg(b, dlo);
-    return hi;
   }
-  for (let step = 0; step < 10; step++) {
-    const mid = Math.sqrt(lo * hi);
-    if (winAt(mid, dmgx) >= target) lo = mid; else hi = mid;
-  }
-  apply(b, lo);
-  return lo;
+  // 被点穴的一回合：自己不出手，对方的招打在门户大开的身上（×1.2）
+  return { toFoe: toFoe * (1 - meStunned), toMe: toMe * (1 - foeStunned) * (1 + 0.2 * meStunned), reflect };
+}
+
+/** 自适应的刻度（D-106）：设计时假定玩家猜对几成；按这个猜对率，几回合打完全部敌人；打完时掉了多少比例的气血 */
+export const ADAPT_ACC = 0.6;
+export const ADAPT_ROUNDS = 6;
+export const ADAPT_TAKEN = 0.6;
+/** NPC 队友的输出、分担敌人火力，都按玩家的几成算 */
+export const ADAPT_ALLY = 0.5;
+/** 敌人气血的放大 / 缩小范围（D-102）：太大成了肉盾，太小一碰就倒 */
+export const ADAPT_HP_CAP = 3;
+export const ADAPT_HP_MIN = 0.25;
+
+/**
+ * 必须打赢的剧情战：按玩家的强度调整敌人（D-051、D-106）。
+ * 强度不看武功等级之和，看刚、巧、守三势各自最狠的一招和气血；不再模拟几百场战斗，直接算：
+ * - 按 ADAPT_ACC 的猜对率算出每回合的期望交换（见 exchange）；虚招（cunning）让猜对率打折扣；
+ * - 敌人气血放缩到约 ADAPT_ROUNDS 回合打完（限在 0.25 ~ 3 倍）；
+ * - 敌人伤害放缩到打完时玩家约掉 ADAPT_TAKEN 的气血。敌人按排列顺序一个个倒下：
+ *   正在打的那个按猜对率算，其余同时出手的按瞎猜（三分之一）算。
+ * 返回气血倍率。
+ */
+export function adaptEnemyHp(db, b) {
+  const foes = enemiesOf(b);
+  const team = teamOf(b);
+  const players = playersOf(b);
+  if (!foes.length || !players.length) return 1;
+  const me = players[0];
+  const pSide = { best: stanceBest(db, me), moves: stanceMoves(db, me) };
+  // NPC 队友按一半算：他们常出辅助招，也可能先倒下（倒下不算输，但之后只剩玩家自己打）
+  const allies = team.filter((u) => !u.isPlayer);
+  const allyOut = allies.reduce((s, u) => s + meanOut(stanceBest(db, u)), 0) * ADAPT_ALLY;
+  const share = 1 / (1 + allies.length * ADAPT_ALLY); // 敌人的招落在玩家身上的比例
+  const ex = foes.map((e) => {
+    const eSide = { best: stanceBest(db, e), moves: stanceMoves(db, e) };
+    const odds = stanceOdds(db, e, eSide.best);
+    const acc = Math.max(1 / 3, ADAPT_ACC - (e.cunning ?? 0) / 200);
+    const aimed = exchange(pSide, eSide, odds, acc, armorOf(me), armorOf(e));
+    const stray = exchange(pSide, eSide, odds, 1 / 3, armorOf(me), armorOf(e));
+    return { aimed, stray, toFoe: aimed.toFoe * players.length + allyOut * armorOf(e) };
+  });
+  const base = foes.reduce((s, e, i) => s + e.maxHp / Math.max(1, ex[i].toFoe), 0);
+  const m = Math.min(ADAPT_HP_CAP, Math.max(ADAPT_HP_MIN, ADAPT_ROUNDS / base));
+  // 每个阶段（正在打第 j 个敌人）的回合数，和这期间玩家挨的打
+  let hit = 0; let refl = 0;
+  foes.forEach((e, j) => {
+    const rounds = e.maxHp * m / Math.max(1, ex[j].toFoe);
+    for (let i = j; i < foes.length; i++) {
+      const x = i === j ? ex[i].aimed : ex[i].stray;
+      hit += rounds * x.toMe * share;
+      refl += rounds * x.reflect;
+    }
+  });
+  const hp = players.reduce((s, u) => s + u.maxHp, 0) / players.length;
+  const dmgx = Math.min(8, Math.max(0.1, (ADAPT_TAKEN * hp - refl) / Math.max(1, hit)));
+  for (const e of foes) { e.maxHp = Math.max(1, Math.round(e.maxHp * m)); e.hp = e.maxHp; e.dmgx = dmgx; }
+  return m;
 }
