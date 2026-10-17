@@ -14,9 +14,12 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'content');
 const index = JSON.parse(readFileSync(join(root, 'index.json'), 'utf8'));
 const files = [...index.world, ...Object.values(index.storylines).flatMap((s) => [...(s.hook ?? []), ...(s.files ?? [])])];
 
+globalThis.MUD_SKIP_ADAPT = true; // 敌人气血一律压到 1，不必让引擎跑自适应（慢）
+
 const problems = [];
-const step = (s) => { if (process.env.PLAYTEST_VERBOSE) console.log('  · ' + s); };
-const note = (s) => problems.push(s);
+const t0 = Date.now();
+const step = (s) => { if (process.env.PLAYTEST_VERBOSE) console.log(`  · [${((Date.now() - t0) / 1000).toFixed(1)}s] ` + s); };
+const note = (s) => { problems.push(s); if (process.env.PLAYTEST_VERBOSE) console.log('  ✗ ' + s); };
 
 function newGame({ skills = {}, inner = null, light = null, maxhpBoost = 0, sect = null } = {}) {
   const db = emptyDb();
@@ -608,12 +611,119 @@ function ch16(g, label, { rang = false } = {}) {
   expectFlag(g, 'tianlong.lead_xuzhu', label);
 }
 
+// ---------------- 第十七章 ----------------
+
+function ch17(g, label) {
+  step(label + ' 第十七章');
+  g.enter('luoyang.station');
+  expectFlag(g, 'tianlong.ch17', label);
+  pick(g, '去擂鼓山看看', label);
+  ex(g, '东北', label);
+  expectRoom(g, 'tianlong.lg.road', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.lg.ping', label);
+  pick(g, '挡在棋盘前面', label);
+  pick(g, '和段誉并肩', label);
+  win(g, label + '/星宿派');
+  pick(g, '看那盘棋', label);
+  expectFlag(g, 'tianlong.c17_jie', label);
+  pick(g, '跟进石室', label);
+  pick(g, '说实话', label);
+  pick(g, '……', label);
+  pick(g, '挡在石床前面', label);
+  win(g, label + '/丁春秋');
+  pick(g, '走到床前', label);
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.ch17_done', label);
+  if (!g.state.player.inventory['tianlong.painting']) note(`${label}：没拿到无崖子的画卷`);
+}
+
+// ---------------- 第十八章 ----------------
+
+function ch18(g, label, { how = 'qiao' } = {}) {
+  step(label + ' 第十八章');
+  g.enter('tianlong.lg.ping');
+  expectFlag(g, 'tianlong.ch18', label);
+  pick(g, '往西北追', label);
+  g.enter('changan.station');
+  ex(g, '西北', label);
+  expectRoom(g, 'tianlong.xx.road', label);
+  pick(g, '问话就不必了', label);
+  win(g, label + '/一品堂');
+  pick(g, '进城', label);
+  if (how === 'party') g.party = { members: [{ id: 'friend' }] };
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.xx.city', label);
+  const opt = { qiao: '踩着筐翻上去', nei: '提一口气贴着夯土墙', party: '和同伴配合' }[how];
+  if (!has(g, opt)) note(`${label}：门槛选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  pick(g, '往冰窖去', label);
+  if (how === 'party') g.party = null;
+  expectFlag(g, 'tianlong.c18_in', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.xx.ice', label);
+  pick(g, '是逍遥派的', label);
+  pick(g, '挡在石阶口', label);
+  win(g, label + '/白衣护卫');
+  pick(g, '看着她走', label);
+  pick(g, '跟着学', label);
+  expectFlag(g, 'tianlong.ch18_done', label);
+  expectSkill(g, 'tianlong.zhemei', label);
+}
+
+// ---------------- 第十九章 ----------------
+
+function ch19(g, label) {
+  step(label + ' 第十九章');
+  g.enter('tianlong.xx.city');
+  expectFlag(g, 'tianlong.ch19', label);
+  pick(g, '往西北上山', label);
+  ex(g, '西北', label);
+  expectRoom(g, 'tianlong.lj.road', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.lj.gate', label);
+  pick(g, '挡在他们前面', label);
+  win(g, label + '/洞主岛主');
+  pick(g, '跟进石殿', label); // 过场把人带进石殿
+  expectRoom(g, 'tianlong.lj.hall', label);
+  pick(g, '拦住他', label);
+  win(g, label + '/乌老大');
+  pick(g, '看他解符', label);
+  pick(g, '冲进去', label);
+  pick(g, '把画展开给她看', label);
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.ch19_done', label);
+}
+
+// ---------------- 第二十章 ----------------
+
+function ch20(g, label) {
+  step(label + ' 第二十章');
+  g.enter('tianlong.xx.city');
+  expectFlag(g, 'tianlong.ch20', label);
+  pick(g, '去校场看看', label);
+  ex(g, '南', label);
+  expectRoom(g, 'tianlong.xx.ground', label);
+  pick(g, '我只是陪朋友来看看', label);
+  pick(g, '上台', label);
+  win(g, label + '/擂台');
+  expectFlag(g, 'tianlong.c20_tai', label);
+  pick(g, '接他这一场', label);
+  win(g, label + '/慕容复');
+  pick(g, '……', label);
+  pick(g, '……', label);
+  pick(g, '在宫门外等着', label);
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.ch20_done', label);
+}
+
 // ================= 路线一：正面硬来、巧路门槛、三月街、藏经、输给鸠摩智 =================
 {
   const label = '路线一';
   step(label + ' 开始');
   const g = newGame({
-    skills: { 'base.zhang': 50, 'base.zhaojia': 20, 'base.tuna': 45 },
+    // 小巧掌 80：走得到第十八章的玩家，巧类外功早练上去了（翻宫墙的门槛要 80）
+    skills: { 'base.zhang': 80, 'base.zhaojia': 20, 'base.tuna': 45 },
     inner: 'base.tuna',
   });
   hook(g, label);
@@ -634,6 +744,10 @@ function ch16(g, label, { rang = false } = {}) {
   ch14(g, label);
   ch15(g, label);
   ch16(g, label, { rang: false });
+  ch17(g, label);
+  ch18(g, label, { how: 'qiao' });
+  ch19(g, label);
+  ch20(g, label);
 }
 
 // ================= 路线二：偷袭、旁观、硬闯门槛、客栈、不藏经、打赢鸠摩智 =================
@@ -641,7 +755,8 @@ function ch16(g, label, { rang = false } = {}) {
   const label = '路线二';
   step(label + ' 开始');
   const g = newGame({
-    skills: { 'base.zhang': 12, 'base.zhaojia': 20, 'base.tuna': 45 },
+    // 养气诀 80：这条路线走的都是"内功"那一档门槛（第十八章要 80）
+    skills: { 'base.zhang': 12, 'base.zhaojia': 20, 'base.tuna': 80 },
     inner: 'base.tuna',
     maxhpBoost: 40, // 气血上限够走"抬横木"那条路
   });
@@ -663,6 +778,10 @@ function ch16(g, label, { rang = false } = {}) {
   ch14(g, label);
   ch15(g, label);
   ch16(g, label, { rang: true });
+  ch17(g, label);
+  ch18(g, label, { how: 'nei' });
+  ch19(g, label);
+  ch20(g, label);
 }
 
 // ================= 路线三：两处门槛都走组队那条路 =================
@@ -688,6 +807,10 @@ function ch16(g, label, { rang = false } = {}) {
   ch14(g, label);
   ch15(g, label);
   ch16(g, label, {});
+  ch17(g, label);
+  ch18(g, label, { how: 'party' });
+  ch19(g, label);
+  ch20(g, label);
 }
 
 // ================= 路线四：功力不够时的"现在还不行"，以及打输重来 =================
@@ -754,6 +877,16 @@ function ch16(g, label, { rang = false } = {}) {
   pick(g, '先下山去练练', label);
   ex(g, '东', label);
   expectRoom(g, 'tianlong.tl.gate', label + '（第四章门槛不锁人）');
+  // 第十八章翻宫墙的门槛（巧类外功 80 / 内功 80 / 组队）：功力不够时同样要有退路
+  Object.assign(g.state.flags, { 'tianlong.ch18': true, 'tianlong.c18_road': true });
+  g.enter('tianlong.xx.city');
+  if (has(g, '踩着筐翻上去') || has(g, '提一口气')) note(`${label}：功力不够，却出现了第十八章的门槛选项`);
+  if (!has(g, '现在还翻不进去')) note(`${label}：第十八章门槛没有"现在还翻不进去"这条路`);
+  pick(g, '现在还翻不进去', label);
+  pick(g, '先找地方练练', label);
+  ex(g, '南', label); // 门槛对话不锁定，可以出城去练功
+  expectRoom(g, 'tianlong.xx.road', label + '（第十八章门槛不锁人）');
+  if (flag(g, 'tianlong.c18_in')) note(`${label}：没过门槛却进了皇宫`);
 }
 
 // ---------------- 结果 ----------------
@@ -763,4 +896,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 天龙八部十六章、四条路线全部走通（三处门槛三选一、各处分支、必败战的输赢、打输重来）');
+console.log('✓ 天龙八部二十章、四条路线全部走通（四处门槛三选一、各处分支、必败战的输赢、打输重来）');

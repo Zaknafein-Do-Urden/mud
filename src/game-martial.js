@@ -307,7 +307,9 @@ export const martial = {
     // 必须打赢的主线战斗（以及标了 adapt 的战斗）：敌人气血按玩家当前功力调整，
     // 使猜对 80% 以上的招式能赢、以下会输（D-051）
     const storyMustWin = !!this.db.storyline[id.split('.')[0]] && !block.props.lose;
-    if (storyMustWin || block.props.adapt === 'true') adaptEnemyHp(this.db, b);
+    // globalThis.MUD_SKIP_ADAPT 是给通关脚本用的开关（D-226）：那里敌人气血本来就要压到 1，
+    // 自适应每场要模拟四百次，一轮下来几分钟全花在这上头。浏览器里没人设这个变量。
+    if ((storyMustWin || block.props.adapt === 'true') && !globalThis.MUD_SKIP_ADAPT) adaptEnemyHp(this.db, b);
     this.state.battle = b;
     this.emitLines(block.lines, 'desc');
     this.emit('combat', `——与${enemiesOf(b).map((e) => e.name).join('、')}交手！——`);
