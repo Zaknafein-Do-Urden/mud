@@ -443,6 +443,93 @@ function ch10(g, label, { dang = true } = {}) {
   expectFlag(g, 'tianlong.lead_yanmen', label);
 }
 
+// ---------------- 第十一章 ----------------
+
+function ch11(g, label, { answer = 'hu' } = {}) {
+  step(label + ' 第十一章');
+  g.enter('changan.station');
+  expectFlag(g, 'tianlong.ch11', label);
+  pick(g, '我们跟你出关', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.ym.road', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.ym.wall', label);
+  pick(g, '请她念', label);
+  pick(g, '等他', label);
+  expectFlag(g, 'tianlong.c11_read', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.ym.village', label);
+  pick(g, '打，不下杀手', label);
+  win(g, label + '/宋军边兵');
+  pick(g, '……', label);
+  pick(g, '拦住他们', label);
+  win(g, label + '/契丹游骑');
+  pick(g, answer === 'hu' ? '你护住的那些人是真的' : '不知道', label);
+  pick(g, '……', label);
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.ch11_done', label);
+  expectFlag(g, 'tianlong.lead_mafuren', label);
+}
+
+// ---------------- 第十二章 ----------------
+
+function ch12(g, label, { ask = false, see = 'chin' } = {}) {
+  step(label + ' 第十二章');
+  g.enter('luoyang.station');
+  expectFlag(g, 'tianlong.ch12', label);
+  pick(g, '一起去信阳', label);
+  ex(g, '南', label);
+  expectRoom(g, 'tianlong.xy.road', label);
+  ex(g, '东', label);
+  expectRoom(g, 'tianlong.xy.house', label);
+  pick(g, '那个人是谁', label);
+  expectFlag(g, 'tianlong.c12_told', label);
+  pick(g, ask ? '当场问她' : '把这点古怪记下来', label);
+  pick(g, '……', label); // 接上院门外的埋伏
+  pick(g, '先打穿这一道', label);
+  win(g, label + '/全冠清');
+  expectFlag(g, 'tianlong.c12_lake', label);
+  ex(g, '西', label);
+  ex(g, '南', label);
+  expectRoom(g, 'tianlong.xy.lake', label);
+  pick(g, see === 'chin' ? '斗笠底下那一截下巴' : '蓑衣下摆在抖', label);
+  pick(g, '喊！', label);
+  expectFlag(g, 'tianlong.c12_blow', label);
+  pick(g, '扑过去', label);
+  pick(g, '……', label);
+  pick(g, '挡在他们中间', label);
+  win(g, label + '/大理四大护卫');
+  pick(g, '……', label);
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.ch12_done', label);
+  expectFlag(g, 'tianlong.lead_azi', label);
+}
+
+// ---------------- 第十三章 ----------------
+
+function ch13(g, label) {
+  step(label + ' 第十三章');
+  g.enter('tianlong.ym.road');
+  expectFlag(g, 'tianlong.ch13', label);
+  pick(g, '上马往北', label);
+  ex(g, '北', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.ym.village', label);
+  ex(g, '北', label);
+  expectRoom(g, 'tianlong.sw.grass', label);
+  pick(g, '上', label);
+  win(g, label + '/星宿派');
+  pick(g, '……', label);
+  pick(g, '挡在她前面', label);
+  expectFlag(g, 'tianlong.c13_azi', label);
+  pick(g, '……', label);
+  pick(g, '并肩', label);
+  win(g, label + '/鹰坊子弟');
+  pick(g, '……', label);
+  expectFlag(g, 'tianlong.ch13_done', label);
+  expectFlag(g, 'tianlong.lead_liaodi', label);
+}
+
 // ================= 路线一：正面硬来、巧路门槛、三月街、藏经、输给鸠摩智 =================
 {
   const label = '路线一';
@@ -463,6 +550,9 @@ function ch10(g, label, { dang = true } = {}) {
   ch8(g, label, { side: 'qiao' });
   ch9(g, label, { ask: 'qiao' });
   ch10(g, label, { dang: true });
+  ch11(g, label, { answer: 'hu' });
+  ch12(g, label, { ask: false, see: 'chin' });
+  ch13(g, label);
 }
 
 // ================= 路线二：偷袭、旁观、硬闯门槛、客栈、不藏经、打赢鸠摩智 =================
@@ -486,6 +576,9 @@ function ch10(g, label, { dang = true } = {}) {
   ch8(g, label, { side: 'kan' });
   ch9(g, label, { ask: 'shuo' });
   ch10(g, label, { dang: false });
+  ch11(g, label, { answer: 'bu' });
+  ch12(g, label, { ask: true, see: 'suoyi' });
+  ch13(g, label);
 }
 
 // ================= 路线三：两处门槛都走组队那条路 =================
@@ -505,6 +598,9 @@ function ch10(g, label, { dang = true } = {}) {
   ch8(g, label, { side: 'bang' }); // 丐帮弟子专属选项
   ch9(g, label, {});
   ch10(g, label, {});
+  ch11(g, label, {});
+  ch12(g, label, {});
+  ch13(g, label);
 }
 
 // ================= 路线四：功力不够时的"现在还不行"，以及打输重来 =================
@@ -580,4 +676,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 天龙八部十章、四条路线全部走通（三处门槛三选一、各处分支、必败战的输赢、打输重来）');
+console.log('✓ 天龙八部十三章、四条路线全部走通（三处门槛三选一、各处分支、必败战的输赢、打输重来）');
