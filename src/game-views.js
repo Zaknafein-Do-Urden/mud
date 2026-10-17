@@ -160,6 +160,7 @@ export const views = {
       const mine = a.have > 0 || b.have > 0;
       return {
         id: c.id, name: c.props.name, bonus: Number(c.props.bonus), effects: c.props.effects ?? '', a, b, mine,
+        effectTips: parseList(c.props.effects).map((e) => ({ tag: e.split(':')[0], tip: EFFECT_TEXT[e.split(':')[0]] ?? e })),
         guard: a.stance === '守', desc: c.lines.map((l) => l.text).join('').replaceAll('$A', '甲').replaceAll('$B', '乙').replaceAll('$n', '对手'),
       };
     }).sort((x, y) => Number(y.mine) - Number(x.mine) || x.bonus - y.bonus);
@@ -192,6 +193,7 @@ export const views = {
       }),
       cargo: Object.entries(p.cargo ?? {}).map(([id, n]) => ({ id, name: this.db.goods[id]?.props.name ?? id, count: n })),
       cargoUnits: cargoUnits(p.cargo), cargoCap: CARGO_CAP,
+      money: p.money ?? 0, bank: p.bank ?? 0,
     };
   },
 
@@ -217,11 +219,14 @@ export const views = {
         if (!done && started && !current) { state = 'current'; current = true; }
         return { name: c.props.name, state };
       });
-      const goal = Object.values(this.db.goal ?? {}).find((g) => g.props.storyline === line.id && this.check(words(g.props.if)));
+      // 当前目标：主线开始后的 goal；开始前的提示用 pre: true 的 goal，按阶段挑一条（D-097），没有就用 storyline 的 hint
+      const goals = Object.values(this.db.goal ?? {}).filter((g) => g.props.storyline === line.id && this.check(words(g.props.if)));
+      const goal = goals.find((g) => g.props.pre !== 'true');
+      const pre = goals.find((g) => g.props.pre === 'true');
       return {
         id: line.id, name: line.props.name, started, xiuwei: (line.props.xiuwei ?? '').replace('-', '~'),
         brief: line.lines.map((l) => this.fmt(l.text)).join(''),
-        hint: line.props.hint ?? '', chapters: chs,
+        hint: pre ? pre.lines.map((l) => this.fmt(l.text)).join('') : line.props.hint ?? '', chapters: chs,
         // 目标只显示做什么（name），具体怎么做放在提示里，玩家点"提示"才看（D-074）
         goal: goal ? goal.props.name ?? goal.lines.map((l) => this.fmt(l.text)).join('') : '',
         goalHint: goal?.props.name ? goal.lines.map((l) => this.fmt(l.text)).join('') : '',

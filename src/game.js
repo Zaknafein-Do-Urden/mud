@@ -7,7 +7,7 @@ import { martial } from './game-martial.js';
 import { trade } from './game-trade.js';
 import { views } from './game-views.js';
 import { party } from './game-party.js';
-import { skillCap, bestInnerLv } from './character.js';
+import { skillCap, bestInnerLv, isWeaponItem } from './character.js';
 import { xiuwei, tal } from './talents.js';
 
 const DIR_ALIAS = {
@@ -197,6 +197,12 @@ export class Game {
       else if (kind === 'give') {
         inv[key] = (inv[key] ?? 0) + 1;
         this.emit('sys', `你得到了${this.itemLink(key)}。`);
+        // 空手时得到兵器：自动拿在手里（D-095）
+        if (isWeaponItem(this.db, key) && !player.equip?.weapon) {
+          player.equip ??= {};
+          player.equip.weapon = key;
+          this.emit('sys', `（你手里正空着，顺手把${this.db.item[key].props.name}握在了手里。）`);
+        }
       } else if (kind === 'take') {
         inv[key] = (inv[key] ?? 0) - 1;
         if (inv[key] <= 0) delete inv[key];
@@ -403,9 +409,10 @@ export class Game {
   }
 
   inventory() {
-    const inv = Object.entries(this.state.player.inventory);
-    if (!inv.length) { this.emit('sys', '你身上空空如也。'); return; }
-    this.emit('sys', '你身上带着：' + inv.map(([id, n]) => `${this.itemLink(id)}×${n}`).join('、'));
+    const p = this.state.player;
+    const inv = Object.entries(p.inventory);
+    this.emit('sys', inv.length ? '你身上带着：' + inv.map(([id, n]) => `${this.itemLink(id)}×${n}`).join('、') : '你身上除了钱，别无长物。');
+    this.emit('sys', `钱：身上 ${p.money ?? 0} 文${p.bank ? `，钱庄存着 ${p.bank} 文` : ''}。`);
   }
 
   // ---- 使用物品 ----

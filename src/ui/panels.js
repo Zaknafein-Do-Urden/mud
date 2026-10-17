@@ -225,10 +225,15 @@ export function initPanels(api) {
     if (tab === '合击') {
       // 双人合击（D-065）：组队时两人同一回合各出一招触发
       body.append(el('p', 'pn-hint', '组队时，两人同一回合用下面这些武功出招就会触发合击。"合击"要打同一个对手；"护攻"是甲用守招护住乙（守招目标选乙），乙出手。对手的克制对合击不起作用。'));
+      // 效果标签的图例（手机上没有悬停，直接写出来）
+      body.append(el('p', 'pn-hint', '效果：破绽＝对手下一次受伤 +30%；点穴＝对手下一回合动弹不得；内伤＝之后 3 回合每回合掉血；化内＝化去对手内力。'));
       for (const c of g.comboView()) {
         const box = el('div', 'pn-item' + (c.mine ? '' : ' faded'));
         const sideText = (x, who) => `${who}：${x.sect ? x.sect + '·' : ''}${x.name} ${x.lv} 级${x.have ? (x.have >= x.lv ? '（你已达到）' : `（你 ${x.have} 级）`) : ''}`;
-        box.append(row(el('span', 'pn-skill-name', `${c.name}`), el('span', 'pn-v', `${c.guard ? '护攻' : '合击'}　额外伤害 ×${(c.bonus - 1).toFixed(1)}${c.effects ? '　' + c.effects : ''}`)));
+        // 效果标签悬停显示说明（D-098）
+        const info = el('span', 'pn-v', `${c.guard ? '护攻' : '合击'}　额外伤害 ×${(c.bonus - 1).toFixed(1)}`);
+        for (const t of c.effectTips) { const tag = el('span', 'pn-tag pn-has-info', t.tag); tag.title = t.tip; info.append('　', tag); }
+        box.append(row(el('span', 'pn-skill-name', `${c.name}`), info));
         box.append(el('div', 'pn-moves', `${sideText(c.a, c.guard ? '甲（守招护住乙）' : '甲')}　｜　${sideText(c.b, '乙')}`));
         box.append(el('div', 'pn-moves', c.desc));
         body.append(box);
@@ -238,6 +243,7 @@ export function initPanels(api) {
 
     if (tab === '背包') {
       const v = g.inventoryView();
+      body.append(kv('钱', `身上 ${v.money} 文${v.bank ? `　钱庄 ${v.bank} 文` : ''}`));
       body.append(el('h4', 'pn-sub', '随身物品'));
       if (!v.items.length) body.append(el('p', 'pn-hint', '身上空空如也。'));
       for (const it of v.items) {

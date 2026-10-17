@@ -161,6 +161,9 @@ for (const b of all) {
       else if (!(Number(m) <= 0.8)) err(b, `goods 只列本地特产，倍率要便宜（≤ 0.8），${g} 却是 ${m}（D-077）`);
     }
   }
+  if (b.type === 'combo') {
+    for (const side of [b.props.a, b.props.b]) if ((side ?? '').trim().startsWith('base.')) err(b, `合击不能用武馆的基础武功（${side}）：合击要么是两个门派的武功配合，要么是同一门派内部的（D-098）`);
+  }
   if (b.type === 'goal' && !b.props.name) err(b, '目标要写 name（只显示做什么），正文写具体怎么做（点"提示"才显示，D-074）');
   if (b.type === 'storyline' && b.props.level) err(b, '主线的建议等级改用 xiuwei: 起-止（建议修为，D-075）');
   if (b.type === 'sect') {

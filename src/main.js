@@ -185,6 +185,7 @@ function refreshQuick() {
   quick.hidden = !!view;
   if (view) {
     combatUi = renderCombat(combatBox, view, (cmd) => { run(cmd); input.focus(); }, party.role() ? party.secondsLeft() : 0);
+    tutorial('combat');
     return;
   }
   combatUi = null;
@@ -434,7 +435,7 @@ const party = initParty({
   // 客人入队后加载所有主线内容，房主那边的剧情文字里的链接才能正常显示
   onJoined: () => Promise.all(Object.keys(db.index.storylines ?? {}).map((id) => loadStoryline(db, id))),
 });
-$('char-toggle').addEventListener('click', () => panels.open('char'));
+$('char-toggle').addEventListener('click', () => { panels.open('char'); tutorial('char'); });
 // 系统菜单（D-093）：导出、导入、新游戏收在这里；点了其中一项先关掉菜单
 $('system-toggle').addEventListener('click', () => $('system-dialog').showModal());
 $('system-close').addEventListener('click', () => $('system-dialog').close());
@@ -541,6 +542,54 @@ $('btn-new').addEventListener('click', async () => {
   applyIdentity(state, await askIdentity());
   start(state, true);
 });
+
+// ---- 首次教程（D-096）----
+
+const TUTORIALS = {
+  combat: {
+    title: '第一次交手：刚、巧、守',
+    html: `
+<p>每一招都属于三种"势"之一，互相克制：</p>
+<p class="tt-rule"><b class="st-刚">刚</b> 克 <b class="st-守">守</b>　·　<b class="st-巧">巧</b> 克 <b class="st-刚">刚</b>　·　<b class="st-守">守</b> 克 <b class="st-巧">巧</b></p>
+<ul>
+<li>克制对手：伤害 ×1.5；被对手克制：伤害 ×0.5。</li>
+<li>守势化解巧招时，还会反震对手。刚招打在守势上叫"破防"。</li>
+<li>调息（0）：回一些内力，但这一回合没有架势，挨打会更疼。</li>
+</ul>
+<p><b>看清预兆</b>：每回合开始，对手会露出一个动作，比如"肩膀微微后撤""剑尖轻颤"。读出他要出哪种势，选克制它的那一招。</p>
+<ul>
+<li><b>虚招</b>：有的对手会故意摆出假架势。悟性越高，越容易察觉"气息与架势不合"。</li>
+<li><b>藏招</b>：强敌有时什么都不露。悟性和天赋"慧眼"能帮你看穿。</li>
+</ul>
+<p>把鼠标停在招式上，能看到威力、内力和估算伤害。</p>`,
+  },
+  char: {
+    title: '人物：潜能、经验与上限',
+    html: `
+<p><b>武功经验</b>：战斗中用哪门武功出招，哪门就长经验。经验条满了，自动升一级。对手越强，经验越多。</p>
+<p><b>潜能</b>：打赢战斗、完成剧情和差事都会得到。在<b>旅店或本门驻地</b>可以花潜能"修炼"，直接把一门武功升一级。等级越高花得越多，悟性高能省一些。</p>
+<p><b>上限</b>：每门武功都有等级上限，写在武功页里（如 10 / 50 级）。</p>
+<ul>
+<li>门派武功的上限随门派阶位提高；剧情传授的武学随剧情提高；武馆武功最高 50 级。</li>
+<li>外功、轻功还不能超过你最高的内功等级 + 20。</li>
+<li>到了上限，经验不再增长，也不能修炼。先提高上限（晋阶、推进剧情、练内功）再说。</li>
+</ul>
+<p><b>修为</b>是所有武功等级之和，每 25 点得 1 个天赋点。把鼠标停在武功名、先天属性上（手机上点一下）能看到说明。</p>`,
+  },
+};
+
+/** 第一次遇到时弹出教程；每个角色只弹一次，记在存档里 */
+function tutorial(key) {
+  if (!game || !TUTORIALS[key]) return;
+  game.state.tutorials ??= {};
+  if (game.state.tutorials[key]) return;
+  game.state.tutorials[key] = true;
+  saveLocal(game.state);
+  $('tutorial-title').textContent = TUTORIALS[key].title;
+  $('tutorial-body').innerHTML = TUTORIALS[key].html;
+  $('tutorial').showModal();
+}
+$('tutorial-ok').addEventListener('click', () => $('tutorial').close());
 
 // ---- 启动 ----
 

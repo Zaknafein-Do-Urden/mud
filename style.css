@@ -451,3 +451,11 @@ button.adopt { font-size: 12px; padding: 0 8px; margin-left: 6px; }
 .pn-skill-info { font-size: 13px; color: var(--muted); background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; margin: 4px 0; }
 .pn-skill-info p { margin: 0 0 4px; }
 .pn-skill-desc { font-style: italic; }
+
+/* ---- 首次教程（D-096）---- */
+#tutorial { width: min(520px, calc(100vw - 24px)); }
+.tutorial-body { font-size: 14px; line-height: 1.7; max-height: 65vh; overflow-y: auto; }
+.tutorial-body p { margin: 0 0 8px; }
+.tutorial-body ul { margin: 0 0 8px; padding-left: 20px; }
+.tt-rule { text-align: center; font-size: 16px; background: var(--panel); border-radius: 4px; padding: 6px; }
+.tt-rule .st-刚 { color: var(--st-gang); } .tt-rule .st-巧 { color: var(--st-qiao); } .tt-rule .st-守 { color: var(--st-shou); }

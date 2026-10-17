@@ -4,35 +4,8 @@
 #   - 否则：两人用 a、b 两门武功打同一个对手，都没被克制，就触发“合击”。
 # bonus：额外伤害 = 两人这一回合造成的伤害 ×（bonus - 1）。effects 作用在对手身上。
 # 正文是合击描述：$A 是 a 方，$B 是 b 方，$n 是对手。
-# 覆盖：五派两两之间各一个、本门各一个，再加武馆基础武功的几个。低级（10~15 级）、高级（20~30 级，用镇派绝学）都有。
-
-# ---------------- 武馆基础武功（不拜师也能合击）----------------
-
-=== combo: combo.base_fist
-name: 二龙戏珠
-a: base.quan@10
-b: base.zhang@10
-bonus: 1.4
----
-$A一拳当胸直捣，$B一掌斜拍侧肋，$n顾得了前顾不了后。
-
-=== combo: combo.base_guard
-name: 一夫当关
-a: base.zhaojia@10
-b: base.quan@10
-bonus: 1.5
-effects: 破绽
----
-$A挡在前面硬接来招，$B从$A身后闪出，一拳正中$n空门。
-
-=== combo: combo.base_blades
-name: 刀剑合璧
-a: base.dao@10
-b: base.jian@10
-bonus: 1.6
-effects: 破绽
----
-$A一刀劈开$n的守势，$B的剑尖已经从刀光的缝隙里递了进去。
+# 覆盖：五派两两之间各一个、本门各一个。低级（10~15 级）、高级（20~30 级，用镇派绝学）都有。
+# 武馆的基础武功不参与合击（D-098）：合击要么是两个门派的武功配合，要么是同一门派内部的；剧情 NPC 的合击配剧情武学或门派武学。
 
 # ---------------- 本门合击 ----------------
 
@@ -192,14 +165,6 @@ $A的剑阵护住$B的空门，$B的绵掌趁势而入，后劲绵绵不绝。
 # ---------------- 剧情 NPC 队友参与的合击（D-072）----------------
 # 玩家之间满足条件也能触发。
 
-=== combo: combo.base_twin
-name: 同仇敌忾
-a: base.quan@10
-b: base.quan@10
-bonus: 1.3
----
-$A和$B一左一右，两记庄稼把式同时砸在$n身上，打的就是一股不要命的狠劲。
-
 === combo: combo.yuenv_quanzhen
 name: 剑影双飞
 a: shediao.yuenv@10
@@ -220,23 +185,6 @@ $A剑尖一引，把$n的兵器带偏了半尺；就这半尺的空当，$B的�
 # ---------------- 天龙八部（剧情 NPC 队友与剧情武学）----------------
 # 木婉清、朱丹臣、段誉做 NPC 队友时（D-072），和玩家这时多半会的武功配出来的合击。
 
-=== combo: combo.tl_mu_jian
-name: 刀剑双绝
-a: tianlong.xiuluo@10
-b: base.jian@10
-bonus: 1.6
-effects: 破绽
----
-$A一刀斩开$n的门户，刀风未歇，$B的剑尖已经贴着刀背递了进去。
-
-=== combo: combo.tl_mu_zhang
-name: 错影分光
-a: tianlong.xiuluo@10
-b: base.zhang@10
-bonus: 1.5
----
-$A的刀光从正面压下，$B的手掌却从刀影底下翻出，$n的眼睛被刀光晃着，看不见那只手。
-
 === combo: combo.tl_zhi_shuang
 name: 双指连心
 a: tianlong.yiyangzhi@10
@@ -255,14 +203,6 @@ effects: 内伤
 ---
 $A的剑气破空而至，逼得$n侧身让开；$B的指力早已等在他让开的那一边。
 
-=== combo: combo.tl_duan_quan
-name: 指东打西
-a: tianlong.liumai@15
-b: base.quan@10
-bonus: 1.5
----
-$A胡乱指了几指，剑气东一道西一道，$n忙着躲闪，被$B一拳结结实实打中。
-
 === combo: combo.tl_zhi_yuenv
 name: 指影剑光
 a: tianlong.yiyangzhi@10
@@ -272,34 +212,8 @@ effects: 点穴
 ---
 $A的指力封住$n周身大穴，$B的剑光在指影里穿来穿去，一剑快过一剑。
 
-=== combo: combo.tl_zhi_quan
-name: 点穴借力
-a: tianlong.yiyangzhi@20
-b: base.quan@10
-bonus: 1.5
-effects: 破绽
----
-$A一指点在$n肩头，$n半边身子一麻，$B的拳头正好砸在他僵住的那一侧。
-
 # ================= 笑傲江湖 =================
 # NPC 队友林平之（第一章起）用辟邪剑法，配玩家这时很可能会的武功（D-072）。
-
-=== combo: combo.xa_lin_jian
-name: 双剑分花
-a: xiaoao.pixie@5
-b: base.jian@10
-bonus: 1.5
-effects: 破绽
----
-$A的剑尖挑开$n的门户，$B的剑跟着从那道缝里送进去，两剑一前一后，像一朵花被从中剖开。
-
-=== combo: combo.xa_lin_quan
-name: 剑引拳随
-a: xiaoao.pixie@5
-b: base.quan@10
-bonus: 1.4
----
-$A一剑逼得$n仰身躲闪，$B的拳头早就候在他仰身的那个地方。
 
 === combo: combo.xa_lin_fantian
 name: 翻天剑雨
@@ -309,15 +223,6 @@ bonus: 1.6
 effects: 内伤
 ---
 $B一掌把$n的身子拍得一歪，$A的剑雨劈头盖脸地落下来——这是福威镖局走镖时一掌一剑的老路数。
-
-=== combo: combo.xa_fantian_zhang
-name: 双掌压梁
-a: xiaoao.fantian@5
-b: base.zhang@10
-bonus: 1.4
-effects: 破绽
----
-$A一掌沉沉压住$n的上盘，$B的掌影从底下翻上来，像两根梁木把人夹在当中。
 
 # ---------------- 天龙八部：乔峰（第七章起的 NPC 队友）----------------
 
@@ -329,14 +234,6 @@ bonus: 2.2
 effects: 内伤
 ---
 $A一掌拍出，掌风把$n逼得横移半步；$B的指力早等在他落脚的那一点上。
-
-=== combo: combo.tl_qiao_quan
-name: 掌风借力
-a: gaibang.xianglong@20
-b: base.quan@10
-bonus: 1.6
----
-$A的掌风把$n推得仰了仰身，$B顺着这股风抢进去，一拳打在他空出来的胸口。
 
 # ---------------- 笑傲江湖（第三章：令狐冲）----------------
 

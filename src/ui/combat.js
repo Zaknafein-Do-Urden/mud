@@ -79,7 +79,7 @@ export function renderCombat(root, view, run, secondsLeft = 0) {
       el('span', 'cb-move', m.name),
       el('span', 'cb-cost', `内力 ${m.mp}${m.effects.length ? ' · ' + m.effects.join(' ') : ''}`),
     );
-    c.title = m.usable ? '' : m.need || '内力不足';
+    c.title = [m.usable ? '' : `【${m.need || '内力不足'}】`, m.tip ?? ''].filter(Boolean).join('\n');
     if (m.need) c.append(el('span', 'cb-need', m.need));
     if (m.support) c.append(el('span', 'cb-support', '辅助：作用在目标身上'));
     // 合击提示（D-065）：与队友已选的招式能构成合击

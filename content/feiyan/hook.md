@@ -4,7 +4,8 @@
 === storyline: feiyan
 name: 竹哨
 xiuwei: 10-300
-hint: 西湖断桥上那个戴斗笠的人说过，时候到了会来找你。先在临安住下——去望湖客栈歇一晚。（要先在断桥吹响竹哨）
+# 尚未开始时的提示按阶段给（下面的 pre 目标，D-097），这一句只在都不满足时兜底
+hint: 师父临终说：去临安，找一个会吹竹哨的人。
 ---
 师父临终前那句话，一支刻着燕子的竹哨，西湖上的雾，和一桩埋了二十年的旧案。
 
@@ -35,3 +36,30 @@ lock: true
 纸条上只有几个字，墨迹未干：
 “子时，断桥。燕。”
 * 去断桥赴约 !start:feiyan
+
+# ---------------- 开始之前的提示（D-097）：一步一步给，不剧透下一步 ----------------
+
+=== goal: feiyan.pre.1
+name: 师父的遗言
+storyline: feiyan
+pre: true
+if: !has:bamboo_whistle !flag:world.whistle_answered
+---
+师父临终只说了一句：去临安，找一个会吹竹哨的人。钱塘门下那个老乞丐，眼神亮得不像个叫化子，也许该跟他聊聊。
+
+=== goal: feiyan.pre.2
+name: 老乞丐的竹哨
+storyline: feiyan
+pre: true
+if: has:bamboo_whistle !flag:world.whistle_answered
+---
+老乞丐塞给你一支竹哨，说：天黑以后，去断桥，吹三声。
+
+=== goal: feiyan.pre.3
+name: 断桥上的人
+storyline: feiyan
+pre: true
+if: flag:world.whistle_answered !flag:feiyan.started
+---
+断桥雾里那个戴斗笠的人说，时候到了会来找你。先在临安住下吧，城里有家望湖客栈。
+

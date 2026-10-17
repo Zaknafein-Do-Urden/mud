@@ -223,11 +223,15 @@ export const martial = {
     const sk = this.db.skill[id];
     if (!sk) return;
     const lo = p.loadout;
-    const curInner = lo.inner ? p.skills[lo.inner] ?? 0 : -1;
+    // 只在栏位空着时自动装备，不替换已经装备的（D-095：以前新学的门派心法会把武馆的养气诀顶掉）
     if (sk.props.kind === '外功' && lo.outer.length < MAX_OUTER && !lo.outer.includes(id)) lo.outer.push(id);
-    else if (sk.props.kind === '内功' && p.skills[id] >= curInner) lo.inner = id;
-    else if (sk.props.kind === '轻功' && (!lo.light || (p.skills[lo.light] ?? 0) <= p.skills[id])) lo.light = id;
-    else { this.emit('sys', '（栏位已满，需要时用 装备 换上。）'); return; }
+    else if (sk.props.kind === '内功' && !lo.inner) lo.inner = id;
+    else if (sk.props.kind === '轻功' && !lo.light) lo.light = id;
+    else {
+      const what = sk.props.kind === '外功' ? '外功栏已满' : `${sk.props.kind}栏已经装着${this.db.skill[sk.props.kind === '内功' ? lo.inner : lo.light]?.props.name ?? '别的武功'}`;
+      this.emit('sys', `（${what}，没有自动装备。需要时在人物面板的武功页里换上。）`);
+      return;
+    }
     this.normalizeHp();
     this.emit('sys', '（已自动装备。）');
   },
@@ -434,7 +438,9 @@ export const martial = {
         const hint = comboHint(this.db, b, me, m);
         // 合击要打的敌人：换成面板上的编号和名字，点卡片时自动打它（D-072）
         if (hint?.foe) { const foes = enemiesOf(b).filter((e) => e.hp > 0); const k = foes.findIndex((e) => e.key === hint.foe); hint.foeN = k + 1; hint.foeName = foes[k]?.name; }
-        return { n: i + 1, name: m.name, skillName: m.skillName, stance: m.stance, mp: m.mp, effects: m.effects, usable: m.mp <= me.mp && armedOk, need: armedOk ? '' : `需要${m.weapon}`, support: m.support, combo: hint };
+        // 悬停说明（D-096）：和武功页同一份招式说明（威力、内力、估算伤害、效果）
+        const tip = this.db.move[m.id] ? this.moveTip(this.db.skill[m.skill], this.db.move[m.id], m.lv).tip : '';
+        return { n: i + 1, name: m.name, skillName: m.skillName, stance: m.stance, mp: m.mp, effects: m.effects, usable: m.mp <= me.mp && armedOk, need: armedOk ? '' : `需要${m.weapon}`, support: m.support, combo: hint, tip };
       }),
       // 兵器：手里的、被打飞的、可以换上的（D-057）
       weapon: me.disarmed ? null : me.wname,
