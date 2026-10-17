@@ -18,12 +18,18 @@ const problems = [];
 const step = (s) => { if (process.env.PLAYTEST_VERBOSE) console.log('  · ' + s); };
 const note = (s) => problems.push(s);
 
-function newGame() {
+function newGame({ skills = {}, maxhpBoost = 0 } = {}) {
   const db = emptyDb();
   for (const f of files) addBlocks(db, parse(readFileSync(join(root, f), 'utf8'), f), f);
   const st = newState(db.meta.game.props.start);
-  st.player.loadout = { outer: ['base.quan'], inner: null, light: null };
+  Object.assign(st.player.skills, skills);
+  st.player.loadout = {
+    outer: ['base.quan', ...Object.keys(skills).filter((id) => db.skill[id]?.props.kind === '外功')].slice(0, 4),
+    inner: null,
+    light: null,
+  };
   st.player.money = 5000;
+  if (maxhpBoost) st.player.attrs.根骨 += maxhpBoost; // 抬高气血上限，用来走"硬闯"那条门槛
   const g = new Game(db, st);
   g.enter(st.player.room);
   return g;
@@ -143,22 +149,106 @@ function ch1(g, label, { ask = false, protect = false, spare = true, block = fal
   expectRoom(g, 'fuzhou.center', label + '（章节之后能回城）');
 }
 
-// ---------------- 路线 1：问清来路 → 站到身边 → 劝住 → 正面扑上去 ----------------
-{
-  const label = '路线1';
-  const g = newGame();
-  hook(g, label);
-  ch1(g, label, { ask: true, spare: true, block: false, baier: true });
+// ---------------- 第二章 ----------------
+
+function ch2(g, label, { how = 'qiao', ask = true, beatYu = false, side = false } = {}) {
+  step(label + ' 第二章');
+  g.enter('fuzhou.center');
+  expectFlag(g, 'xiaoao.ch2', label);
+  pick(g, '这就去向阳巷', label);
+  // 门槛三选一
+  if (how === 'party') g.party = { members: [{ id: 'friend' }] }; // 选项在开对话那一刻就过滤好，得先组队
+  ex(g, '西北', label);
+  expectRoom(g, 'xiaoao.fz.lane', label);
+  const opt = { qiao: '染坊的屋脊', hp: '撞开顶死的角门', party: '和同伴分头' }[how];
+  if (!has(g, opt)) note(`${label}：门槛选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  pick(g, '往后院去', label);
+  if (how === 'party') g.party = null;
+  expectFlag(g, 'xiaoao.c2_in', label);
+  // 后院
+  ex(g, '西', label);          // 向阳巷口 → 前厅
+  ex(g, '北', label);          // 前厅 → 后院
+  expectRoom(g, 'xiaoao.fz.yard', label);
+  pick(g, ask ? '先问他们在找什么' : '直接动手', label);
+  pick(g, '动手', label);
+  win(g, label + '/后院三人');
+  expectFlag(g, 'xiaoao.c2_yard', label);
+  pick(g, '往前厅去', label);
+  // 前厅：必败战
+  ex(g, '南', label);
+  pick(g, '冲进去', label);
+  pick(g, '顶上去', label);
+  if (beatYu) win(g, label + '/余沧海（硬要打赢）'); else lose(g, label + '/余沧海');
+  if (beatYu && !flag(g, 'xiaoao.beat_yu')) note(`${label}：打赢余沧海没有记下标记`);
+  pick(g, '扶起林平之', label);
+  expectFlag(g, 'xiaoao.c2_flee', label);
+  expectItem(g, 'xiaoao.item.tie', label);
+  pick(g, '北门', label);
+  // 出城、芦苇荡、破祠堂
+  ex(g, '东', label);          // 前厅 → 向阳巷口
+  ex(g, '东南', label);        // → 鼓楼前
+  ex(g, '北', label);          // → 府衙
+  ex(g, '北', label);          // → 北门渡口
+  expectRoom(g, 'xiaoao.fz.ferry', label);
+  ex(g, '西', label);
+  expectRoom(g, 'xiaoao.fz.reed', label);
+  expectFlag(g, 'xiaoao.c2_chase', label);
+  ex(g, '北', label);
+  expectRoom(g, 'xiaoao.fz.shrine', label);
+  pick(g, side ? '绕到侧面' : '自己迎上去', label);
+  pick(g, '动手', label);
+  win(g, label + '/于人豪');
+  pick(g, '打给他看', label);
+  expectFlag(g, 'xiaoao.ch2_done', label);
+  if ((g.state.player.skillcap?.['xiaoao.fantian'] ?? 0) < 25) note(`${label}：翻天掌的上限没有提到 25`);
 }
 
-// ---------------- 路线 2：先护姑娘 → 不劝 → 先抽跳板 → 不走支线 ----------------
+// ---------------- 路线 1：问清来路 → 站到身边 → 劝住 → 正面扑上去；第二章走"巧"那条门槛 ----------------
+{
+  const label = '路线1';
+  const g = newGame({ skills: { 'base.zhang': 20 } }); // 小巧掌 20 级：巧类门槛
+  hook(g, label);
+  ch1(g, label, { ask: true, spare: true, block: false, baier: true });
+  ch2(g, label, { how: 'qiao', ask: true, beatYu: false, side: false });
+}
+
+// ---------------- 路线 2：先护姑娘 → 不劝 → 先抽跳板 → 不走支线；第二章硬闯 + 打赢余沧海 ----------------
 {
   const label = '路线2';
-  const g = newGame();
+  const g = newGame({ maxhpBoost: 60 }); // 气血上限够：撞开角门那条
   hook(g, label);
   ch1(g, label, { protect: true, spare: false, block: true, baier: false });
   if (!flag(g, 'xiaoao.c1_protect')) note(`${label}：护住卖酒姑娘的标记没有设上`);
   if (!flag(g, 'xiaoao.c1_block')) note(`${label}：抽掉跳板的标记没有设上`);
+  ch2(g, label, { how: 'hp', ask: false, beatYu: true, side: true });
+}
+
+// ---------------- 路线 4：第二章组队门槛 ----------------
+{
+  const label = '路线4';
+  const g = newGame();
+  hook(g, label);
+  ch1(g, label, { spare: true, baier: false });
+  ch2(g, label, { how: 'party' });
+}
+
+// ---------------- 路线 5：第二章门槛一条都不满足时，要有退路 ----------------
+{
+  const label = '路线5';
+  const g = newGame();
+  hook(g, label);
+  ch1(g, label, { spare: true, baier: false });
+  g.enter('fuzhou.center');
+  pick(g, '这就去向阳巷', label);
+  ex(g, '西北', label);
+  if (has(g, '染坊的屋脊') || has(g, '撞开顶死的角门')) note(`${label}：功力不够，却出现了门槛选项`);
+  if (!has(g, '现在还进不去')) note(`${label}：功力不够时没有"现在还进不去"这条路`);
+  pick(g, '现在还进不去', label);
+  pick(g, '先退回去练练', label);
+  ex(g, '东南', label); // 门槛对话不锁定，可以离开去练功
+  expectRoom(g, 'fuzhou.center', label + '（门槛不锁人）');
+  if (flag(g, 'xiaoao.c2_in')) note(`${label}：没过门槛却进了镖局`);
 }
 
 // ---------------- 路线 3：第一场故意打输，回检查点重来 ----------------
@@ -194,4 +284,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 笑傲江湖第一章、三条路线全部走通（两处分支、可选支线、NPC 队友、打输重来）');
+console.log('✓ 笑傲江湖第一、二章，五条路线全部走通（门槛三选一、各处分支、可选支线、NPC 队友、必败战的输赢、打输重来）');
