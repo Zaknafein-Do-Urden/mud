@@ -348,3 +348,23 @@ bonus: 1.7
 effects: 破绽
 ---
 $A的剑尖在$n眼前画了一个圈，$n的眼睛跟着剑走——$B的掌已经从圈底下穿过去，结结实实压在他胸口。
+
+# ---------------- 笑傲江湖（第四章：衡山剑法）----------------
+
+=== combo: combo.xa_hengshan_huashan
+name: 雁阵分飞
+a: xiaoao.hengshan@10
+b: huashan.jianfa@20
+bonus: 1.7
+effects: 破绽
+---
+$A的剑像雁阵一样散开，把$n的注意力扯向两边；$B的剑从雁阵当中的那道空处直插进去。
+
+=== combo: combo.xa_hengshan_fantian
+name: 剑引掌到
+a: xiaoao.hengshan@10
+b: xiaoao.fantian@20
+bonus: 1.6
+effects: 内伤
+---
+$A的剑绕到$n侧后，逼得他转身来挡；$B的掌已经等在他转过来的那一面，一掌按实。
