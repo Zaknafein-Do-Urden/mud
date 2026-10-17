@@ -11,6 +11,7 @@ import { renderMap, findPath, regionOf } from './ui/map.js';
 import { renderWorld } from './ui/worldmap.js';
 import { initPanels } from './ui/panels.js';
 import { initParty } from './ui/party.js';
+import { VERSION } from './version.js';
 
 const $ = (id) => document.getElementById(id);
 const output = $('output');
@@ -324,6 +325,9 @@ $('world-close').addEventListener('click', () => $('world-dialog').close());
 
 function setMapOpen(open) {
   document.body.classList.toggle('map-open', open);
+  $('map-toggle').setAttribute('aria-pressed', String(open));
+  // 地图隐藏时量不到尺寸，打开后重画一次，把当前位置滚到中间（D-093）
+  if (open && game) refreshMap();
   try { localStorage.setItem('wuxia-mud:ui:map', open ? '1' : '0'); } catch { /* 忽略 */ }
 }
 $('map-toggle').addEventListener('click', () => setMapOpen(!document.body.classList.contains('map-open')));
@@ -431,6 +435,10 @@ const party = initParty({
   onJoined: () => Promise.all(Object.keys(db.index.storylines ?? {}).map((id) => loadStoryline(db, id))),
 });
 $('char-toggle').addEventListener('click', () => panels.open('char'));
+// 系统菜单（D-093）：导出、导入、新游戏收在这里；点了其中一项先关掉菜单
+$('system-toggle').addEventListener('click', () => $('system-dialog').showModal());
+$('system-close').addEventListener('click', () => $('system-dialog').close());
+for (const id of ['btn-export', 'btn-import', 'btn-new']) $(id).addEventListener('click', () => $('system-dialog').close(), { capture: true });
 $('journal-toggle').addEventListener('click', () => panels.open('journal'));
 
 output.addEventListener('click', (e) => {
@@ -536,19 +544,40 @@ $('btn-new').addEventListener('click', async () => {
 
 // ---- 启动 ----
 
+/** 加载画面（D-094）：进度条 + 文字。加载完成或出错时处理 */
+const loading = {
+  set(pct, text) {
+    $('ld-fill').style.width = `${Math.round(pct)}%`;
+    $('loading').setAttribute('aria-valuenow', String(Math.round(pct)));
+    if (text) $('ld-text').textContent = text;
+  },
+  done() { $('loading').classList.add('gone'); setTimeout(() => $('loading').remove(), 300); },
+  fail(msg) { $('loading').classList.add('failed'); $('ld-text').textContent = msg; },
+};
+$('ld-ver').textContent = `v${VERSION}`;
+$('version').textContent = `v${VERSION}`;
+document.title = `江湖夜雨 v${VERSION}`;
+
 (async () => {
+  loading.set(3, '正在读取存档……');
   const saved = loadLocal();
   try {
-    db = await loadContent(startedStorylines(saved));
+    // 内容文件占进度条的 5% ~ 95%
+    db = await loadContent(startedStorylines(saved), 'content/', (done, total) => {
+      loading.set(5 + (total ? (done / total) * 90 : 90), `正在载入江湖……（${done}/${total}）`);
+    });
   } catch (err) {
-    print([{ cls: 'err', text: '内容加载失败：' + err.message }, { cls: 'sys', text: '如果是直接双击打开的 index.html，请改用本地服务器：python -m http.server 8000' }]);
+    loading.fail('内容加载失败：' + err.message + '。如果是直接双击打开的 index.html，请改用本地服务器：python -m http.server 8000');
     return;
   }
+  loading.set(97, '正在布置场景……');
   contentHash = hashText(JSON.stringify(db.index));
   const meta = db.meta.game;
-  if (meta?.props.title) { document.title = meta.props.title; $('title').textContent = meta.props.title; }
+  if (meta?.props.title) { document.title = `${meta.props.title} v${VERSION}`; $('title').textContent = meta.props.title; }
   const valid = saved && db.room[saved.player.room];
   const state = valid ? saved : newState(meta.props.start);
+  loading.set(100);
+  loading.done();
   // 新游戏，或旧存档还没有姓名：先报上名来
   if (!state.player.surname) applyIdentity(state, await askIdentity());
   start(state, !valid);

@@ -48,24 +48,40 @@
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body {
-  display: flex;
-  flex-direction: column;
-  max-width: 820px;
-  margin: 0 auto;
-  transition: padding-right 0.15s;
   background: var(--bg);
   color: var(--fg);
   font: 16px/1.75 "Noto Serif SC", "Songti SC", "SimSun", serif;
+  overflow: hidden;
+}
+
+/* ---- 整体布局（D-093）：一屏高的纵向布局；电脑上游戏区和地图左右并排，手机上地图在文字上方 ---- */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
   padding: 8px 16px;
   border-bottom: 1px solid var(--border);
 }
-h1 { margin: 0; font-size: 20px; color: var(--accent); letter-spacing: 0.2em; }
+h1 { margin: 0; font-size: 20px; color: var(--accent); letter-spacing: 0.2em; white-space: nowrap; }
+h1 small { font-size: 12px; letter-spacing: 0; color: var(--muted); font-weight: normal; margin-left: 8px; }
+.top-nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.top-btn { font-size: 16px; padding: 6px 16px; min-height: 40px; }
+@media (max-width: 899px) {
+  header { padding: 6px 10px; }
+  .top-nav { width: 100%; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .top-btn { padding: 6px 0; min-height: 44px; font-size: 15px; }
+}
 
 button, .file-btn {
   font: inherit;
@@ -239,32 +255,34 @@ button.choice:disabled { color: var(--muted); opacity: 0.6; cursor: default; bor
 
 /* ---- 地图侧栏（常驻右侧，可收起）---- */
 #status { display: flex; justify-content: space-between; align-items: center; }
-#map-toggle { font-size: 12px; padding: 0 8px; }
+#layout { flex: 1; min-height: 0; display: flex; }
+#main-col { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+#output { min-height: 0; }
+html { overflow: hidden; }
 #side {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 300px;
   display: none;
   flex-direction: column;
   background: var(--bg);
-  border-left: 1px solid var(--border);
   padding: 8px 12px;
-  z-index: 5;
+  --map-scale: 1;
 }
 body.map-open #side { display: flex; }
+#map-toggle[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
 @media (min-width: 900px) {
-  body.map-open { max-width: calc(820px + 300px); padding-right: 300px; }
-  body.map-open #map-toggle { display: none; }
+  /* 电脑：地图是右边的一栏，跟着游戏区一起居中 */
+  #side { width: 360px; border-left: 1px solid var(--border); }
 }
 @media (max-width: 899px) {
-  #side { width: min(320px, 85vw); box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2); }
+  /* 手机：地图在文字上方，占四成屏高；房间框放大，点得准 */
+  #layout { flex-direction: column; }
+  #side { order: -1; height: 36vh; height: 36dvh; border-bottom: 1px solid var(--border); padding: 6px 10px; --map-scale: 1.3; }
+  #side .side-tip { display: none; }
+  #output, #quick, #input-form { padding-left: 10px; padding-right: 10px; }
 }
 .side-head { display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--accent); margin-bottom: 6px; }
-.side-head button { font-size: 12px; padding: 0 8px; }
+.side-head button { font-size: 13px; padding: 2px 10px; }
 #map { flex: 1; overflow: auto; }
-.map-svg { width: 100%; height: auto; max-height: 100%; }
+.map-svg { display: block; height: auto; margin: 0 auto; }
 .map-link { stroke: var(--border); stroke-width: 2; }
 .map-link.unknown { stroke-dasharray: 3 3; }
 .map-link.out { stroke-dasharray: 2 3; }
@@ -287,8 +305,6 @@ body.map-open #side { display: flex; }
   background: var(--panel); color: var(--fg);
 }
 .create-hint { color: var(--muted); }
-.status-btns { display: inline-flex; gap: 6px; }
-#world-toggle { font-size: 12px; padding: 0 8px; }
 
 /* ---- 大地图 ---- */
 #world-dialog { width: min(720px, calc(100vw - 24px)); }
@@ -308,7 +324,6 @@ body.map-open #side { display: flex; }
 .world-info { color: var(--muted); font-size: 14px; min-height: 1.5em; }
 
 /* ---- 面板（D-045）---- */
-#char-toggle, #journal-toggle { font-size: 12px; padding: 0 8px; }
 #panel { width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 40px); }
 #panel-tabs { display: flex; gap: 4px; margin: 8px 0; flex-wrap: wrap; }
 .pn-tab.on { border-color: var(--accent); color: var(--accent); font-weight: bold; }
@@ -408,3 +423,31 @@ button.adopt { font-size: 12px; padding: 0 8px; margin-left: 6px; }
 /* 地图：通往其他区域的出口按钮（D-084） */
 .map-exit rect { stroke-dasharray: 3 2; }
 .map-exit:not(.unknown) { cursor: pointer; }
+
+/* ---- 加载画面（D-094）---- */
+#loading {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+  transition: opacity 0.3s;
+}
+#loading.gone { opacity: 0; pointer-events: none; }
+.ld-box { width: min(320px, 80vw); text-align: center; }
+.ld-title { font-size: 28px; color: var(--accent); letter-spacing: 0.3em; }
+.ld-ver { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+.ld-bar { height: 8px; border-radius: 4px; background: var(--panel); border: 1px solid var(--border); overflow: hidden; }
+.ld-fill { height: 100%; width: 0; background: var(--accent); transition: width 0.15s; }
+.ld-text { font-size: 13px; color: var(--muted); margin-top: 10px; min-height: 2em; }
+#loading.failed .ld-text { color: var(--err); }
+
+/* ---- 系统菜单（D-093）---- */
+.system-menu { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.sys-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; font-size: 16px; padding: 10px 14px; }
+.sys-btn small { font-size: 12px; color: var(--muted); }
+.sys-btn.danger { color: var(--err); }
+
+/* ---- 武功说明（D-092）---- */
+.pn-has-info { cursor: help; border-bottom: 1px dotted var(--muted); }
+.pn-skill-info { font-size: 13px; color: var(--muted); background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; margin: 4px 0; }
+.pn-skill-info p { margin: 0 0 4px; }
+.pn-skill-desc { font-style: italic; }

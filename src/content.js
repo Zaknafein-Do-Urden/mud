@@ -106,13 +106,13 @@ export function emptyDb() {
   return { room: {}, npc: {}, item: {}, dialog: {}, entry: {}, storyline: {}, chapter: {}, trigger: {}, use: {}, skill: {}, move: {}, enemy: {}, battle: {}, sect: {}, city: {}, goods: {}, quest: {}, goal: {}, combo: {}, meta: {}, patch: {}, loaded: new Set() };
 }
 
-async function loadFiles(db, base, files) {
+async function loadFiles(db, base, files, onFile) {
   const todo = files.filter((f) => !db.loaded.has(f));
   // no-cache：每次向服务器确认是否有新版本（内容更新后玩家不会读到旧文件）
   const texts = await Promise.all(todo.map((f) => fetch(base + f, { cache: 'no-cache' }).then((r) => {
     if (!r.ok) throw new Error(`${f}: HTTP ${r.status}`);
     return r.text();
-  })));
+  }).then((t) => { onFile?.(f); return t; })));
   texts.forEach((src, i) => {
     addBlocks(db, parse(src, todo[i]), todo[i]);
     db.loaded.add(todo[i]);
@@ -124,21 +124,27 @@ async function loadFiles(db, base, files) {
  *   { "world": [...], "storylines": { "<id>": { "hook": [...], "files": [...] } } }
  * world 与各主线的 hook（开端）总是加载；主线正文只在已开始时加载（见 STORY.md §4.3）。
  */
-export async function loadContent(startedLines = [], base = 'content/') {
+export async function loadContent(startedLines = [], base = 'content/', onProgress) {
   const index = await (await fetch(base + 'index.json', { cache: 'no-cache' })).json();
   const db = emptyDb();
   db.index = index;
   db.base = base;
   const hooks = Object.values(index.storylines ?? {}).flatMap((s) => s.hook ?? []);
-  await loadFiles(db, base, [...index.world, ...hooks]);
-  await Promise.all(startedLines.map((id) => loadStoryline(db, id)));
+  // 加载进度（D-094）：要下载的文件总数，每下载完一个回调一次
+  const lineFiles = startedLines.flatMap((id) => index.storylines?.[id]?.files ?? []);
+  const total = index.world.length + hooks.length + lineFiles.length;
+  let done = 0;
+  const onFile = (f) => onProgress?.(++done, total, f);
+  onProgress?.(0, total, '');
+  await loadFiles(db, base, [...index.world, ...hooks], onFile);
+  await Promise.all(startedLines.map((id) => loadStoryline(db, id, onFile)));
   return db;
 }
 
-export async function loadStoryline(db, id) {
+export async function loadStoryline(db, id, onFile) {
   const line = db.index.storylines?.[id];
   if (!line) { console.warn('未知主线', id); return; }
-  await loadFiles(db, db.base, line.files ?? []);
+  await loadFiles(db, db.base, line.files ?? [], onFile);
 }
 
 /** 把 `[[显示名|id]]` 标记拆成片段：[{text}, {text, id}, ...] */

@@ -180,4 +180,15 @@ export function renderMap(root, game, onWalk, override) {
   }
 
   root.replaceChildren(svg);
+  // 按格子的实际大小画，不随容器缩小（D-093）：手机上 --map-scale 放大，点得准；区域太大就在容器里滚动
+  svg.style.width = `max(100%, calc(var(--map-scale, 1) * ${Math.round(w)}px))`;
+  // 当前位置滚到可见处
+  requestAnimationFrame(() => {
+    const me = svg.querySelector('.map-room.here');
+    if (!me) return;
+    const r = me.getBoundingClientRect();
+    const c = root.getBoundingClientRect();
+    root.scrollLeft += r.left + r.width / 2 - (c.left + c.width / 2);
+    root.scrollTop += r.top + r.height / 2 - (c.top + c.height / 2);
+  });
 }

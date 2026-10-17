@@ -27,6 +27,30 @@ function bar(value, max, cls) {
 const row = (...children) => { const r = el('div', 'pn-row'); r.append(...children); return r; };
 const kv = (k, v) => { const d = el('div', 'pn-kv'); d.append(el('span', 'pn-k', k), el('span', 'pn-v', v)); return d; };
 
+/** 先天属性的作用（D-092）：电脑上悬停显示，手机上点一下展开 */
+const ATTR_INFO = {
+  根骨: (x) => `气血上限 +${x * 5}、内力上限 +${x * 2}（每点根骨气血 +5、内力 +2）。`,
+  身法: (x) => `出手先后：同一阶段（先巧招、后刚招）里身法高的先出手。装备轻功每 4 级再 +1，天赋"迅捷"每级 +2。`,
+  悟性: (x) => `修炼武功花的潜能 ×${(20 / x).toFixed(2).replace(/\.?0+$/, '')}（悟性越高越省）；对手出虚招、藏招时，每回合有 ${x * 2}% 的机会看穿（天赋"慧眼"每级再 +10%）。`,
+};
+function attrRow(attrs) {
+  const d = el('div', 'pn-kv');
+  const vals = el('span', 'pn-v');
+  const info = el('div', 'pn-skill-info');
+  info.hidden = true;
+  Object.entries(ATTR_INFO).forEach(([k, f], i) => {
+    const a = el('span', 'pn-has-info', `${k} ${attrs[k]}`);
+    a.title = f(attrs[k]);
+    a.addEventListener('click', () => { info.replaceChildren(el('p', '', `${k}：${f(attrs[k])}`)); info.hidden = false; });
+    if (i) vals.append('　');
+    vals.append(a);
+  });
+  d.append(el('span', 'pn-k', '先天'), vals);
+  const box = el('div');
+  box.append(d, info);
+  return box;
+}
+
 /**
  * @param {{game: () => any, run: (cmd: string) => Promise<any[]>}} api
  *   run 返回本次命令产生的输出条目，用于在面板底部显示反馈
@@ -86,7 +110,7 @@ export function initPanels(api) {
         el('h3', 'pn-name', `${v.name}　${v.gender}`),
         row(el('span', 'pn-k', '气血'), bar(v.hp, v.maxHp, 'hp'), el('span', 'pn-v', `${v.hp}/${v.maxHp}`)),
         kv('内力上限', `${v.mp}（每场战斗开始时回满）`),
-        kv('先天', `根骨 ${v.attrs.根骨}　身法 ${v.attrs.身法}　悟性 ${v.attrs.悟性}`),
+        attrRow(v.attrs),
         kv('兵器', v.weapon),
         kv('修为', `${v.xiuwei}（所有武功等级之和）`),
         kv('潜能', `${v.potential}（用于修炼武功）`),
@@ -117,9 +141,17 @@ export function initPanels(api) {
         for (const s of list) {
           const r = el('div', 'pn-skill' + (s.equipped ? ' on' : ''));
           const head = el('div', 'pn-skill-head');
+          // 武功说明（D-092）：电脑上悬停武功名就显示；手机没有悬停，点一下展开、再点收起
+          const nameEl = el('span', 'pn-skill-name pn-has-info', s.name);
+          nameEl.title = s.info.tip;
+          const info = el('div', 'pn-skill-info');
+          info.hidden = true;
+          for (const line of s.info.effect) info.append(el('p', '', line));
+          if (s.info.desc) info.append(el('p', 'pn-skill-desc', s.info.desc));
+          nameEl.addEventListener('click', () => { info.hidden = !info.hidden; });
           head.append(
             el('span', `pn-stance st-${s.stance || '无'}`, s.stance || kind[0]),
-            el('span', 'pn-skill-name', s.name),
+            nameEl,
             el('span', 'pn-v', `${s.lv} / ${s.cap} 级${s.frozen ? '（冻结）' : ''}`),
           );
           const btns = el('span', 'pn-btns');
@@ -131,7 +163,7 @@ export function initPanels(api) {
             title: s.frozen ? '已冻结' : !v.canTrain ? '要在旅店或本门驻地修炼' : s.lv >= s.cap ? '已到上限' : v.potential < s.trainCost ? '潜能不足' : '',
           }));
           head.append(btns);
-          r.append(head);
+          r.append(head, info);
           if (!s.frozen && s.lv < s.cap) r.append(row(el('span', 'pn-k', '经验'), bar(s.exp, s.need, 'mp'), el('span', 'pn-v', `${s.exp}/${s.need}`)));
           if (s.moves.length) {
             // 每个招式悬停显示威力、内力、估算伤害、效果（D-053）

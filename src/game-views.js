@@ -45,6 +45,37 @@ export const views = {
     return ['刚', '巧', '守'].filter((s) => set.has(s)).join('') || (sk.props.stance ?? '');
   },
 
+  /**
+   * 武功的效果说明与描述（D-092）：武功页悬停 / 点开武功名时显示。
+   * 内功、轻功没有招式，以前在武功页上看不出它们有什么用。
+   */
+  skillInfo(sk, lv, cap) {
+    const p = this.state.player;
+    const num = (v, d) => (v === undefined || v === '' ? d : Number(v));
+    const lines = [];
+    if (sk.props.kind === '内功') {
+      const hp = num(sk.props.hp, 6);
+      const mp = num(sk.props.mp, 8);
+      lines.push(`每升一级：气血上限 +${hp}、内力上限 +${mp}（永久；已学的内功都算，不用装备）。眼下这门共提供气血 +${hp * lv}、内力 +${mp * lv}。`);
+      const aff = sk.props.affinity && sk.props.affinity !== '无' ? sk.props.affinity : '';
+      lines.push(`装备为内功时：所有招式威力 +${lv}%${aff ? `，${aff}招再 +${(lv * 0.5).toFixed(1).replace(/\.0$/, '')}%` : ''}。`);
+      lines.push(`内功越深，受到的伤害越少：眼下化去约 ${Math.round((1 - 100 / (100 + lv)) * 100)}%（按已装备内功的等级算）。`);
+      if (Number(sk.props.absorb) > 0) lines.push(`装备时，每次没被克制的攻击都会吸取对手内力（伤害的 ${Math.round(Number(sk.props.absorb) * 100)}%）。`);
+    } else if (sk.props.kind === '轻功') {
+      lines.push(`装备为轻功时：身法 +${Math.floor(lv / 4)}（同一阶段先出手）；巧招威力 +${(lv * 0.3).toFixed(1).replace(/\.0$/, '')}%；调息、换兵器时受的伤害随等级减轻。`);
+      const traits = parseList(sk.props.traits).map((t) => t.split('@'));
+      if (traits.length) lines.push('特性：' + traits.map(([n, need]) => `${n}（${need || 1} 级${lv >= Number(need || 1) ? '，已领悟' : ''}）`).join('、'));
+    } else {
+      const stances = this.stancesOf(sk);
+      const w = sk.props.weapon && sk.props.weapon !== '拳' ? sk.props.weapon : '';
+      lines.push(`${stances}招${w ? `，要拿着${w}才能施展` : '，空手施展'}。招式的威力、估算伤害见下面每一招的说明。`);
+    }
+    const sect = sk.props.sect ? this.db.sect[sk.props.sect]?.props.name : '';
+    lines.push(`上限 ${cap} 级${sect ? `（${sect}武学，随阶位提高；外功、轻功还不能超过内功最高等级 + 20）` : sk.id.startsWith('base.') ? '（武馆武功）' : '（剧情武学，随剧情提高）'}。`);
+    const desc = sk.lines.map((l) => this.fmt(l.text)).join('');
+    return { effect: lines, desc, tip: [...lines, '', desc].join('\n').trim() };
+  },
+
   skillsView() {
     const p = this.state.player;
     const lo = p.loadout;
@@ -59,6 +90,7 @@ export const views = {
         equipped: lo.outer.includes(id) || lo.inner === id || lo.light === id,
         trainCost: trainCost(p, lv), canTrain: canTrain && lv < cap && !p.frozen?.[id],
         moves: movesOf(this.db, id, 999).map((m) => this.moveTip(sk, m, lv)),
+        info: this.skillInfo(sk, lv, cap),
         sectName: sk.props.sect ? this.db.sect[sk.props.sect]?.props.name : '',
       };
     }).filter(Boolean);

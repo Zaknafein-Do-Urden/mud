@@ -7,34 +7,60 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1 id="title">江湖夜雨</h1>
-    <nav>
-      <button id="btn-export" title="导出存档为文本，可在其他浏览器导入">导出</button>
-      <button id="btn-import" title="从文本或文件导入存档">导入</button>
-      <button id="btn-new" title="放弃当前进度，重新开始">新游戏</button>
-    </nav>
-  </header>
+  <!-- 加载画面（D-094）：写在 HTML 里，脚本还没跑起来时就盖住页面；加载完才撤掉，期间什么都点不到 -->
+  <div id="loading" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <div class="ld-box">
+      <div class="ld-title">江湖夜雨</div>
+      <div class="ld-ver" id="ld-ver"></div>
+      <div class="ld-bar"><div class="ld-fill" id="ld-fill"></div></div>
+      <div class="ld-text" id="ld-text">正在读取存档……</div>
+    </div>
+  </div>
 
-  <div id="status"><span id="status-text"></span><span class="status-btns"><button id="char-toggle" title="状态、武功、天赋、背包">人物</button><button id="journal-toggle" title="主线进度、任务清单">江湖</button><button id="world-toggle" title="查看城市与马车路线">大地图</button><button id="map-toggle" title="显示 / 收起地图">地图</button></span></div>
+  <div id="app">
+    <!-- 顶栏（D-093）：常用的大按钮放在这里；导出、导入、新游戏收进"系统" -->
+    <header>
+      <h1><span id="title">江湖夜雨</span><small id="version"></small></h1>
+      <nav class="top-nav">
+        <button id="char-toggle" class="top-btn" title="状态、武功、天赋、合击、背包">人物</button>
+        <button id="journal-toggle" class="top-btn" title="主线进度、任务清单">江湖</button>
+        <button id="map-toggle" class="top-btn" title="显示 / 收起地图">地图</button>
+        <button id="world-toggle" class="top-btn" title="查看城市与马车路线">大地图</button>
+        <button id="system-toggle" class="top-btn" title="导出、导入存档，新游戏">系统</button>
+      </nav>
+    </header>
 
-  <div id="party" hidden></div>
+    <div id="status"><span id="status-text"></span></div>
 
-  <main id="output" aria-live="polite"></main>
+    <div id="layout">
+      <div id="main-col">
+        <div id="party" hidden></div>
+        <main id="output" aria-live="polite"></main>
+        <div id="combat" hidden></div>
+        <div id="quick"></div>
+        <form id="input-form" autocomplete="off">
+          <span class="prompt">&gt;</span>
+          <input id="input" placeholder="输入命令，Tab 补全，如 talk lqg" autofocus>
+        </form>
+      </div>
 
-  <div id="combat" hidden></div>
-  <div id="quick"></div>
+      <!-- 地图：电脑上在右边一栏，手机上在文字上方（D-093） -->
+      <aside id="side">
+        <div class="side-head"><span id="map-title">地图</span><button id="map-close" title="收起地图">收起</button></div>
+        <div id="map"></div>
+        <p class="side-tip">点击去过的地方可以自动走过去</p>
+      </aside>
+    </div>
+  </div>
 
-  <form id="input-form" autocomplete="off">
-    <span class="prompt">&gt;</span>
-    <input id="input" placeholder="输入命令，Tab 补全，如 talk lqg" autofocus>
-  </form>
-
-  <aside id="side">
-    <div class="side-head"><span id="map-title">地图</span><button id="map-close" title="收起地图">收起 ›</button></div>
-    <div id="map"></div>
-    <p class="side-tip">点击去过的地方可以自动走过去</p>
-  </aside>
+  <dialog id="system-dialog">
+    <div class="world-head"><h2>系统</h2><button id="system-close" title="关闭">×</button></div>
+    <div class="system-menu">
+      <button id="btn-export" class="sys-btn">导出存档<small>存档变成一段文字，可以复制或下载，在别的浏览器导入</small></button>
+      <button id="btn-import" class="sys-btn">导入存档<small>从文字或 .txt 文件读回存档</small></button>
+      <button id="btn-new" class="sys-btn danger">新游戏<small>放弃当前进度，重新开始</small></button>
+    </div>
+  </dialog>
 
   <dialog id="create-dialog">
     <form id="create-form">
