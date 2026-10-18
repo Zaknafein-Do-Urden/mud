@@ -30,6 +30,7 @@ node tools/validate.mjs            # 内容校验（引用、命名空间、锁�
 node tools/power.mjs               # 武学威力 / 敌人战斗力报表
 node tools/balance.mjs <战斗id>    # 战斗胜率模拟（按猜对率）
 node tools/goalcheck.mjs [主线id]  # 当前目标的连贯性（上一章的收尾目标有没有挡住后面）
+node tools/exitcheck.mjs           # 出口冲突（共享房间的同一个方向被两条主线占用）
 python -m http.server 8000         # 本地预览：http://localhost:8000/?slot=9（slot 用独立存档）
 ```
 

@@ -371,8 +371,8 @@ function ch8(g, label, { side = 'qiao' } = {}) {
   step(label + ' 第八章');
   g.enter('tianlong.wx.road');
   expectFlag(g, 'tianlong.ch8', label);
-  pick(g, '往东进林子', label);
-  ex(g, '东', label);
+  pick(g, '往东北进林子', label);
+  ex(g, '东北', label);
   expectRoom(g, 'tianlong.xz.lin', label);
   const opt = { kan: '哪边都不站', qiao: '我们站乔峰那一边', bang: '本帮的事' }[side];
   if (!has(g, opt)) note(`${label}：林口选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
@@ -398,10 +398,12 @@ function ch9(g, label, { ask = 'qiao' } = {}) {
   step(label + ' 第九章');
   g.enter('luoyang.station');
   expectFlag(g, 'tianlong.ch9', label);
-  pick(g, '往北去少室山下', label);
-  ex(g, '北', label);
+  pick(g, '往少室山下去', label);
+  ex(g, '东南', label); // 洛阳车马行 → 少林山门
+  ex(g, '东', label);  // 山门 → 后山
+  ex(g, '南', label);
   expectRoom(g, 'tianlong.hn.road', label);
-  ex(g, '北', label);
+  ex(g, '西', label);
   expectRoom(g, 'tianlong.hn.hut', label);
   pick(g, ask === 'qiao' ? '那就让他自己来见我' : '大师，三十年前那块石头上的孩子', label);
   pick(g, '……', label);
@@ -455,7 +457,7 @@ function ch11(g, label, { answer = 'hu' } = {}) {
   g.enter('changan.station');
   expectFlag(g, 'tianlong.ch11', label);
   pick(g, '我们跟你出关', label);
-  ex(g, '北', label);
+  ex(g, '东北', label);
   expectRoom(g, 'tianlong.ym.road', label);
   ex(g, '北', label);
   expectRoom(g, 'tianlong.ym.wall', label);
@@ -597,7 +599,7 @@ function ch16(g, label, { rang = false } = {}) {
   expectRoom(g, 'shaolin.gate', label);
   ex(g, '东', label);
   expectRoom(g, 'shaolin.hill', label);
-  ex(g, '北', label);
+  ex(g, '东', label);
   expectRoom(g, 'tianlong.ss.back', label);
   ex(g, '北', label);
   expectRoom(g, 'tianlong.ss.ge', label);
@@ -704,7 +706,7 @@ function ch20(g, label) {
   g.enter('tianlong.xx.city');
   expectFlag(g, 'tianlong.ch20', label);
   pick(g, '去校场看看', label);
-  ex(g, '南', label);
+  ex(g, '东南', label);
   expectRoom(g, 'tianlong.xx.ground', label);
   pick(g, '我只是陪朋友来看看', label);
   pick(g, '上台', label);
@@ -765,9 +767,11 @@ function ch21(g, label, { ta = true } = {}) {
 
 function ch22(g, label, { how = 'pai', quan = 'li' } = {}) {
   step(label + ' 第二十二章');
-  g.enter('luoyang.station');
+  g.enter('changan.station');
   expectFlag(g, 'tianlong.ch22', label);
-  pick(g, '往东北，过桑干河', label);
+  pick(g, '往东北出雁门关', label);
+  ex(g, '东北', label);
+  expectRoom(g, 'tianlong.ym.road', label);
   ex(g, '东北', label);
   expectRoom(g, 'tianlong.nj.ford', label);
   const opt = { pai: '亮出南院的金牌', mian: '贴上阿朱的人皮面具', ying: '不亮也不装' }[how];
@@ -806,7 +810,7 @@ function ch23(g, label, { oath = 'bai' } = {}) {
   g.enter('changan.station');
   expectFlag(g, 'tianlong.ch23', label);
   pick(g, '走到他前头去', label);
-  ex(g, '北', label);
+  ex(g, '东北', label);
   expectRoom(g, 'tianlong.ym.road', label);
   pick(g, '跟上去', label);
   win(g, label + '/辽军游骑');
@@ -836,7 +840,7 @@ function ch24(g, label) {
   g.enter('suzhou.station');
   expectFlag(g, 'tianlong.ch24', label);
   pick(g, '雇船去参合庄', label);
-  ex(g, '东', label);
+  ex(g, '东南', label);
   expectRoom(g, 'tianlong.ch.zhuang', label);
   pick(g, '杏黄衫子的人呢', label);
   pick(g, '往北，去水阁', label);
