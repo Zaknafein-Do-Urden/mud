@@ -751,10 +751,51 @@ function ch14(g, label, { how = 'qiao', stay = false } = {}) {
   expectSkill(g, 'xiaoao.kuihua', label);
 }
 
+// ---------------- 第十五章 ----------------
+
+function ch15(g, label, { how = 'qiao', read = true, ask = true, beatMask = false } = {}) {
+  step(label + ' 第十五章');
+  g.enter('fuzhou.station');
+  expectFlag(g, 'xiaoao.ch15', label);
+  pick(g, '往巷子里走', label);
+  // 老宅
+  if (how === 'party') g.party = { members: [{ id: 'friend' }] };   // 门槛跟在对话里，队伍先组好
+  g.enter('xiaoao.fz.lane');
+  ex(g, '北', label);
+  expectRoom(g, 'xiaoao.fz.ruin', label);
+  expectFlag(g, 'xiaoao.c15_meet', label);
+  pick(g, '下地窖', label);
+  const opt = { qiao: '踩着朽木', hp: '直接跳下去', party: '一个放绳一个下' }[how];
+  if (!has(g, opt)) note(`${label}：门槛选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  if (how === 'party') g.party = null;
+  pick(g, '看看窖里有什么', label);
+  expectFlag(g, 'xiaoao.c15_down', label);
+  // 地窖：袈裟
+  ex(g, '下', label);
+  expectRoom(g, 'xiaoao.fz.cellar', label);
+  expectFlag(g, 'xiaoao.c15_jiasha', label);
+  if (read) { pick(g, '记下来', label); pick(g, '上去', label); }
+  else pick(g, '答他', label);     // 不细看那一行，直接应声上去
+  expectRoom(g, 'xiaoao.fz.ruin', label + '（过场把人带回院子）');
+  // 余沧海
+  pick(g, '和他并肩', label);
+  win(g, label + '/余沧海');
+  expectFlag(g, 'xiaoao.c15_yu', label);
+  if (ask) pick(g, '练这个要先做什么', label);
+  pick(g, '把袈裟给他', label);
+  pick(g, '挡住他', label);
+  if (beatMask) win(g, label + '/蒙面人（硬要夹住他的剑）'); else lose(g, label + '/蒙面人');
+  if (beatMask && !flag(g, 'xiaoao.beat_masked2')) note(`${label}：夹住他的剑没有记下标记`);
+  pick(g, '爬起来', label);
+  expectFlag(g, 'xiaoao.ch15_done', label);
+  if ((g.state.player.skillcap?.['xiaoao.pixie'] ?? 0) < 80) note(`${label}：辟邪剑法上限没有提到 80`);
+}
+
 // ---------------- 路线 1：问清来路 → 站到身边 → 劝住 → 正面扑上去；第二章走"巧"那条门槛 ----------------
 {
   const label = '路线1';
-  const g = newGame({ skills: { 'base.zhang': 140 } }); // 小巧掌 140 级：二~十四章的巧类门槛都够
+  const g = newGame({ skills: { 'base.zhang': 150 } }); // 小巧掌 150 级：二~十五章的巧类门槛都够
   hook(g, label);
   ch1(g, label, { ask: true, spare: true, block: false, baier: true });
   ch2(g, label, { how: 'qiao', ask: true, beatYu: false, side: false });
@@ -770,12 +811,13 @@ function ch14(g, label, { how = 'qiao', stay = false } = {}) {
   ch12(g, label, { how: 'qiao', talk: true, tell: true, beatMask: false });
   ch13(g, label, { how: 'qiao', ask: true, beatDf: false, free: true });
   ch14(g, label, { how: 'qiao', stay: false });
+  ch15(g, label, { how: 'qiao', read: true, ask: true, beatMask: false });
 }
 
 // ---------------- 路线 2：先护姑娘 → 不劝 → 先抽跳板 → 不走支线；第二章硬闯 + 打赢余沧海 ----------------
 {
   const label = '路线2';
-  const g = newGame({ maxhpBoost: 1420 }); // 气血上限够：一路硬闯的门槛，直到绣楼前堵门
+  const g = newGame({ maxhpBoost: 1580 }); // 气血上限够：一路硬闯的门槛，直到跳进林家地窖
   hook(g, label);
   ch1(g, label, { protect: true, spare: false, block: true, baier: false });
   if (!flag(g, 'xiaoao.c1_protect')) note(`${label}：护住卖酒姑娘的标记没有设上`);
@@ -793,6 +835,7 @@ function ch14(g, label, { how = 'qiao', stay = false } = {}) {
   ch12(g, label, { how: 'hp', talk: false, tell: false, beatMask: true });
   ch13(g, label, { how: 'hp', ask: false, beatDf: true, free: false });   // 第八章没开锁那条路
   ch14(g, label, { how: 'hp', stay: true });
+  ch15(g, label, { how: 'hp', read: false, ask: false, beatMask: true });
 }
 
 // ---------------- 路线 4：第二章组队门槛 ----------------
@@ -814,6 +857,7 @@ function ch14(g, label, { how = 'qiao', stay = false } = {}) {
   ch12(g, label, { how: 'party', talk: true, tell: true, beatMask: false });
   ch13(g, label, { how: 'party', ask: true, beatDf: false, free: true });
   ch14(g, label, { how: 'party', stay: false });
+  ch15(g, label, { how: 'party', read: true, ask: true, beatMask: false });
 }
 
 // ---------------- 路线 5：第二章门槛一条都不满足时，要有退路 ----------------
@@ -865,4 +909,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 笑傲江湖第一~十四章，五条路线全部走通（十三处门槛、放人与不放人两条线、留不留在教里、各处分支、NPC 队友、十场必败战的输赢、打输重来）');
+console.log('✓ 笑傲江湖第一~十五章，五条路线全部走通（十四处门槛、两条大分支、各处小分支、NPC 队友、十一场必败战的输赢、打输重来）');
