@@ -296,8 +296,8 @@ function ch4(g, label, { how = 'qiao', expose = true, grass = false, beatFei = f
   expectItem(g, 'xiaoao.item.juan', label);
   pick(g, '追出城去', label);
   // 山道
-  ex(g, '东', label);
-  ex(g, '西', label);
+  ex(g, '东', label);          // 刘府后墙窄巷 → 街口
+  ex(g, '西南', label);        // 街口 → 衡山南麓山道（西边是客栈，不能占）
   expectRoom(g, 'xiaoao.hy.mountain', label);
   pick(g, grass ? '退到茅草深处' : '先动手', label);
   pick(g, '动手', label);
@@ -317,7 +317,7 @@ function ch4(g, label, { how = 'qiao', expose = true, grass = false, beatFei = f
   expectSkill(g, 'xiaoao.hengshan', label);
   // 章节结束后还回得去
   ex(g, '南', label);
-  ex(g, '东', label);
+  ex(g, '东北', label);
   expectRoom(g, 'hengyang.center', label + '（章节之后能回城）');
 }
 
@@ -427,7 +427,7 @@ function ch7(g, label, { how = 'qin', askBox = true } = {}) {
   expectFlag(g, 'xiaoao.ch7', label);
   g.enter('linan.lake');
   if (how === 'party') g.party = { members: [{ id: 'friend' }] };
-  ex(g, '西', label);
+  ex(g, '西北', label);        // 断桥 → 孤山梅庄（正西是钱塘门，不能占）
   expectRoom(g, 'xiaoao.mz.gate', label);
   const opt = { qin: '拿出那块绢谱', shu: '以剑代笔', jiu: '拼酒', party: '两个人对弈' }[how];
   if (!has(g, opt)) note(`${label}：门槛选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
@@ -465,9 +465,9 @@ function ch8(g, label, { how = 'qiao', free = true, askRisk = true, beatRen = fa
   expectFlag(g, 'xiaoao.ch8', label);
   pick(g, '跟他回梅庄去', label);
   // 竹林
-  ex(g, '西', label);
-  ex(g, '西', label);
-  ex(g, '北', label);
+  ex(g, '西北', label);       // 断桥 → 梅庄门外
+  ex(g, '西', label);         // → 四友堂
+  ex(g, '北', label);         // → 后园竹林
   expectRoom(g, 'xiaoao.mz.bamboo', label);
   if (askRisk) pick(g, '底下那个人出来了会怎样', label);
   pick(g, '帮他撬开石板', label);
@@ -564,7 +564,7 @@ function ch10(g, label, { how = 'qiao', stone = true, beatChief = false } = {}) 
   expectFlag(g, 'xiaoao.ch10', label);
   pick(g, '往北走', label);
   // 廿八铺
-  ex(g, '北', label);
+  ex(g, '西北', label);       // 洛阳车马行 → 官道（正北是进城的路，不能占）
   expectRoom(g, 'xiaoao.hn.pu', label);
   pick(g, stone ? '先捡块石头' : '直接冲进去', label);
   pick(g, '并肩挡住', label);
