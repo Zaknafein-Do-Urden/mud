@@ -556,6 +556,45 @@ function ch9(g, label, { how = 'qiao', expose = true, beatDing = false } = {}) {
   if ((g.state.player.skillcap?.['xiaoao.fantian'] ?? 0) < 85) note(`${label}：翻天掌上限没有提到 85`);
 }
 
+// ---------------- 第十章 ----------------
+
+function ch10(g, label, { how = 'qiao', stone = true, beatChief = false } = {}) {
+  step(label + ' 第十章');
+  g.enter('luoyang.station');
+  expectFlag(g, 'xiaoao.ch10', label);
+  pick(g, '往北走', label);
+  // 廿八铺
+  ex(g, '北', label);
+  expectRoom(g, 'xiaoao.hn.pu', label);
+  pick(g, stone ? '先捡块石头' : '直接冲进去', label);
+  pick(g, '并肩挡住', label);
+  win(g, label + '/假魔教');
+  expectFlag(g, 'xiaoao.c10_fight', label);
+  pick(g, '问她伤得怎么样', label);
+  pick(g, '带她们走', label);
+  // 乱石渡口：门槛三选一
+  if (how === 'party') g.party = { members: [{ id: 'friend' }] };
+  ex(g, '北', label);
+  expectRoom(g, 'xiaoao.hn.ford', label);
+  const opt = { qiao: '踩着河心的石头', hp: '蹚水一趟一趟背', party: '一个在河心接应' }[how];
+  if (!has(g, opt)) note(`${label}：门槛选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  pick(g, '上坡进庙', label);
+  if (how === 'party') g.party = null;
+  expectFlag(g, 'xiaoao.c10_cross', label);
+  expectRoom(g, 'xiaoao.hn.temple', label + '（过场把人带过河）');
+  // 山神庙
+  pick(g, '开门出去', label);
+  pick(g, '挡在门口', label);
+  if (beatChief) win(g, label + '/黑衣首领（硬要打赢）'); else lose(g, label + '/黑衣首领');
+  if (beatChief && !flag(g, 'xiaoao.beat_chief')) note(`${label}：逼退黑衣首领没有记下标记`);
+  pick(g, '扶定静进去', label);
+  expectFlag(g, 'xiaoao.ch10_done', label);
+  expectItem(g, 'xiaoao.item.tiepai', label);
+  if ((g.state.player.skillcap?.['xiaoao.hengshan'] ?? 0) < 110) note(`${label}：衡山剑法上限没有提到 110`);
+  if ((g.state.player.skillcap?.['xiaoao.qixian'] ?? 0) < 70) note(`${label}：七弦指上限没有提到 70`);
+}
+
 // ---------------- 路线 1：问清来路 → 站到身边 → 劝住 → 正面扑上去；第二章走"巧"那条门槛 ----------------
 {
   const label = '路线1';
@@ -574,7 +613,7 @@ function ch9(g, label, { how = 'qiao', expose = true, beatDing = false } = {}) {
 // ---------------- 路线 2：先护姑娘 → 不劝 → 先抽跳板 → 不走支线；第二章硬闯 + 打赢余沧海 ----------------
 {
   const label = '路线2';
-  const g = newGame({ maxhpBoost: 620 }); // 气血上限够：一路硬闯的门槛，直到少室山的碎石坡
+  const g = newGame({ maxhpBoost: 740 }); // 气血上限够：一路硬闯的门槛，直到乱石渡口
   hook(g, label);
   ch1(g, label, { protect: true, spare: false, block: true, baier: false });
   if (!flag(g, 'xiaoao.c1_protect')) note(`${label}：护住卖酒姑娘的标记没有设上`);
@@ -652,4 +691,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 笑傲江湖第一~九章，五条路线全部走通（八处门槛、放人与不放人两种收场、各处分支、NPC 队友、六场必败战的输赢、打输重来）');
+console.log('✓ 笑傲江湖第一~十章，五条路线全部走通（九处门槛、放人与不放人两种收场、各处分支、NPC 队友、七场必败战的输赢、打输重来）');

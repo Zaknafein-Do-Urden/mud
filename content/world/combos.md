@@ -313,3 +313,22 @@ effects: 点穴
 ---
 $A的落英掌和$B的越女剑都是一个"巧"字，一个如花落，一个如燕回，$n左支右绌，被点中了穴道。
 
+
+# ---------------- 笑傲江湖（第十章：仪琳）----------------
+
+=== combo: combo.xa_yilin_hengshan
+name: 慈航剑影
+a: xiaoao.tianchang@10
+b: xiaoao.hengshan@20
+bonus: 1.6
+effects: 破绽
+---
+$A的掌把$n的来势推偏半尺，$B的剑从那半尺的空里穿进去——一个不伤人，一个替她伤。
+
+=== combo: combo.xa_yilin_fantian
+name: 掌后有掌
+a: xiaoao.tianchang@10
+b: xiaoao.fantian@20
+bonus: 1.5
+---
+$A软软地挡了一掌，$n的力道刚被卸开，$B沉沉的一掌已经压在他收力的那一瞬上。

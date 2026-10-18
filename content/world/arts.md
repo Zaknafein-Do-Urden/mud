@@ -625,3 +625,48 @@ absorb: 0.5
 吸来的内力**可以暂时超过你的内力上限**——一战之内取之不尽，打完了却带不走。
 他教你的时候反复说了三遍："你现在学的是怎么取。怎么化，我没有教你。取而不化，取得越多，死得越快。"
 这门功夫要一层一层地放：取的法子你已经会了，化的法子要等你自己走到那一步。
+
+# ---------------- 天长掌法（NPC 专用：仪琳）----------------
+# 恒山派的护持功夫，招式软，专给同伴挡刀、疗伤。定义在这里是因为合击要认得它（D-083）。
+
+=== skill: xiaoao.tianchang
+name: 天长掌法
+kind: 外功
+stance: 守
+---
+恒山派的掌法，起手像合十，收手像还礼。招式软，力道也软——它本来就不是用来伤人的。
+仪琳使这路掌法的时候嘴里一直在念经。她自己说：念着经，手就不会抖。
+
+=== move: xiaoao.tianchang.1
+skill: xiaoao.tianchang
+name: 云遮
+level: 0
+power: 15
+mp: 6
+omen: $N合掌当胸，手腕朝外翻了翻……
+---
+$N双掌向外一推，「$招」，掌风不重，却把$n的来势推偏了半尺。
+
+=== move: xiaoao.tianchang.2
+skill: xiaoao.tianchang
+name: 慈航
+level: 10
+power: 18
+mp: 10
+support: true
+effects: 疗伤
+omen: $N退开半步，两只手虚虚地托着，嘴里念念有词……
+---
+$N掌心贴上$n的背心，一股温吞吞的内息渡过去，$n身上的伤口不那么疼了。
+
+=== move: xiaoao.tianchang.3
+skill: xiaoao.tianchang
+name: 不嗔
+level: 30
+power: 22
+mp: 12
+support: true
+effects: 护体
+omen: $N把身子挡在前头，双掌平举，像是在给人撑一把伞……
+---
+$N挡在$n身前，「$招」，一层软软的掌力罩下来——她自己不躲，只管替人挡。
