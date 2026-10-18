@@ -90,6 +90,17 @@ omen: $N双掌缓缓收于胸前，神色凝重……
 ---
 $N双掌抱元，「$招」掌力浑然一体，滴水不漏。
 
+=== move: huashan.hunyuan.3
+skill: huashan.hunyuan
+name: 混元劈空
+level: 0
+power: 16
+mp: 8
+stance: 刚
+omen: $N右掌高高扬起，掌缘绷得笔直……
+---
+$N一声清啸，「$招」一掌劈落，掌风呼的一声直压$n$部位！
+
 === skill: huashan.poyu
 name: 破玉拳
 kind: 外功
@@ -119,6 +130,17 @@ effects: 内伤
 omen: $N沉腰坐马，拳头上青筋暴起……
 ---
 $N全身劲力凝于一拳，「$招」，拳到之处，宁为玉碎！
+
+=== move: huashan.poyu.3
+skill: huashan.poyu
+name: 石破天惊
+level: 50
+power: 47
+mp: 26
+effects: 破绽, 内伤
+omen: $N双拳收在肋下，一口气越提越足，地上尘土微微扬起……
+---
+$N双拳并出，「$招」，拳风未到，$n已觉胸口一窒！
 
 === skill: huashan.lingyun
 name: 凌云步

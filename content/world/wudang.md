@@ -49,6 +49,17 @@ omen: $N双臂缓缓画圈，如行云流水，不见首尾……
 ---
 $N双手如云般连绵转动，「$招」一出，任何来劲都被带得偏了方向。
 
+=== move: wudang.taiji.3
+skill: wudang.taiji
+name: 进步搬拦捶
+level: 0
+power: 16
+mp: 8
+stance: 刚
+omen: $N左掌虚拦，右拳收在腰际，脚下向前斜进了一步……
+---
+$N进步上前，左手一搬一拦，「$招」右拳顺势直捣$n$部位！
+
 === skill: wudang.mianzhang
 name: 绵掌
 kind: 外功
@@ -115,7 +126,7 @@ name: 震山掌
 kind: 外功
 stance: 刚
 sect: wudang
-rank: 2
+rank: 1
 ---
 武当少有的刚猛掌法，以纯阳内力催动，掌力浑厚。
 
@@ -128,6 +139,28 @@ mp: 16
 omen: $N深吸一口长气，双掌缓缓提起……
 ---
 $N双掌齐推，「$招」，掌力如山崩一般涌向$n！
+
+=== move: wudang.zhenshan.2
+skill: wudang.zhenshan
+name: 排山倒海
+level: 25
+power: 38
+mp: 20
+effects: 破绽
+omen: $N双掌一前一后，脚下一步一沉，青石板上留下浅浅的脚印……
+---
+$N双掌连环推出，「$招」，掌力一浪高过一浪，压得$n站不住脚！
+
+=== move: wudang.zhenshan.3
+skill: wudang.zhenshan
+name: 真武荡魔
+level: 50
+power: 46
+mp: 25
+effects: 内伤
+omen: $N须发微扬，周身隐隐有纯阳之气蒸腾……
+---
+$N纯阳内力尽数贯于掌上，「$招」，一掌拍向$n，声如闷雷！
 
 === skill: wudang.tiyun
 name: 梯云纵

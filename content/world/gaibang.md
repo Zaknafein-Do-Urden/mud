@@ -95,6 +95,18 @@ omen: $N双手交错，翻腕成爪……
 ---
 $N翻腕成爪，摆出「$招」的架势，专等对手手腕送上门来。
 
+=== move: gaibang.chansi.3
+skill: gaibang.chansi
+name: 顺手牵羊
+level: 0
+power: 15
+mp: 6
+stance: 巧
+effects: 缴械:20
+omen: $N嬉皮笑脸地凑近，一只手在身前晃来晃去……
+---
+$N笑嘻嘻地欺近，「$招」一勾一带，手指已搭上$n的手腕！
+
 === skill: gaibang.xiaoyao
 name: 逍遥游
 kind: 外功

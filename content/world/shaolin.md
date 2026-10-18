@@ -61,6 +61,18 @@ omen: $N提膝抬拳，周身筋骨格格作响……
 ---
 $N右拳高举，「$招」自上而下砸落，地上的青砖都被震得裂开！
 
+=== move: shaolin.luohan.4
+skill: shaolin.luohan
+name: 罗汉拂袖
+level: 0
+power: 15
+mp: 6
+stance: 巧
+effects: 破绽
+omen: $N袍袖一抖，脚下悄悄横跨半步……
+---
+$N侧身让开正面，「$招」袍袖拂向$n眼前，拳头却从袖底钻了出来！
+
 === skill: shaolin.jinzhong
 name: 金钟罩
 kind: 外功
@@ -120,6 +132,17 @@ effects: 点穴, 破绽
 omen: $N五指如兰花般舒展开来……
 ---
 $N五指连拂，「$招」指影重重，$n周身大穴都在指风笼罩之下！
+
+=== move: shaolin.nianhua.3
+skill: shaolin.nianhua
+name: 迦叶一笑
+level: 50
+power: 34
+mp: 18
+effects: 点穴, 缴械:30
+omen: $N垂目合掌，指尖却在袖中轻轻一弹……
+---
+$N合掌的双手忽然分开，「$招」，一缕指风轻飘飘拂过$n腕上三处穴道！
 
 === skill: shaolin.yiwei
 name: 一苇渡江

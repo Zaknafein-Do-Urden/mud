@@ -81,6 +81,17 @@ omen: $N双手拢在袖中，身子一动不动……
 ---
 $N双手拢袖，摆出「$招」的架势，专等对手出手。
 
+=== move: tangmen.qianji.3
+skill: tangmen.qianji
+name: 千斤闸
+level: 0
+power: 16
+mp: 8
+stance: 刚
+omen: $N双臂缓缓举过头顶，肘弯里咔的一响，如机括上弦……
+---
+$N双臂如闸门般猛然落下，「$招」，一股沉劲直砸$n$部位！
+
 === skill: tangmen.kaibei
 name: 开碑手
 kind: 外功
@@ -110,6 +121,17 @@ effects: 内伤
 omen: $N五指箕张，指节发出咯咯的响声……
 ---
 $N一掌按向$n，「$招」，掌力透体而入，直震脏腑！
+
+=== move: tangmen.kaibei.3
+skill: tangmen.kaibei
+name: 断碣分碑
+level: 50
+power: 46
+mp: 25
+effects: 内伤, 破绽
+omen: $N掌心翻转向外，手掌渐渐泛起青灰之色……
+---
+$N一掌直劈，「$招」，掌力如刀，似要将$n连人带骨劈作两半！
 
 === skill: tangmen.yanzi
 name: 燕子三抄水
