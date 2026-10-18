@@ -4,7 +4,7 @@
 
 === storyline: xiaoao
 name: 笑傲江湖
-xiuwei: 120-630
+xiuwei: 120-520
 milestones: flag:xiaoao.c4.hall_won
 # 尚未开始时，在“江湖 → 主线”里给出的线索
 hint: 临安车马行的角落里堆着一摞插着小旗的茶包，旁边有个镖行的伙计在招人手，说要往南边走一趟。
