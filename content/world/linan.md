@@ -3,7 +3,7 @@
 # 共享世界只能写 world.* 标记。
 
 === meta: game
-title: 江湖夜雨
+title: 英雄传
 start: linan.gate
 # 还没去过任何旅店时，战败后回到这里
 inn: linan.inn

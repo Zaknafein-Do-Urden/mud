@@ -385,8 +385,19 @@ function applyIdentity(state, id) {
 
 // ---- 启动一局 ----
 
+/** 游戏标题：报上姓名后是“姓名+英雄传”，之前只是“英雄传” */
+function gameTitle() {
+  const base = db?.meta.game?.props.title || '英雄传';
+  return (game?.state.player.name ?? '') + base;
+}
+function showTitle() {
+  document.title = `${gameTitle()} v${VERSION}`;
+  $('title').textContent = gameTitle();
+}
+
 function start(state, isNew) {
   game = new Game(db, state);
+  showTitle();
   output.replaceChildren();
   queue = [];
   const meta = db.meta.game;
@@ -533,7 +544,7 @@ $('btn-download').addEventListener('click', () => {
   const pad = (x) => String(x).padStart(2, '0');
   const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
   a.href = URL.createObjectURL(blob);
-  a.download = `江湖夜雨-存档-${stamp}.txt`;
+  a.download = `${gameTitle()}-存档-${stamp}.txt`;
   a.click();
   URL.revokeObjectURL(a.href);
 });
@@ -628,7 +639,7 @@ const loading = {
 };
 $('ld-ver').textContent = `v${VERSION}`;
 $('version').textContent = `v${VERSION}`;
-document.title = `江湖夜雨 v${VERSION}`;
+showTitle();
 
 (async () => {
   loading.set(3, '正在读取存档……');
@@ -645,7 +656,6 @@ document.title = `江湖夜雨 v${VERSION}`;
   loading.set(97, '正在布置场景……');
   contentHash = hashText(JSON.stringify(db.index));
   const meta = db.meta.game;
-  if (meta?.props.title) { document.title = `${meta.props.title} v${VERSION}`; $('title').textContent = meta.props.title; }
   const valid = saved && db.room[saved.player.room];
   const state = valid ? saved : newState(meta.props.start);
   loading.set(100);
