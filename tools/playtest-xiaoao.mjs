@@ -564,7 +564,7 @@ function ch10(g, label, { how = 'qiao', stone = true, beatChief = false } = {}) 
   expectFlag(g, 'xiaoao.ch10', label);
   pick(g, '往北走', label);
   // 廿八铺
-  ex(g, '西北', label);       // 洛阳车马行 → 官道（正北是进城的路，不能占）
+  ex(g, '西南', label);       // 洛阳车马行 → 官道（北是进城、西北是天龙的少室山路）
   expectRoom(g, 'xiaoao.hn.pu', label);
   pick(g, stone ? '先捡块石头' : '直接冲进去', label);
   pick(g, '并肩挡住', label);
@@ -595,10 +595,49 @@ function ch10(g, label, { how = 'qiao', stone = true, beatChief = false } = {}) 
   if ((g.state.player.skillcap?.['xiaoao.qixian'] ?? 0) < 70) note(`${label}：七弦指上限没有提到 70`);
 }
 
+// ---------------- 第十一章 ----------------
+
+function ch11(g, label, { how = 'qiao', wait = false, beatZuo = false } = {}) {
+  step(label + ' 第十一章');
+  g.enter('luoyang.station');
+  expectFlag(g, 'xiaoao.ch11', label);
+  pick(g, '上嵩山', label);
+  // 朝天梯：门槛三选一
+  if (how === 'party') g.party = { members: [{ id: 'friend' }] };
+  ex(g, '东南', label);        // 洛阳车马行 → 少林山门
+  ex(g, '西南', label);        // 山门 → 太室山朝天梯
+  expectRoom(g, 'xiaoao.ss.ladder', label);
+  const opt = { qiao: '崖壁的手扣', hp: '把那位老者背上去', party: '一上一下把人递上去' }[how];
+  if (!has(g, opt)) note(`${label}：门槛选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  pick(g, '上台', label);
+  if (how === 'party') g.party = null;
+  expectFlag(g, 'xiaoao.c11_up', label);
+  expectRoom(g, 'xiaoao.ss.tai', label + '（过场把人带上封禅台）');
+  // 台上
+  if (wait) pick(g, '等一等', label);
+  pick(g, '摊出来', label);
+  expectFlag(g, 'xiaoao.c11_show', label);
+  pick(g, '守住台心', label);
+  win(g, label + '/嵩山队正');
+  expectFlag(g, 'xiaoao.c11_fight', label);
+  pick(g, '退到台边', label);
+  pick(g, '盯着看完', label);
+  expectFlag(g, 'xiaoao.c11_blind', label);
+  pick(g, '看着左冷禅', label);
+  pick(g, '挡住', label);
+  if (beatZuo) win(g, label + '/左冷禅（硬要挡下）'); else lose(g, label + '/左冷禅');
+  if (beatZuo && !flag(g, 'xiaoao.beat_zuo')) note(`${label}：挡下左冷禅没有记下标记`);
+  pick(g, '站起来', label);
+  expectFlag(g, 'xiaoao.ch11_done', label);
+  if ((g.state.player.skillcap?.['xiaoao.pixie'] ?? 0) < 40) note(`${label}：辟邪剑法上限没有提到 40`);
+  if ((g.state.player.skillcap?.['xiaoao.fantian'] ?? 0) < 100) note(`${label}：翻天掌上限没有提到 100`);
+}
+
 // ---------------- 路线 1：问清来路 → 站到身边 → 劝住 → 正面扑上去；第二章走"巧"那条门槛 ----------------
 {
   const label = '路线1';
-  const g = newGame({ skills: { 'base.zhang': 80 } }); // 小巧掌 80 级：二~八章的巧类门槛都够
+  const g = newGame({ skills: { 'base.zhang': 110 } }); // 小巧掌 110 级：二~十一章的巧类门槛都够
   hook(g, label);
   ch1(g, label, { ask: true, spare: true, block: false, baier: true });
   ch2(g, label, { how: 'qiao', ask: true, beatYu: false, side: false });
@@ -608,12 +647,15 @@ function ch10(g, label, { how = 'qiao', stone = true, beatChief = false } = {}) 
   ch6(g, label, { how: 'qiao', ambush: true, askWall: true, beatFeng: false });
   ch7(g, label, { how: 'qin', askBox: true });   // 绢谱叩门
   ch8(g, label, { how: 'qiao', free: true, askRisk: true, beatRen: false });  // 开锁放人
+  ch9(g, label, { how: 'qiao', expose: true, beatDing: false });
+  ch10(g, label, { how: 'qiao', stone: true, beatChief: false });
+  ch11(g, label, { how: 'qiao', wait: false, beatZuo: false });
 }
 
 // ---------------- 路线 2：先护姑娘 → 不劝 → 先抽跳板 → 不走支线；第二章硬闯 + 打赢余沧海 ----------------
 {
   const label = '路线2';
-  const g = newGame({ maxhpBoost: 740 }); // 气血上限够：一路硬闯的门槛，直到乱石渡口
+  const g = newGame({ maxhpBoost: 980 }); // 气血上限够：一路硬闯的门槛，直到朝天梯背人
   hook(g, label);
   ch1(g, label, { protect: true, spare: false, block: true, baier: false });
   if (!flag(g, 'xiaoao.c1_protect')) note(`${label}：护住卖酒姑娘的标记没有设上`);
@@ -625,6 +667,9 @@ function ch10(g, label, { how = 'qiao', stone = true, beatChief = false } = {}) 
   ch6(g, label, { how: 'hp', ambush: false, askWall: false, beatFeng: true });
   ch7(g, label, { how: 'jiu', askBox: false });  // 拼酒进门
   ch8(g, label, { how: 'hp', free: false, askRisk: false, beatRen: true });   // 不开锁
+  ch9(g, label, { how: 'hp', expose: false, beatDing: true });
+  ch10(g, label, { how: 'hp', stone: false, beatChief: true });
+  ch11(g, label, { how: 'hp', wait: true, beatZuo: true });
 }
 
 // ---------------- 路线 4：第二章组队门槛 ----------------
@@ -640,6 +685,9 @@ function ch10(g, label, { how = 'qiao', stone = true, beatChief = false } = {}) 
   ch6(g, label, { how: 'party', ambush: true, askWall: false, beatFeng: false });
   ch7(g, label, { how: 'party', askBox: true }); // 两人对弈进门
   ch8(g, label, { how: 'party', free: true, askRisk: true, beatRen: false });
+  ch9(g, label, { how: 'party', expose: true, beatDing: false });
+  ch10(g, label, { how: 'party', stone: true, beatChief: false });
+  ch11(g, label, { how: 'party', wait: true, beatZuo: false });
 }
 
 // ---------------- 路线 5：第二章门槛一条都不满足时，要有退路 ----------------
@@ -691,4 +739,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 笑傲江湖第一~十章，五条路线全部走通（九处门槛、放人与不放人两种收场、各处分支、NPC 队友、七场必败战的输赢、打输重来）');
+console.log('✓ 笑傲江湖第一~十一章，五条路线全部走通（十处门槛、放人与不放人两种收场、各处分支、NPC 队友、八场必败战的输赢、打输重来）');
