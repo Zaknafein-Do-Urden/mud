@@ -679,10 +679,50 @@ function ch12(g, label, { how = 'qiao', talk = true, tell = true, beatMask = fal
   if ((g.state.player.skillcap?.['xiaoao.qixian'] ?? 0) < 90) note(`${label}：七弦指上限没有提到 90`);
 }
 
+// ---------------- 第十三章 ----------------
+
+function ch13(g, label, { how = 'qiao', ask = true, beatDf = false, free = true } = {}) {
+  step(label + ' 第十三章');
+  g.enter('xiaoao.hh.road');
+  expectFlag(g, 'xiaoao.ch13', label);
+  pick(g, '跟他走', label);
+  // 百丈悬索：门槛三选一
+  if (how === 'party') g.party = { members: [{ id: 'friend' }] };
+  ex(g, '北', label);
+  expectRoom(g, 'xiaoao.hm.road', label);
+  ex(g, '上', label);
+  expectRoom(g, 'xiaoao.hm.rope', label);
+  const opt = { qiao: '攀崖壁的铁环', hp: '一口气吊上去', party: '一个稳索一个上' }[how];
+  if (!has(g, opt)) note(`${label}：门槛选项「${opt}」没出现（现有：${g.dialog?.map((c) => c.text).join(' / ')}）`);
+  pick(g, opt, label);
+  pick(g, '上崖', label);
+  if (how === 'party') g.party = null;
+  expectFlag(g, 'xiaoao.c13_up', label);
+  expectRoom(g, 'xiaoao.hm.hall', label + '（过场把人带上崖顶）');
+  // 广场
+  pick(g, ask ? '哪一位' : '脚挪开', label);
+  pick(g, '接住', label);
+  win(g, label + '/杨莲亭的人');
+  expectFlag(g, 'xiaoao.c13_fight', label);
+  pick(g, '上楼', label);
+  expectRoom(g, 'xiaoao.hm.lou', label + '（过场把人带进绣楼）');
+  // 绣楼
+  pick(g, free ? '承认' : '不答话', label);
+  pick(g, '挡', label);
+  if (beatDf) win(g, label + '/东方不败（硬要接下三针）'); else lose(g, label + '/东方不败');
+  if (beatDf && !flag(g, 'xiaoao.beat_dfbb')) note(`${label}：接下三针没有记下标记`);
+  pick(g, '下楼', label);
+  pick(g, '打开看看', label);
+  expectFlag(g, 'xiaoao.ch13_done', label);
+  if (free) {
+    if ((g.state.player.skillcap?.['xiaoao.xixing'] ?? 0) < 60) note(`${label}：开过锁的那条路，吸星大法上限没有提到 60`);
+  } else if ((g.state.player.skillcap?.['xiaoao.yangxin'] ?? 0) < 120) note(`${label}：没开锁的那条路，养心诀上限没有提到 120`);
+}
+
 // ---------------- 路线 1：问清来路 → 站到身边 → 劝住 → 正面扑上去；第二章走"巧"那条门槛 ----------------
 {
   const label = '路线1';
-  const g = newGame({ skills: { 'base.zhang': 120 } }); // 小巧掌 120 级：二~十二章的巧类门槛都够
+  const g = newGame({ skills: { 'base.zhang': 130 } }); // 小巧掌 130 级：二~十三章的巧类门槛都够
   hook(g, label);
   ch1(g, label, { ask: true, spare: true, block: false, baier: true });
   ch2(g, label, { how: 'qiao', ask: true, beatYu: false, side: false });
@@ -696,12 +736,13 @@ function ch12(g, label, { how = 'qiao', talk = true, tell = true, beatMask = fal
   ch10(g, label, { how: 'qiao', stone: true, beatChief: false });
   ch11(g, label, { how: 'qiao', wait: false, beatZuo: false });
   ch12(g, label, { how: 'qiao', talk: true, tell: true, beatMask: false });
+  ch13(g, label, { how: 'qiao', ask: true, beatDf: false, free: true });
 }
 
 // ---------------- 路线 2：先护姑娘 → 不劝 → 先抽跳板 → 不走支线；第二章硬闯 + 打赢余沧海 ----------------
 {
   const label = '路线2';
-  const g = newGame({ maxhpBoost: 1100 }); // 气血上限够：一路硬闯的门槛，直到悬空栈道
+  const g = newGame({ maxhpBoost: 1260 }); // 气血上限够：一路硬闯的门槛，直到百丈悬索
   hook(g, label);
   ch1(g, label, { protect: true, spare: false, block: true, baier: false });
   if (!flag(g, 'xiaoao.c1_protect')) note(`${label}：护住卖酒姑娘的标记没有设上`);
@@ -717,6 +758,7 @@ function ch12(g, label, { how = 'qiao', talk = true, tell = true, beatMask = fal
   ch10(g, label, { how: 'hp', stone: false, beatChief: true });
   ch11(g, label, { how: 'hp', wait: true, beatZuo: true });
   ch12(g, label, { how: 'hp', talk: false, tell: false, beatMask: true });
+  ch13(g, label, { how: 'hp', ask: false, beatDf: true, free: false });   // 第八章没开锁那条路
 }
 
 // ---------------- 路线 4：第二章组队门槛 ----------------
@@ -736,6 +778,7 @@ function ch12(g, label, { how = 'qiao', talk = true, tell = true, beatMask = fal
   ch10(g, label, { how: 'party', stone: true, beatChief: false });
   ch11(g, label, { how: 'party', wait: true, beatZuo: false });
   ch12(g, label, { how: 'party', talk: true, tell: true, beatMask: false });
+  ch13(g, label, { how: 'party', ask: true, beatDf: false, free: true });
 }
 
 // ---------------- 路线 5：第二章门槛一条都不满足时，要有退路 ----------------
@@ -787,4 +830,4 @@ if (problems.length) {
   console.log(`\n${problems.length} 处问题`);
   process.exit(1);
 }
-console.log('✓ 笑傲江湖第一~十二章，五条路线全部走通（十一处门槛、放人与不放人两种收场、各处分支、NPC 队友、九场必败战的输赢、打输重来）');
+console.log('✓ 笑傲江湖第一~十三章，五条路线全部走通（十二处门槛、放人与不放人两条线、各处分支、NPC 队友、十场必败战的输赢、打输重来）');
