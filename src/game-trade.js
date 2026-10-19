@@ -1,19 +1,14 @@
 // 引擎的经济部分：金钱、市场、钱庄、马车。以方法的形式并入 Game（见 game.js 末尾）。
 
+import { CONFIG } from './config.js';
 import { escortFee, ESCORT_RATE, goodsPrice, goodsLocal, cargoUnits, cargoValue, robberyChance, robbers, martialLevel, routesOf, cityOfRoom, CARGO_CAP, SELL_RATE } from './economy.js';
 import { createScaledBattle, beginRound, enemiesOf, adaptEnemyHp } from './combat.js';
 
 const ALL = ['全部', 'all'];
 
 // 马车奇遇（D-114）：没遇上劫道时碰上小故事的概率；选对了的奖励
-const QIYU_RATE = 0.2;
-const QIYU_RECENT = 5; // 全部看过一遍后重新洗牌，最近看过的这几个排到最后
-const QIYU_MONEY = [50, 150];
-const QIYU_POT = [20, 60];
-const QIYU_ATTR = 0.08; // 根骨、身法、悟性随机一项 +1
-const QIYU_BOOK = 0.03; // 送秘籍
-const QIYU_BOOK_STEP = 20; // 已经会了，再读一本提高的上限
-const QIYU_BOOK_MAX = 100;
+const { rate: QIYU_RATE, recent: QIYU_RECENT, money: QIYU_MONEY, potential: QIYU_POT, attr: QIYU_ATTR,
+  book: QIYU_BOOK, bookStep: QIYU_BOOK_STEP, bookMax: QIYU_BOOK_MAX } = CONFIG.qiyu; // 数值在 config.js
 
 export const trade = {
   addMoney(n) {
@@ -307,10 +302,10 @@ export const trade = {
       p.potential += pot;
       this.emit('combat', `——你打退了劫匪！获得潜能 ${pot} 点。——`);
     } else {
-      const lost = Math.floor((p.money ?? 0) / 2);
+      const lost = Math.floor((p.money ?? 0) * CONFIG.outcome.robberyMoneyLoss);
       p.money -= lost;
       p.cargo = {};
-      p.hp = Math.max(1, Math.round(this.hpMax() * 0.3));
+      p.hp = Math.max(1, Math.round(this.hpMax() * CONFIG.outcome.loseHpRate));
       this.emit('combat', '——你寡不敌众，被打倒在地。——');
       this.emit('story', `劫匪抢走了车上所有的货物，还从你身上搜走了 ${lost} 文钱。车把式哆哆嗦嗦地把你扶上车，继续赶路。`);
     }

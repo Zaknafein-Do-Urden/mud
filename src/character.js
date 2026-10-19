@@ -1,9 +1,10 @@
 // 角色数值：派生属性、武功上限、装备栏。纯函数，供引擎和战斗使用。见 COMBAT.md §2、SECT.md §4。
 
+import { CONFIG } from './config.js';
 
 export const STANCES = ['刚', '巧', '守'];
-export const MAX_OUTER = 4;
-export const BASE_CAP = 50; // 基础武功上限
+export const MAX_OUTER = CONFIG.character.maxOuter;
+export const BASE_CAP = CONFIG.character.baseCap; // 基础武功上限
 
 const num = (v, d = 0) => (v === undefined || v === '' ? d : Number(v));
 

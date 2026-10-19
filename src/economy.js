@@ -1,9 +1,10 @@
 // 经济：货物价格、车资、劫道概率。纯函数。见 docs/ECONOMY.md。
 
+import { CONFIG } from './config.js';
 import { parseNums } from './character.js';
 
-export const CARGO_CAP = 100; // 马车最多装 100 件货（D-077）
-export const SELL_RATE = 0.9; // 卖价是行情价的九成（买卖差价）
+export const CARGO_CAP = CONFIG.economy.cargoCap; // 马车最多装 100 件货（D-077）
+export const SELL_RATE = CONFIG.economy.sellRate; // 卖价是行情价的九成（买卖差价）
 
 /** 稳定的伪随机 0~1：同一城市、货物、日子总是同一个数（价格每天波动，刷新页面不变） */
 function hash01(...parts) {
@@ -18,10 +19,10 @@ function hash01(...parts) {
 // 价格的大方针（D-077）：本地特产便宜（城市 goods 里列的，倍率 0.6~0.7），本地没有的货贵。
 // 跑商就是把特产运到不产它的地方卖，再收当地的特产运回来。离产地越远越贵，赚得越多，但路上被劫的机会也越大。
 // 每天的波动只有 ±10%，保证"特产 → 最近的外地"最坏也有三成左右的赚头。
-export const WAVE = 0.1;
-export const FOREIGN_BASE = 1.15; // 外地货：基础倍率
-export const FOREIGN_PER_DAY = 0.06; // 离最近产地每多一天路程 +0.06
-export const FOREIGN_CAP = 1.8;
+export const WAVE = CONFIG.economy.wave;
+export const FOREIGN_BASE = CONFIG.economy.foreignBase; // 外地货：基础倍率
+export const FOREIGN_PER_DAY = CONFIG.economy.foreignPerDay; // 离最近产地每多一天路程 +0.06
+export const FOREIGN_CAP = CONFIG.economy.foreignCap;
 
 /** 这座城市是否出产这种货（本地特产才能买） */
 export function goodsLocal(db, cityId, goodsId) {
@@ -76,23 +77,25 @@ export function fare() {
 
 /** 被劫的概率：路途越远、货越值钱，越容易被盯上。马车扩到 100 件后货值尺度从 2000 调到 5000（D-077） */
 export function robberyChance(days, value) {
-  return Math.min(0.65, 0.03 * days + 0.5 * (value / (value + 5000)));
+  const R = CONFIG.robbery;
+  return Math.min(R.maxChance, R.perDay * days + R.valueWeight * (value / (value + R.valueScale)));
 }
 
 /** 雇镖师护送的价钱（D-104）：50 文起，加货值的 8% */
 export function escortFee(value) {
-  return Math.round(50 + value * 0.08);
+  return Math.round(CONFIG.robbery.escortBaseFee + value * CONFIG.robbery.escortFeeRate);
 }
 /** 有镖师护送时，被劫的概率乘这个系数 */
-export const ESCORT_RATE = 0.4;
+export const ESCORT_RATE = CONFIG.robbery.escortRate;
 
 /**
  * 劫匪的人数与难度系数：取决于货物价值加身上现钱（D-040）。
  * 强弱本身按我方战斗力自适应（D-115），货越值钱，盯上你的人越多、越狠（hard 1.0 ~ 1.2）。
  */
 export function robbers(total) {
-  const count = 1 + (total >= 3000 ? 1 : 0) + (total >= 15000 ? 1 : 0);
-  const hard = 1 + 0.2 * Math.min(1, Math.sqrt(total / 50000));
+  const R = CONFIG.robbery;
+  const count = 1 + R.countAt.filter((x) => total >= x).length;
+  const hard = 1 + R.hardExtra * Math.min(1, Math.sqrt(total / R.hardScale));
   return { count, hard };
 }
 

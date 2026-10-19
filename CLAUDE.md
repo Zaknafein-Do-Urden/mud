@@ -36,12 +36,14 @@ python -m http.server 8000         # 本地预览：http://localhost:8000/?slot=
 
 ## 目录
 
-- `src/`：引擎（`game.js` 及 `game-*.js` 混入）、战斗 `combat.js`、威力公式 `power.js`、存档 `save.js`、界面 `ui/`、联机 `net/`。
+- `src/`：可调参数 `config.js`、引擎（`game.js` 及 `game-*.js` 混入）、战斗 `combat.js`、威力公式 `power.js`、存档 `save.js`、界面 `ui/`、联机 `net/`。
 - `content/`：内容。`world/` 共享地图和门派；`<主线>/` 各条剧情；`index.json` 登记文件和剧情顺序。
 - `docs/`：设计文档。DESIGN（总体）、STORY（剧情结构）、COMBAT、SECT、POWER、MULTIPLAYER、ECONOMY、UX、TODO-CONTENT、DEVLOG。
 - `tools/`：校验、平衡、报表脚本。
 
 ## 改代码的约定
+
+- **可调参数统一放 [`src/config.js`](src/config.js)**（D-116）：难度浮动的权重（主角 1、NPC 队友 1、联机客人 0.5）、战斗倍率、战败惩罚、经济、劫道、奇遇、联机人数等。开发新功能时，凡是以后可能想调的数字，加到 `CONFIG` 对应分组（没有合适的就新开一组）并写注释，代码里引用 `CONFIG.xxx`，不要写死在逻辑里。
 
 - 引擎是纯逻辑，界面只发命令（界面和命令行等价，D-045）。
 - 改了存档结构就升 `SAVE_VERSION` 并写迁移（`src/save.js`）。

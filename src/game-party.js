@@ -4,10 +4,11 @@
 // 输出条目可以带 to 字段（接收者 pid）：没有 to 的发给所有人，有 to 的只给那个人。
 // 'host' 是房主自己；客人的 pid 是网络层给的对端 id。
 
+import { CONFIG } from './config.js';
 import { playerUnitOf, playersOf, intentsReady, moveInfo } from './combat.js';
 import { expPerUse, gainExp, maxHp } from './character.js';
 
-export const MAX_GUESTS = 3;
+export const MAX_GUESTS = CONFIG.party.maxGuests;
 
 /** 客人在本地自己处理的命令（查看自己、调整武功天赋等），不发给房主 */
 export const GUEST_LOCAL = new Set(['状态', 'hp', 'score', '武功', 'skills', '天赋', 'talent', '装备', 'equip', '卸下', 'unequip',
@@ -168,7 +169,7 @@ export const party = {
       const pot = result === 'win' ? potential : 0;
       m.snap.potential = (m.snap.potential ?? 0) + pot;
       const mhp = maxHp(this.db, m.snap);
-      m.snap.hp = result === 'win' ? Math.max(1, u.hp) : mhp;
+      m.snap.hp = result === 'win' ? Math.max(CONFIG.outcome.reviveHp, u.hp) : mhp;
       if (texts.length) this.emit('sys', '实战经验：' + texts.join('，'), { to: m.pid });
       if (pot) this.emit('sys', `获得潜能 ${pot} 点。`, { to: m.pid });
       this.outbox.push({ to: m.pid, msg: { t: 'settle', seq: ++this.settleSeq, exp: amounts, potential: pot, hp: m.snap.hp } });

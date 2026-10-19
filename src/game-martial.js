@@ -1,5 +1,6 @@
 // 引擎的武学部分：战斗、门派、修炼、旅店。以方法的形式并入 Game（见 game.js 末尾）。
 
+import { CONFIG } from './config.js';
 import { maxHp, maxMp, skillCap, trainCost, sectRanks, bestInnerLv, MAX_OUTER, movesOf, expNeed, expPerUse, gainExp, isWeaponItem, weaponOf, ARMED } from './character.js';
 import { TALENT_TREE, talentPointsSpent, canAddTalent, findTalent, tal } from './talents.js';
 import { adaptEnemyHp, isAdaptive, teamOf, xiuwei } from './combat.js';
@@ -390,7 +391,7 @@ export const martial = {
     resolveRound(this.db, b, emit);
     if (!b.over && !playersOf(b).some((u) => u.hp > 0)) {
       emit('combat', '——你已倒地，队友还在苦战……——');
-      for (let n = 0; !b.over && n < 60; n++) {
+      for (let n = 0; !b.over && n < CONFIG.combat.allyAutoRounds; n++) {
         beginRound(this.db, b, emit);
         resolveRound(this.db, b, emit);
       }
@@ -406,7 +407,7 @@ export const martial = {
     const p = this.state.player;
     const me = playerUnitOf(b);
     // 打赢了，战斗中倒下的人也回到 1 点气血，接着走剧情（D-115）
-    p.hp = Math.max(result === 'win' ? 1 : 0, me.hp);
+    p.hp = Math.max(result === 'win' ? CONFIG.outcome.reviveHp : 0, me.hp);
     // 战斗中换过兵器就保留新的；被打飞的兵器战后拾回（D-057）
     if (me.wid !== (p.equip?.weapon ?? null)) { p.equip ??= {}; p.equip.weapon = me.wid; }
     if (me.dropped) this.emit('sys', `战后你拾回了被打飞的${this.db.item[me.dropped]?.props.name ?? '兵器'}。`, { to: 'host' });
@@ -433,7 +434,7 @@ export const martial = {
     } else if (result === 'lose') {
       this.emit('combat', '——你眼前一黑，什么也不知道了。——');
       if (block?.props.lose) {
-        p.hp = Math.max(1, Math.round(this.hpMax() * 0.3));
+        p.hp = Math.max(1, Math.round(this.hpMax() * CONFIG.outcome.loseHpRate));
         this.showDialog(block.props.lose);
       } else {
         // 战败无惩罚：被人救起，回到最近的旅店（D-016）
@@ -464,7 +465,7 @@ export const martial = {
       this.emit('combat', '——考核通过！——');
       this.emit('story', `师父点了点头：“好，从今日起，你便是本门${ranks[b.exam.rank]?.name}了。”（天赋点 +1）`);
     } else {
-      p.hp = Math.max(1, p.hp, Math.round(this.hpMax() * 0.3));
+      p.hp = Math.max(1, p.hp, Math.round(this.hpMax() * CONFIG.outcome.loseHpRate));
       this.emit('combat', result === 'flee' ? '——你认输了。——' : '——考核未过。——');
       this.emit('story', '师父摆摆手：“火候还差些，回去再练练。准备好了随时再来。”');
     }

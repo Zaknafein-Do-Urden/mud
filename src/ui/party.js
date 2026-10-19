@@ -1,13 +1,14 @@
 // 联机控制（D-048）：开设 / 加入队伍、消息收发、按接收者分发输出、出招倒计时、客人一侧的结算。
 // 引擎只认命令；这里负责把命令和输出在房主与客人之间搬运。协议见 docs/MULTIPLAYER.md §8。
 
+import { CONFIG } from '../config.js';
 import { openTransport, makeRoomCode, LOBBY_ROOM } from '../net/transport.js';
 import { GUEST_LOCAL, HOST_PRIVATE, MAX_GUESTS } from '../game-party.js';
 import { gainExp } from '../character.js';
 import { regionOf } from './map.js';
 
 export const PROTOCOL = 1;
-const ROUND_SECONDS = 20; // 组队时每回合出招时限
+const ROUND_SECONDS = CONFIG.party.roundSeconds; // 组队时每回合出招时限（config.js）
 const COMBAT_CLS = new Set(['round', 'omen', 'hint', 'act', 'tag', 'hit', 'fx', 'combat', 'team']);
 
 /** 把战斗文字里自己的名字换成"你"（D-048：组队战斗用真名，各人看到的视角不同） */

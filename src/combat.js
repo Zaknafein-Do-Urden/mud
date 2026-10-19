@@ -2,15 +2,17 @@
 // 规则见 COMBAT.md：同时出招、刚巧守相克、内力、预兆与虚招。
 // 随机数由战斗自带的种子产生，便于联机时由主机统一结算（D-008）。
 
+import { CONFIG } from './config.js';
 import { STANCES, parseNums, innerOf, maxHp, maxMp, speed, innerBonus, movesOf, ARMED, weaponOf, isWeaponItem } from './character.js';
 import { parseList } from './content.js';
 import { tal } from './talents.js';
 import { ATTACK, OMEN as WEAPON_OMEN, WEAPON_NAME } from './weapons.js';
 
-// 攻方势 × 受方姿态 → 伤害倍率（COMBAT.md §4.2，D-017：先用 1.5 / 0.5）
+// 攻方势 × 受方姿态 → 伤害倍率（COMBAT.md §4.2，D-017）；数值在 config.js
+const { counterMult: CM, counteredMult: CD, openMult: OM } = CONFIG.combat;
 const MULT = {
-  刚: { 刚: 1.0, 巧: 0.5, 守: 1.5, 无: 1.2 },
-  巧: { 刚: 1.5, 巧: 1.0, 守: 0.5, 无: 1.2 },
+  刚: { 刚: 1.0, 巧: CD, 守: CM, 无: OM },
+  巧: { 刚: CM, 巧: 1.0, 守: CD, 无: OM },
 };
 const OUTCOME = {
   '刚守': '$n的守势被这一招硬生生震开！（破防）',
@@ -68,7 +70,7 @@ const OMEN_REST = [
 ];
 const STANCE_HINT = { 刚: '刚猛重招', 巧: '轻巧快招', 守: '守势' };
 const PARTS = ['胸口', '小腹', '肩头', '左臂', '右臂', '后心', '面门', '腰间', '膝弯'];
-const REST_RATE = 0.1;
+const REST_RATE = CONFIG.combat.restRate;
 
 // ---- 随机数（mulberry32，状态存在 battle.seed 中）----
 function rand(b) {
@@ -200,10 +202,10 @@ function playerUnits(db, players) {
   return list.map((m, i) => playerUnit(db, m.player, 'p' + i, m.pid, named));
 }
 
-/** 组队时敌人气血按人数加成：× (1 + 0.7 × (人数 - 1))（COMBAT.md §9.4） */
+/** 不自适应的战斗，组队时敌人气血按人数加成：× (1 + 0.7 × (人数 - 1))（COMBAT.md §9.4，系数在 config.js） */
 function scaleForParty(units, n) {
   if (n <= 1) return;
-  for (const u of units) { u.maxHp = Math.round(u.maxHp * (1 + 0.7 * (n - 1))); u.hp = u.maxHp; }
+  for (const u of units) { u.maxHp = Math.round(u.maxHp * (1 + CONFIG.combat.partyHpPerExtra * (n - 1))); u.hp = u.maxHp; }
 }
 
 /**
@@ -607,7 +609,7 @@ function actText(b, u, m) {
 }
 
 /** 群攻招式对多个对手时，每人受的伤害比例（D-081） */
-const AOE_RATE = 0.6;
+const AOE_RATE = CONFIG.combat.aoeRate;
 
 /** opts：scale 伤害比例（群攻）、quiet 不再重复出招描述、primary 是否主目标（只有主目标吃附加效果、记合击） */
 /** 一招的攻击值：伤害公式里克制、护体、随机之前的部分（自适应也用它估算强度，D-106） */
@@ -1041,18 +1043,17 @@ export const xiuwei = (db, p) => unitXiuwei(db, playerUnit(db, p));
 export const enemyXiuwei = (db, foeId) => unitXiuwei(db, enemyUnit(db, db.enemy[foeId], 0));
 
 /** 自适应的刻度（D-106）：设计时假定玩家猜对几成；按这个猜对率，几回合打完全部敌人；打完时掉了多少比例的气血 */
-export const ADAPT_ACC = 0.6;
-export const ADAPT_ROUNDS = 6;
-export const ADAPT_TAKEN = 0.6;
-/**
- * 我方各人的战斗力权重（D-115）：主角 1、NPC 队友 1、联机客人 0.5。
- * 客人只算一半：联机图的是热闹，多一个人不该让每场都难一截。
- */
-export const ADAPT_ALLY = 1;
-export const ADAPT_GUEST = 0.5;
+// 数值都在 config.js 的 CONFIG.adapt（D-116）；这里留旧名字给工具脚本用
+export const ADAPT_ACC = CONFIG.adapt.acc;
+export const ADAPT_ROUNDS = CONFIG.adapt.rounds;
+export const ADAPT_TAKEN = CONFIG.adapt.taken;
+/** 我方各人的战斗力权重（D-115）：主角、NPC 队友、联机客人 */
+export const ADAPT_HOST = CONFIG.adapt.host;
+export const ADAPT_ALLY = CONFIG.adapt.ally;
+export const ADAPT_GUEST = CONFIG.adapt.guest;
 /** 敌人气血的放大 / 缩小范围（D-102）：太大成了肉盾，太小一碰就倒 */
-export const ADAPT_HP_CAP = 3;
-export const ADAPT_HP_MIN = 0.25;
+export const ADAPT_HP_CAP = CONFIG.adapt.hpCap;
+export const ADAPT_HP_MIN = CONFIG.adapt.hpMin;
 
 /**
  * 按我方战斗力调整敌人（D-051、D-106、D-115）。主线必胜战、门派任务、城市差事、劫道都走这里。
@@ -1071,10 +1072,10 @@ export function adaptEnemyHp(db, b, opts = {}) {
   const team = teamOf(b);
   const players = playersOf(b);
   if (!foes.length || !players.length) return 1;
-  const hard = Math.min(1.25, Math.max(0.8, opts.hard ?? 1));
+  const hard = Math.min(CONFIG.adapt.hardMax, Math.max(CONFIG.adapt.hardMin, opts.hard ?? 1));
   const me = players[0];
   const sideOf = (u) => ({ best: stanceBest(db, u), moves: stanceMoves(db, u) });
-  const pSides = players.map((u, i) => ({ u, w: i === 0 ? 1 : ADAPT_GUEST, side: sideOf(u) }));
+  const pSides = players.map((u, i) => ({ u, w: i === 0 ? ADAPT_HOST : ADAPT_GUEST, side: sideOf(u) }));
   const allies = team.filter((u) => !u.isPlayer);
   const allyOut = allies.reduce((s, u) => s + meanOut(stanceBest(db, u)), 0) * ADAPT_ALLY;
   const weight = pSides.reduce((s, x) => s + x.w, 0) + allies.length * ADAPT_ALLY;
@@ -1101,7 +1102,7 @@ export function adaptEnemyHp(db, b, opts = {}) {
       refl += rounds * x.reflect;
     }
   });
-  const dmgx = Math.min(8, Math.max(0.1, (ADAPT_TAKEN * hard * me.maxHp - refl) / Math.max(1, hit)));
+  const dmgx = Math.min(CONFIG.adapt.dmgCap, Math.max(CONFIG.adapt.dmgMin, (ADAPT_TAKEN * hard * me.maxHp - refl) / Math.max(1, hit)));
   for (const e of foes) { e.maxHp = Math.max(1, Math.round(baseHp(e) * m)); e.hp = e.maxHp; e.dmgx = dmgx; }
   return m;
 }

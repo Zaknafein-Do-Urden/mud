@@ -1,13 +1,15 @@
 // 武学威力（WP）与敌人战斗力（CP）：同一把尺子，用来约束"剧情里什么时候能得到多强的武学"。
 // 规则与公式见 docs/POWER.md（D-068）。纯函数，工具和校验脚本共用，游戏里也可以用来显示。
 
+import { CONFIG } from './config.js';
+
 const num = (v, d = 0) => (v === undefined || v === '' ? d : Number(v));
 const list = (s) => (s ?? '').split(/[,，]/).map((x) => x.trim()).filter(Boolean);
 
 /** 招式附带效果的折算：控制类 +10%，内力类 +5% */
 const EFFECT_BONUS = { 内伤: 0.1, 点穴: 0.1, 破绽: 0.1, 缴械: 0.1, 群攻: 0.1, 吸内: 0.05, 化内: 0.05 };
 /** 内功、轻功没有招式，按"标准招式"（威力 25，约等于门派入门招式）在同等级的攻击值折算 */
-export const STANDARD_POWER = 25;
+export const STANDARD_POWER = CONFIG.power.standard;
 
 function effectFactor(effects) {
   return 1 + list(effects).reduce((s, e) => s + (EFFECT_BONUS[e.split(':')[0]] ?? 0), 0);
