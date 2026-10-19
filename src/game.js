@@ -626,14 +626,21 @@ export class Game {
   showWiki(arg) {
     const all = this.wikiView();
     const key = (arg ?? '').trim();
+    if (key && '招式效果'.includes(key) && key.length >= 2 || key === 'effects') {
+      for (const grp of this.effectsView()) {
+        this.emit('sys', `〔${grp.group}〕${grp.note}`);
+        for (const it of grp.items) this.emit('sys', `　${it.name}：${it.text}`);
+      }
+      return;
+    }
     const w = key && all.find((x) => x.name === key || x.id === key || x.name.startsWith(key));
     if (!w) {
       if (key) this.emit('err', `百科里没有「${key}」。`);
-      this.emit('sys', `【江湖百科】${all.map((x) => x.name).join('、')}。输入 百科 少林 查看。`);
+      this.emit('sys', `【江湖百科】${all.map((x) => x.name).join('、')}、招式效果。输入 百科 少林、百科 效果 查看。`);
       return;
     }
     this.emit('sys', `【${w.name}】驻地：${w.seat}　师父：${w.master}　侧重：${w.style}`);
-    if (w.quest) this.emit('sys', `绝学任务：${w.quest}（本门第四阶起向师父请缨）`);
+    if (w.quest) this.emit('sys', `绝学任务：${w.quest}`);
     for (const sec of w.sections) {
       if (sec.title) this.emit('sys', `〔${sec.title}〕`);
       for (const p of sec.paras) this.emit('sys', `　${p}`);
@@ -661,7 +668,7 @@ export class Game {
       '  叛出师门               离开门派：本门武功等级减半且不能再提升',
       '  天赋 / 天赋 加 截脉     查看、点选天赋（门派每晋升一阶 1 点，每条主线 3 点；天赋 重置 免费）',
       '  目标 / 提示            查看各主线的当前目标；不知道怎么做时用 提示 看具体做法',
-      '  百科 / 百科 少林        查看各门派的来历、武功路数和能学到的全部武学',
+      '  百科 / 百科 少林        查看各门派的来历、武功路数和能学到的全部武学；百科 效果 查看点穴、护体等效果',
       '  休息                   在旅店休息，恢复气血（过去一天）',
       '  乘车 / 乘车 襄阳        在车马行坐马车去别的城市（路上可能遇到劫道）',
       '  行情 / 买 / 卖 / 货物   在市集看行情、买卖货物；货物装在马车上',

@@ -18,7 +18,33 @@ const EFFECT_TEXT = {
   化内: '化内：化去对手内力',
   缴械: '缴械：有一定几率打飞对手的兵器（守招在化解巧招时触发）',
   群攻: '群攻：打到所有对手，对手多于一个时每人受六成伤害',
+  疗伤: '疗伤：目标回复气血',
+  回气: '回气：目标回复内力',
+  振奋: '振奋：目标下一次出招伤害 ×1.3',
+  护体: '护体：目标两回合内受到的伤害 ×0.7',
+  解穴: '解穴：解除目标的点穴和内伤',
 };
+
+// 百科「效果」页的详细说明（D-112）。数值与 combat.js 一致，改战斗规则时一起改。
+const EFFECT_DETAIL = [
+  { group: '攻招的附加效果', note: '只在这一招没被克制时生效；群攻时只作用在主目标身上。', items: [
+    ['破绽', '对手露出破绽，下一次受到的伤害 +30%。最常见的附加效果，刚招、巧招都有。'],
+    ['内伤', '之后 3 回合，对手每回合掉一次血，每次约为这一招伤害的两成（至少 3 点）。天赋"重创"能让内伤多发作两回合。'],
+    ['点穴', '对手下一回合动弹不得，出不了招，算作无势，你出什么招都克他。天赋"封穴"能多点住一回合。'],
+    ['缴械', '按招式写明的几率（如 缴械:30 就是三成）打飞对手的兵器，对手这一战只能改用拳脚。巧招打中时、守招化解巧招时都能触发；对手空手时没用。'],
+    ['化内', '化去对手的内力，数量和这一招的伤害相当。内力耗尽的对手只能调息，调息时受伤 ×1.2。'],
+    ['吸内', '同化内，另外把化掉的一半补进自己的内力。'],
+    ['群攻', '一招打到所有对手；对手不止一个时，每人受六成伤害。'],
+  ] },
+  { group: '辅助招式的效果', note: '辅助招式是守招，不伤人，作用在你选的队友身上（单人时作用在自己身上），在守的阶段先于所有攻击生效。', items: [
+    ['疗伤', '目标回复气血，多少按招式威力、武功等级、内功加成计算。天赋"妙手"每级再 +20%。'],
+    ['回气', '目标回复内力，算法同疗伤。'],
+    ['振奋', '目标下一次出招伤害 ×1.3。'],
+    ['护体', '目标在两回合内受到的伤害 ×0.7。'],
+    ['解穴', '解除目标身上的点穴和内伤。'],
+  ] },
+];
+
 
 export const views = {
   charView() {
@@ -172,13 +198,26 @@ export const views = {
         .sort((a, b) => a.rank - b.rank || ['内功', '外功', '轻功'].indexOf(a.kind) - ['内功', '外功', '轻功'].indexOf(b.kind));
       return {
         id: w.id, name: w.props.name ?? sect?.props.name ?? w.id,
-        seat: w.props.seat ?? '', master: w.props.master ?? '', style: w.props.style ?? '', quest: w.props.quest ?? '',
+        seat: w.props.seat ?? '', master: w.props.master ?? '', style: w.props.style ?? '',
+        // 绝学任务只说怎么接，不说任务内容（不剧透，D-112）
+        quest: sect ? `本门${ranks[3]?.name ?? '第四阶'}起可以向师父请缨，做完任务得本门绝学或神兵` : '',
         sections,
         ranks: ranks.map((r, i) => ({ name: r.name, rep: r.rep, cap: caps[i] ?? 0 })),
         mine: !!sect && p.sect?.id === sect.id, myRank: sect && p.sect?.id === sect.id ? p.sect.rank : -1,
         skills,
       };
     });
+  },
+
+  /** 百科「效果」页（D-112）：各种招式效果的说明，以及门派武学里哪些招式带这个效果 */
+  effectsView() {
+    const users = {};
+    for (const m of Object.values(this.db.move)) {
+      const sk = this.db.skill[m.props.skill];
+      if (!sk?.props.sect && !sk?.id.startsWith('base.')) continue; // 只举门派和武馆的武学，剧情武学不列（免得剧透）
+      for (const e of parseList(m.props.effects)) (users[e.split(':')[0]] ??= []).push(`${sk.props.name}·${m.props.name}`);
+    }
+    return EFFECT_DETAIL.map((g) => ({ ...g, items: g.items.map(([name, text]) => ({ name, text, examples: users[name] ?? [] })) }));
   },
 
   /** 百科里一门武学的说明：来源、上限、每一招的数据 */
@@ -190,7 +229,7 @@ export const views = {
     const kind = sk.props.kind;
     const stance = kind === '外功' ? this.stancesOf(sk) : '';
     const weapon = sk.props.weapon && sk.props.weapon !== '拳' ? sk.props.weapon : '';
-    const source = secret ? `门派绝学：${ranks[rank]?.name ?? ''}向师父请缨，做完绝学任务才得${w.props.quest ? `（${w.props.quest}）` : ''}`
+    const source = secret ? `门派绝学：${ranks[rank]?.name ?? ''}向师父请缨，做完绝学任务才得`
       : ranks.length ? `${ranks[rank]?.name ?? ''}起可学，本门最高阶时上限 ${caps.at(-1) ?? ''} 级`
       : `武馆花钱学，上限 50 级`;
     const lines = [`${sk.props.name}　${kind}${stance ? '·' + stance : ''}${weapon ? `　要有${weapon}` : ''}`, source];

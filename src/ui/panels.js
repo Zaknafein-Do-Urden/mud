@@ -327,20 +327,48 @@ export function initPanels(api) {
     if (tab === '百科') renderWiki(g);
   }
 
+  /** 百科「招式效果」页（D-112）：每种效果一段说明，悬停"举例"看哪些门派招式带它 */
+  function renderEffects(g) {
+    for (const grp of g.effectsView()) {
+      body.append(el('h4', 'pn-sub', grp.group), el('p', 'pn-hint', grp.note));
+      for (const it of grp.items) {
+        const box = el('div', 'pn-item');
+        const h = el('div', 'pn-skill-head');
+        h.append(el('span', 'pn-skill-name', it.name));
+        if (it.examples.length) {
+          const ex = el('span', 'pn-v pn-has-info', `门派招式里有 ${it.examples.length} 招带这个效果`);
+          ex.title = it.examples.join('、');
+          const list = el('div', 'pn-moves', it.examples.join('、'));
+          list.hidden = true;
+          ex.addEventListener('click', () => { list.hidden = !list.hidden; });
+          h.append(ex);
+          box.append(h, el('p', 'pn-wiki-p', it.text), list);
+        } else {
+          box.append(h, el('p', 'pn-wiki-p', it.text));
+        }
+        body.append(box);
+      }
+    }
+  }
+
   /** 江湖百科（D-111）：门派介绍 + 能学到的全部武学；悬停武功名、招式名看详细数据，手机上点武功名展开 */
   function renderWiki(g) {
     const all = g.wikiView();
     if (!all.length) return;
-    const w = all.find((x) => x.id === wikiSel) ?? all.find((x) => x.mine) ?? all[0];
-    wikiSel = w.id;
-    body.append(row(...all.map((x) => button(x.name, () => { wikiSel = x.id; render(); }, { cls: 'pn-tab pn-wiki-tab' + (x.id === w.id ? ' on' : '') }))));
+    const w = wikiSel === 'effects' ? null : all.find((x) => x.id === wikiSel) ?? all.find((x) => x.mine) ?? all[0];
+    wikiSel = w?.id ?? 'effects';
+    body.append(row(
+      ...all.map((x) => button(x.name, () => { wikiSel = x.id; render(); }, { cls: 'pn-tab pn-wiki-tab' + (x.id === wikiSel ? ' on' : '') })),
+      button('招式效果', () => { wikiSel = 'effects'; render(); }, { cls: 'pn-tab pn-wiki-tab' + (wikiSel === 'effects' ? ' on' : '') }),
+    ));
+    if (!w) { renderEffects(g); return; }
 
     const head = el('div', 'pn-story');
     head.append(el('h3', 'pn-name', `${w.name}${w.mine ? '　（本门）' : ''}`));
     if (w.seat) head.append(kv('驻地', w.seat));
     if (w.master) head.append(kv('师父', w.master));
     if (w.style) head.append(kv('侧重', w.style));
-    if (w.quest) head.append(kv('绝学任务', `${w.quest}（本门第四阶起向师父请缨）`));
+    if (w.quest) head.append(kv('绝学任务', w.quest));
     for (const sec of w.sections) {
       if (sec.title) head.append(el('h4', 'pn-sub', sec.title));
       for (const p of sec.paras) head.append(el('p', 'pn-wiki-p', p));
