@@ -69,6 +69,8 @@ function checkEffects(b, effects) {
     else if (kind === 'potential') { if (Number.isNaN(Number(key))) err(b, `potential 需要数字: ${e}`); }
     else if (kind === 'heal' || kind === 'promote' || kind === 'escort') { /* 无参数 */ }
     else if (kind === 'money' || kind === 'pay') { if (Number.isNaN(Number(key))) err(b, `${kind} 需要数字: ${e}`); }
+    else if (kind === 'qiyu') { if (!['good', 'bad'].includes(key)) err(b, `qiyu 效果只能是 qiyu:good 或 qiyu:bad: ${e}`); }
+    else if (kind === 'study') { if (!db.skill[key]) err(b, `study 目标武功不存在: ${key}`); }
     else if (kind === 'travel') { if (!db.city[key]) err(b, `travel 目标城市不存在: ${key}`); }
     else if (kind === 'today') { if (!key) err(b, 'today 需要一个键名'); }
     else if (kind === 'cap') { const [id, n] = key.split(':'); if (!db.skill[id] || Number.isNaN(Number(n))) err(b, `cap 格式应为 cap:武功:等级，却是: ${e}`); }
@@ -318,6 +320,30 @@ for (const [id, s] of Object.entries(index.storylines)) {
   if (!xs.length) continue;
   const want = `${Math.floor(Math.min(...xs) / 10) * 10}-${Math.ceil(Math.max(...xs) / 10) * 10}`;
   if ((line.props.xiuwei ?? '').replace(/\s/g, '') !== want) warns.push(`${line.file} 主线「${line.props.name}」的建议修为应为 xiuwei: ${want}（按必须打赢的战斗里最强敌人的修为算，D-107），现在写的是 ${line.props.xiuwei ?? '（没写）'}`);
+}
+
+// 马车奇遇（D-114）：每个故事都要锁定，每条路走到头都要以 qiyu:good / qiyu:bad 收场（否则马车到不了站）
+{
+  const tales = Object.values(db.dialog).filter((d) => d.props.qiyu === 'true');
+  for (const t of tales) {
+    const seen = new Set();
+    const walk = (d) => {
+      if (!d || seen.has(d.id)) return;
+      seen.add(d.id);
+      if (d.props.lock !== 'true') err(d, '奇遇的对话要加 lock: true（中途离开，马车就停在半路了）');
+      const ends = words(d.props.do).filter((e) => e.startsWith('qiyu:'));
+      if (d.choices.length && ends.length) err(d, '有选项的对话不能写 qiyu: 收场效果，收场放在没有选项的结果对话里');
+      if (!d.choices.length && ends.length !== 1) err(d, '奇遇的结果对话要在 do 里写一个 qiyu:good 或 qiyu:bad');
+      for (const c of d.choices) {
+        if (!c.target) err(d, `奇遇的选项「${c.text}」要指向结果对话`);
+        if (c.cond.length) err(d, `奇遇的选项「${c.text}」不要加条件（总有选项没出来时，玩家可能一个都选不了）`);
+        walk(db.dialog[c.target]);
+      }
+    };
+    walk(t);
+  }
+  if (tales.length && tales.length < 30) warns.push(`马车奇遇只有 ${tales.length} 个，要求至少 30 个不重复`);
+  for (const it of Object.values(db.item)) if (it.props.book && !db.skill[it.props.book]) err(it, `秘籍对应的武功不存在: ${it.props.book}`);
 }
 
 // 待写占位：剧情推进后要回头删掉，清单见 docs/TODO-CONTENT.md

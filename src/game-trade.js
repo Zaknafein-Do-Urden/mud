@@ -5,6 +5,16 @@ import { createScaledBattle, beginRound, enemiesOf } from './combat.js';
 
 const ALL = ['全部', 'all'];
 
+// 马车奇遇（D-114）：没遇上劫道时碰上小故事的概率；选对了的奖励
+const QIYU_RATE = 0.2;
+const QIYU_RECENT = 5; // 全部看过一遍后重新洗牌，最近看过的这几个排到最后
+const QIYU_MONEY = [50, 150];
+const QIYU_POT = [20, 60];
+const QIYU_ATTR = 0.08; // 根骨、身法、悟性随机一项 +1
+const QIYU_BOOK = 0.03; // 送秘籍
+const QIYU_BOOK_STEP = 20; // 已经会了，再读一本提高的上限
+const QIYU_BOOK_MAX = 100;
+
 export const trade = {
   addMoney(n) {
     const p = this.state.player;
@@ -203,7 +213,81 @@ export const trade = {
         return;
       }
     }
+    if (this.roadTale(to, days)) return;
     this.arrive(to, days);
+  },
+
+  // ---- 马车奇遇（D-114）----
+
+  /**
+   * 没遇上劫道时，小概率在路上碰到一段小故事（content/world/qiyu-tales.md 里 qiyu: true 的对话）。
+   * 抽签不放回：全部看过一遍才重新洗牌，洗牌后最近看过的几个排到最后。
+   * 到站推迟到故事收场（qiyu:good / qiyu:bad 效果）时；中途存档读档，行程记在 state.trip 里。
+   * 联机组队时不触发：奖励只能落在主机身上，对队友不公平。
+   */
+  roadTale(to, days) {
+    if (this.party?.members.length) return false;
+    if (Math.random() >= QIYU_RATE) return false;
+    const ids = Object.values(this.db.dialog).filter((d) => d.props.qiyu === 'true').map((d) => d.id);
+    if (!ids.length) return false;
+    const q = (this.state.qiyu ??= { seen: [] });
+    let pool = ids.filter((id) => !q.seen.includes(id));
+    if (!pool.length) {
+      q.seen = q.seen.slice(-QIYU_RECENT);
+      pool = ids.filter((id) => !q.seen.includes(id));
+    }
+    const id = pool[Math.floor(Math.random() * pool.length)];
+    q.seen.push(id);
+    this.state.trip = { to, days };
+    this.showDialog(id);
+    return true;
+  },
+
+  /** 奇遇收场：选对了发奖励，然后接着赶路到站 */
+  qiyuEnd(good) {
+    const p = this.state.player;
+    if (good) {
+      const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+      this.addMoney(rnd(QIYU_MONEY[0], QIYU_MONEY[1]));
+      const pot = rnd(QIYU_POT[0], QIYU_POT[1]);
+      p.potential += pot;
+      this.emit('sys', `潜能 +${pot}`);
+      if (Math.random() < QIYU_ATTR) {
+        const attr = ['根骨', '身法', '悟性'][Math.floor(Math.random() * 3)];
+        p.attrs[attr] += 1;
+        this.emit('story', `这一番经历让你若有所悟，${attr}提高了。（${attr} ${p.attrs[attr]}）`);
+        this.normalizeHp();
+      }
+      if (Math.random() < QIYU_BOOK) this.qiyuBook();
+    }
+    const trip = this.state.trip;
+    delete this.state.trip;
+    if (trip) this.arrive(trip.to, trip.days);
+  },
+
+  /** 送一本秘籍：先挑还没学会、身上也没有的；都有了就随便给一本（再读可以提高上限） */
+  qiyuBook() {
+    const p = this.state.player;
+    const books = Object.values(this.db.item).filter((it) => it.props.book);
+    if (!books.length) return;
+    const fresh = books.filter((it) => p.skills[it.props.book] === undefined && !p.inventory[it.id]);
+    const pick = (fresh.length ? fresh : books)[Math.floor(Math.random() * (fresh.length || books.length))];
+    this.emit('story', '重新上车时，你发现包袱里多了一本旧册子，纸页发黄，是一路上这番机缘留下的。');
+    this.applyEffects([`give:${pick.id}`]);
+    this.emit('sys', `（输入「读」可以研读秘籍。）`);
+  },
+
+  /** 研读奇遇得来的秘籍：没学过就学会；学过了，上限提高一截（D-114） */
+  studyBook(skillId) {
+    const p = this.state.player;
+    const sk = this.db.skill[skillId];
+    if (!sk) return;
+    if (p.skills[skillId] === undefined) { this.applyEffects([`learn:${skillId}`]); return; }
+    p.skillcap ??= {};
+    const now = Math.max(Number(sk.props.cap ?? 100), p.skillcap[skillId] ?? 0);
+    if (now >= QIYU_BOOK_MAX) { this.emit('sys', `书里的东西你早已烂熟于胸，再读也读不出新意了。`); return; }
+    p.skillcap[skillId] = Math.min(QIYU_BOOK_MAX, now + QIYU_BOOK_STEP);
+    this.emit('story', `这一本和你从前读过的不是同一个抄本，有几处批注是你没见过的。你对${sk.props.name}的领悟更深了一层（上限提高到 ${p.skillcap[skillId]} 级）。`);
   },
 
   arrive(to, days) {

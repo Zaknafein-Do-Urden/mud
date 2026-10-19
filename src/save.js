@@ -7,7 +7,7 @@ const PREFIX = 'wuxia-mud:'; // 同一 github.io 用户下所有项目共享 loc
 const SLOT = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('slot')) || '1';
 const SLOT_KEY = PREFIX + 'save:' + SLOT.replace(/[^\w-]/g, '');
 const EXPORT_TAG = 'WXMUD1';
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 export function newState(startRoom) {
   const now = Date.now();
@@ -20,6 +20,7 @@ export function newState(startRoom) {
     visited: {},
     day: 1, // 第几日：坐车、住店会过日子；市集行情按日子波动
     claimed: {}, // 已领取的一次性主线奖励
+    qiyu: { seen: [] }, // 马车奇遇看过的故事（D-114）
   };
 }
 
@@ -77,6 +78,8 @@ const migrations = {
   },
   // v10：天赋树重做成五条机制线，天赋点改由门派阶位和走完的主线给（D-107）。旧天赋全部退回
   9: (s) => ({ ...s, player: { ...s.player, talents: {} } }),
+  // v11：马车奇遇（D-114）。看过哪些故事；坐车途中的行程 trip 只在奇遇进行中才有
+  10: (s) => ({ qiyu: { seen: [] }, ...s }),
 };
 
 /** 已开始的主线 id（用于决定加载哪些内容） */

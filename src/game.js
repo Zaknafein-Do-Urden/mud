@@ -273,6 +273,8 @@ export class Game {
       else if (kind === 'sectlearn') this.learn(key); // 向本门师父学艺（不要钱，规则同"学"命令）
       else if (kind === 'promote') this.promote(); // 向本门师父申请晋阶（D-099，规则同"晋阶"命令）
       else if (kind === 'escort') this.hireEscort(); // 车马行雇镖师（D-104）
+      else if (kind === 'qiyu') this.qiyuEnd(key === 'good'); // 马车奇遇收场：good 发奖励，然后到站（D-114）
+      else if (kind === 'study') this.studyBook(key); // 研读奇遇得来的秘籍（D-114）
       else if (kind === 'learn') {
         if (player.skills[key] === undefined) {
           player.skills[key] = 1;
@@ -670,7 +672,7 @@ export class Game {
       '  目标 / 提示            查看各主线的当前目标；不知道怎么做时用 提示 看具体做法',
       '  百科 / 百科 少林        查看各门派的来历、武功路数和能学到的全部武学；百科 效果 查看点穴、护体等效果',
       '  休息                   在旅店休息，恢复气血（过去一天）',
-      '  乘车 / 乘车 襄阳        在车马行坐马车去别的城市（路上可能遇到劫道）',
+      '  乘车 / 乘车 襄阳        在车马行坐马车去别的城市（路上可能遇到劫道，也可能碰上奇遇）',
       '  行情 / 买 / 卖 / 货物   在市集看行情、买卖货物；货物装在马车上',
       '  存 / 取 / 存款          在钱庄存取钱（各地通兑，没有利息，不会被劫）',
       '  use 竹哨 / 使用 竹哨    使用物品；有的物品有专门的动词，如 吹 竹哨',
