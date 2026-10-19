@@ -73,11 +73,16 @@ talk: hengyang.officer.talk
 ifnone: 周班头：今日的差事派完了，明日赶早。
 ---
 周班头：这位{男:壮士|女:女侠}面生。这几日城里人多，衙门忙不过来，有几桩小事要托人。
-* 山脚下的强人要不要管？ -> hengyang.job.bandit ?!flag:world.job.bandit_hengyang ?!today:world.job.bandit_hengyang
-* 听说码头上丢了东西？ -> hengyang.job.thief ?!flag:world.job.thief_hengyang ?!today:world.job.thief_hengyang
-* 要不要去客栈查查外乡人？ -> hengyang.job.patrol ?!flag:world.job.patrol_hengyang ?!today:world.job.patrol_hengyang
+* 山脚下的强人要不要管？ -> hengyang.job.bandit ?pick:office.hengyang:bandit ?!flag:world.job.bandit_hengyang ?!today:world.job.bandit_hengyang
+* 听说码头上丢了东西？ -> hengyang.job.thief ?pick:office.hengyang:thief ?!flag:world.job.thief_hengyang ?!today:world.job.thief_hengyang
+* 要不要去客栈查查外乡人？ -> hengyang.job.patrol ?pick:office.hengyang:patrol ?!flag:world.job.patrol_hengyang ?!today:world.job.patrol_hengyang
 * 有信要送去襄阳吗？ -> hengyang.job.mail_xiangyang ?!flag:world.job.mail_xiangyang ?!today:world.job.mailday_hengyang_xiangyang
 * 交上襄阳衙门托付的书信 -> hengyang.job.deliver_xiangyang ?flag:world.job.mail_hengyang_from_xiangyang
+* 可有告示要张贴？ -> hengyang.job.notice ?pick:office.hengyang:notice ?!flag:world.job.notice_hengyang ?!today:world.job.notice_hengyang
+* 钱庄那边可有事？ -> hengyang.job.ledger ?pick:office.hengyang:ledger ?!flag:world.job.ledger_hengyang ?!today:world.job.ledger_hengyang
+* 要不要去市集巡夜？ -> hengyang.job.night ?pick:office.hengyang:night ?!flag:world.job.night_hengyang ?!today:world.job.night_hengyang
+* 客栈里可有人闹事？ -> hengyang.job.drunk ?pick:office.hengyang:drunk ?!flag:world.job.drunk_hengyang ?!today:world.job.drunk_hengyang
+* 车马行那边可有可疑的人？ -> hengyang.job.kidnap ?pick:office.hengyang:kidnap ?!flag:world.job.kidnap_hengyang ?!today:world.job.kidnap_hengyang
 * 告辞
 
 === dialog: hengyang.job.bandit

@@ -67,9 +67,9 @@ talk: xiangyang.officer.talk
 ifnone: 王捕头：今天的差事都派完了，明天再来吧。
 ---
 王捕头：这位{男:兄弟|女:姑娘}，可是来领差事的？赏钱不多，胜在实在。
-* 有什么除害的差事？ -> xiangyang.job.bandit ?!flag:world.job.bandit_xiangyang ?!today:world.job.bandit_xiangyang
-* 听说城里闹飞贼？ -> xiangyang.job.thief ?!flag:world.job.thief_xiangyang ?!today:world.job.thief_xiangyang
-* 要不要去客栈查查外乡人？ -> xiangyang.job.patrol ?!flag:world.job.patrol_xiangyang ?!today:world.job.patrol_xiangyang
+* 有什么除害的差事？ -> xiangyang.job.bandit ?pick:office.xiangyang:bandit ?!flag:world.job.bandit_xiangyang ?!today:world.job.bandit_xiangyang
+* 听说城里闹飞贼？ -> xiangyang.job.thief ?pick:office.xiangyang:thief ?!flag:world.job.thief_xiangyang ?!today:world.job.thief_xiangyang
+* 要不要去客栈查查外乡人？ -> xiangyang.job.patrol ?pick:office.xiangyang:patrol ?!flag:world.job.patrol_xiangyang ?!today:world.job.patrol_xiangyang
 * 有信要送去成都吗？ -> xiangyang.job.mail_chengdu ?!flag:world.job.mail_chengdu ?!today:world.job.mailday_xiangyang_chengdu
 * 有信要送去临安吗？ -> xiangyang.job.mail_linan ?!flag:world.job.mail_linan ?!today:world.job.mailday_xiangyang_linan
 * 有信要送去洛阳吗？ -> xiangyang.job.mail_luoyang ?!flag:world.job.mail_luoyang ?!today:world.job.mailday_xiangyang_luoyang
@@ -78,6 +78,11 @@ ifnone: 王捕头：今天的差事都派完了，明天再来吧。
 * 交上衡阳府托付的书信 -> xiangyang.job.deliver_hengyang ?flag:world.job.mail_xiangyang_from_hengyang
 * 交上临安衙门托付的书信 -> xiangyang.job.deliver_linan ?flag:world.job.mail_xiangyang_from_linan
 * 交上洛阳衙门托付的书信 -> xiangyang.job.deliver_luoyang ?flag:world.job.mail_xiangyang_from_luoyang
+* 可有告示要张贴？ -> xiangyang.job.notice ?pick:office.xiangyang:notice ?!flag:world.job.notice_xiangyang ?!today:world.job.notice_xiangyang
+* 钱庄那边可有事？ -> xiangyang.job.ledger ?pick:office.xiangyang:ledger ?!flag:world.job.ledger_xiangyang ?!today:world.job.ledger_xiangyang
+* 要不要去市集巡夜？ -> xiangyang.job.night ?pick:office.xiangyang:night ?!flag:world.job.night_xiangyang ?!today:world.job.night_xiangyang
+* 客栈里可有人闹事？ -> xiangyang.job.drunk ?pick:office.xiangyang:drunk ?!flag:world.job.drunk_xiangyang ?!today:world.job.drunk_xiangyang
+* 车马行那边可有可疑的人？ -> xiangyang.job.kidnap ?pick:office.xiangyang:kidnap ?!flag:world.job.kidnap_xiangyang ?!today:world.job.kidnap_xiangyang
 * 离开
 
 === dialog: xiangyang.job.thief

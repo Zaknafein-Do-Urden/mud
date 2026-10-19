@@ -2,7 +2,7 @@
 
 === sect: tangmen
 name: 唐门
-ranks: 外姓门人=0, 唐门子弟=100, 暗器高手=250, 唐门执事=450, 唐门长老=700
+ranks: 外姓门人=0, 唐门子弟=150, 暗器高手=500, 唐门执事=1200, 唐门长老=2500
 caps: 40, 70, 100, 140, 180
 examiner: 唐七
 ---
@@ -229,12 +229,20 @@ talk: tangmen.laolao.talk
 === dialog: tangmen.laolao.task
 ifnone: 唐姥姥：今天的差事都办完了，目前没有门派任务。明日再来吧。
 ---
-* 堡外可有不速之客？ -> tangmen.task.spy ?!flag:world.tangmen.task_spy ?!today:world.tangmen.task_spy
-* 附近可有人滋事？ -> tangmen.task.b2 ?!flag:world.tangmen.task_b2 ?!today:world.tangmen.task_b2
-* 要不要去竹林巡视？ -> tangmen.task.patrol ?!flag:world.tangmen.task_patrol ?!today:world.tangmen.task_patrol
-* 可有书信要送去成都？ -> tangmen.task.deliver ?!flag:world.tangmen.task_deliver ?!today:world.tangmen.task_deliver
-* 可有更要紧的事？ -> tangmen.task.traitor ?rank:1 ?!flag:world.tangmen.task_traitor ?!today:world.tangmen.task_traitor
-* 可有最难办的差事？ -> tangmen.task.b3 ?rank:2 ?!flag:world.tangmen.task_b3 ?!today:world.tangmen.task_b3
+* 堡外可有不速之客？ -> tangmen.task.spy ?pick:sect.tangmen:spy ?!flag:world.tangmen.task_spy ?!today:world.tangmen.task_spy
+* 附近可有人滋事？ -> tangmen.task.b2 ?pick:sect.tangmen:b2 ?!flag:world.tangmen.task_b2 ?!today:world.tangmen.task_b2
+* 要不要去竹林巡视？ -> tangmen.task.patrol ?pick:sect.tangmen:patrol ?!flag:world.tangmen.task_patrol ?!today:world.tangmen.task_patrol
+* 可有书信要送去成都？ -> tangmen.task.deliver ?pick:sect.tangmen:deliver ?!flag:world.tangmen.task_deliver ?!today:world.tangmen.task_deliver
+* 可有更要紧的事？ -> tangmen.task.traitor ?rank:1 ?pick:sect.tangmen:traitor ?!flag:world.tangmen.task_traitor ?!today:world.tangmen.task_traitor
+* 可有最难办的差事？ -> tangmen.task.b3 ?rank:2 ?pick:sect.tangmen:b3 ?!flag:world.tangmen.task_b3 ?!today:world.tangmen.task_b3
+* 竹林里可要采药？ -> tangmen.task.herb ?pick:sect.tangmen:herb ?!flag:world.tangmen.task_herb ?!today:world.tangmen.task_herb
+* 可有客人要接？ -> tangmen.task.visit ?pick:sect.tangmen:visit ?!flag:world.tangmen.task_visit ?!today:world.tangmen.task_visit
+* 堡里可缺什么东西？ -> tangmen.task.buy ?pick:sect.tangmen:buy ?!flag:world.tangmen.task_buy ?!today:world.tangmen.task_buy
+* 可有族人要出远门？ -> tangmen.task.escort ?pick:sect.tangmen:escort ?!flag:world.tangmen.task_escort ?!today:world.tangmen.task_escort
+* 堡外可有人窥探？ -> tangmen.task.rival ?pick:sect.tangmen:rival ?!flag:world.tangmen.task_rival ?!today:world.tangmen.task_rival
+* 可有棘手的差事？ -> tangmen.task.hunt ?pick:sect.tangmen:hunt ?rank:1 ?!flag:world.tangmen.task_hunt ?!today:world.tangmen.task_hunt
+* 师门缺什么材料？ -> tangmen.task.material_ask ?!cargo:iron:100 ?!today:world.tangmen.task_material
+* 交上铁器 100 件 -> tangmen.task.material ?cargo:iron:100 ?!today:world.tangmen.task_material
 * 告辞
 
 === dialog: tangmen.task.spy

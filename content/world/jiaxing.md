@@ -66,11 +66,16 @@ talk: jiaxing.officer.talk
 ifnone: 孙捕头：今天的差事都派完了，明天再来吧。
 ---
 孙捕头：这位{男:兄弟|女:姑娘}，可是来领差事的？赏钱不多，胜在实在。
-* 有什么除害的差事？ -> jiaxing.job.bandit ?!flag:world.job.bandit_jiaxing ?!today:world.job.bandit_jiaxing
-* 听说城里闹飞贼？ -> jiaxing.job.thief ?!flag:world.job.thief_jiaxing ?!today:world.job.thief_jiaxing
-* 要不要去客栈查查外乡人？ -> jiaxing.job.patrol ?!flag:world.job.patrol_jiaxing ?!today:world.job.patrol_jiaxing
+* 有什么除害的差事？ -> jiaxing.job.bandit ?pick:office.jiaxing:bandit ?!flag:world.job.bandit_jiaxing ?!today:world.job.bandit_jiaxing
+* 听说城里闹飞贼？ -> jiaxing.job.thief ?pick:office.jiaxing:thief ?!flag:world.job.thief_jiaxing ?!today:world.job.thief_jiaxing
+* 要不要去客栈查查外乡人？ -> jiaxing.job.patrol ?pick:office.jiaxing:patrol ?!flag:world.job.patrol_jiaxing ?!today:world.job.patrol_jiaxing
 * 有信要送去临安吗？ -> jiaxing.job.mail_linan ?!flag:world.job.mail_linan ?!today:world.job.mailday_jiaxing_linan
 * 交上临安衙门托付的书信 -> jiaxing.job.deliver_linan ?flag:world.job.mail_jiaxing_from_linan
+* 可有告示要张贴？ -> jiaxing.job.notice ?pick:office.jiaxing:notice ?!flag:world.job.notice_jiaxing ?!today:world.job.notice_jiaxing
+* 钱庄那边可有事？ -> jiaxing.job.ledger ?pick:office.jiaxing:ledger ?!flag:world.job.ledger_jiaxing ?!today:world.job.ledger_jiaxing
+* 要不要去市集巡夜？ -> jiaxing.job.night ?pick:office.jiaxing:night ?!flag:world.job.night_jiaxing ?!today:world.job.night_jiaxing
+* 客栈里可有人闹事？ -> jiaxing.job.drunk ?pick:office.jiaxing:drunk ?!flag:world.job.drunk_jiaxing ?!today:world.job.drunk_jiaxing
+* 车马行那边可有可疑的人？ -> jiaxing.job.kidnap ?pick:office.jiaxing:kidnap ?!flag:world.job.kidnap_jiaxing ?!today:world.job.kidnap_jiaxing
 * 离开
 
 === dialog: jiaxing.job.thief

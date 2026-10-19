@@ -67,13 +67,18 @@ talk: chengdu.officer.talk
 ifnone: 周捕头：今天的差事都派完了，明天再来吧。
 ---
 周捕头：这位{男:兄弟|女:姑娘}，可是来领差事的？赏钱不多，胜在实在。
-* 有什么除害的差事？ -> chengdu.job.bandit ?!flag:world.job.bandit_chengdu ?!today:world.job.bandit_chengdu
-* 听说城里闹飞贼？ -> chengdu.job.thief ?!flag:world.job.thief_chengdu ?!today:world.job.thief_chengdu
-* 要不要去客栈查查外乡人？ -> chengdu.job.patrol ?!flag:world.job.patrol_chengdu ?!today:world.job.patrol_chengdu
+* 有什么除害的差事？ -> chengdu.job.bandit ?pick:office.chengdu:bandit ?!flag:world.job.bandit_chengdu ?!today:world.job.bandit_chengdu
+* 听说城里闹飞贼？ -> chengdu.job.thief ?pick:office.chengdu:thief ?!flag:world.job.thief_chengdu ?!today:world.job.thief_chengdu
+* 要不要去客栈查查外乡人？ -> chengdu.job.patrol ?pick:office.chengdu:patrol ?!flag:world.job.patrol_chengdu ?!today:world.job.patrol_chengdu
 * 有信要送去长安吗？ -> chengdu.job.mail_changan ?!flag:world.job.mail_changan ?!today:world.job.mailday_chengdu_changan
 * 有信要送去襄阳吗？ -> chengdu.job.mail_xiangyang ?!flag:world.job.mail_xiangyang ?!today:world.job.mailday_chengdu_xiangyang
 * 交上长安衙门托付的书信 -> chengdu.job.deliver_changan ?flag:world.job.mail_chengdu_from_changan
 * 交上襄阳衙门托付的书信 -> chengdu.job.deliver_xiangyang ?flag:world.job.mail_chengdu_from_xiangyang
+* 可有告示要张贴？ -> chengdu.job.notice ?pick:office.chengdu:notice ?!flag:world.job.notice_chengdu ?!today:world.job.notice_chengdu
+* 钱庄那边可有事？ -> chengdu.job.ledger ?pick:office.chengdu:ledger ?!flag:world.job.ledger_chengdu ?!today:world.job.ledger_chengdu
+* 要不要去市集巡夜？ -> chengdu.job.night ?pick:office.chengdu:night ?!flag:world.job.night_chengdu ?!today:world.job.night_chengdu
+* 客栈里可有人闹事？ -> chengdu.job.drunk ?pick:office.chengdu:drunk ?!flag:world.job.drunk_chengdu ?!today:world.job.drunk_chengdu
+* 车马行那边可有可疑的人？ -> chengdu.job.kidnap ?pick:office.chengdu:kidnap ?!flag:world.job.kidnap_chengdu ?!today:world.job.kidnap_chengdu
 * 离开
 
 === dialog: chengdu.job.thief

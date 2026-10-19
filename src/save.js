@@ -7,7 +7,7 @@ const PREFIX = 'wuxia-mud:'; // 同一 github.io 用户下所有项目共享 loc
 const SLOT = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('slot')) || '1';
 const SLOT_KEY = PREFIX + 'save:' + SLOT.replace(/[^\w-]/g, '');
 const EXPORT_TAG = 'WXMUD1';
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 export function newState(startRoom) {
   const now = Date.now();
@@ -86,6 +86,11 @@ const migrations = {
     const leftCap = { ...(player.leftCap ?? {}) };
     for (const id of Object.keys(frozen)) if (frozen[id]) leftCap[id] = player.skills?.[id] ?? 0;
     return { ...s, player: { ...player, leftCap } };
+  },
+  // v13：车队（D-122）：起步一辆车；雇的镖师从"有没有"改成"几个"
+  12: (s) => {
+    const { escort, ...rest } = s;
+    return { ...rest, ...(escort ? { escort: 1 } : {}), player: { carts: 1, ...s.player } };
   },
 };
 

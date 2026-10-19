@@ -67,13 +67,18 @@ talk: changan.officer.talk
 ifnone: 赵捕快：今天的差事都派完了，明天再来吧。
 ---
 赵捕快：这位{男:兄弟|女:姑娘}，可是来领差事的？赏钱不多，胜在实在。
-* 有什么除害的差事？ -> changan.job.bandit ?!flag:world.job.bandit_changan ?!today:world.job.bandit_changan
-* 听说城里闹飞贼？ -> changan.job.thief ?!flag:world.job.thief_changan ?!today:world.job.thief_changan
-* 要不要去客栈查查外乡人？ -> changan.job.patrol ?!flag:world.job.patrol_changan ?!today:world.job.patrol_changan
+* 有什么除害的差事？ -> changan.job.bandit ?pick:office.changan:bandit ?!flag:world.job.bandit_changan ?!today:world.job.bandit_changan
+* 听说城里闹飞贼？ -> changan.job.thief ?pick:office.changan:thief ?!flag:world.job.thief_changan ?!today:world.job.thief_changan
+* 要不要去客栈查查外乡人？ -> changan.job.patrol ?pick:office.changan:patrol ?!flag:world.job.patrol_changan ?!today:world.job.patrol_changan
 * 有信要送去成都吗？ -> changan.job.mail_chengdu ?!flag:world.job.mail_chengdu ?!today:world.job.mailday_changan_chengdu
 * 有信要送去洛阳吗？ -> changan.job.mail_luoyang ?!flag:world.job.mail_luoyang ?!today:world.job.mailday_changan_luoyang
 * 交上成都衙门托付的书信 -> changan.job.deliver_chengdu ?flag:world.job.mail_changan_from_chengdu
 * 交上洛阳衙门托付的书信 -> changan.job.deliver_luoyang ?flag:world.job.mail_changan_from_luoyang
+* 可有告示要张贴？ -> changan.job.notice ?pick:office.changan:notice ?!flag:world.job.notice_changan ?!today:world.job.notice_changan
+* 钱庄那边可有事？ -> changan.job.ledger ?pick:office.changan:ledger ?!flag:world.job.ledger_changan ?!today:world.job.ledger_changan
+* 要不要去市集巡夜？ -> changan.job.night ?pick:office.changan:night ?!flag:world.job.night_changan ?!today:world.job.night_changan
+* 客栈里可有人闹事？ -> changan.job.drunk ?pick:office.changan:drunk ?!flag:world.job.drunk_changan ?!today:world.job.drunk_changan
+* 车马行那边可有可疑的人？ -> changan.job.kidnap ?pick:office.changan:kidnap ?!flag:world.job.kidnap_changan ?!today:world.job.kidnap_changan
 * 离开
 
 === dialog: changan.job.thief

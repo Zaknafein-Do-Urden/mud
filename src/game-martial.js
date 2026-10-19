@@ -27,7 +27,7 @@ export const martial = {
     const rank = sect ? sectRanks(sect)[p.sect.rank]?.name : null;
     this.emit('sys', `【${p.name}】${p.gender ?? ''}`);
     this.emit('sys', `气血 ${p.hp}/${this.hpMax()}　内力 ${maxMp(this.db, p)}（战斗开始时回满）　潜能 ${p.potential}`);
-    this.emit('sys', `身上 ${p.money ?? 0} 文　存款 ${p.bank ?? 0} 文　第 ${this.state.day ?? 1} 日`);
+    this.emit('sys', `身上 ${p.money ?? 0} 文　存款 ${p.bank ?? 0} 文`);
     this.emit('sys', `根骨 ${p.attrs.根骨}　身法 ${p.attrs.身法}　悟性 ${p.attrs.悟性}`);
     this.emit('sys', sect ? `门派：[[${sect.props.name}|${sect.id}]]　${rank}　声望 ${p.sect.rep}` : '门派：无（江湖散人）');
   },
@@ -132,7 +132,7 @@ export const martial = {
     p.hp = this.hpMax();
     this.state.day = (this.state.day ?? 1) + 1;
     const msg = this.room().props.restmsg ?? '你要了一间客房，美美睡了一觉。醒来时神清气爽。';
-    this.emit('sys', `${msg}（气血全满，第 ${this.state.day} 日）`);
+    this.emit('sys', `${msg}（气血全满）`);
   },
 
   // ---- 天赋（D-044）----

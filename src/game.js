@@ -10,6 +10,8 @@ import { party } from './game-party.js';
 import { skillCap, bestInnerLv, isWeaponItem } from './character.js';
 import { tal } from './talents.js';
 import { xiuwei } from './combat.js';
+import { CONFIG } from './config.js';
+import { hash01 } from './economy.js';
 
 const DIR_ALIAS = {
   n: '北', s: '南', e: '东', w: '西', u: '上', d: '下',
@@ -178,6 +180,10 @@ export class Game {
       else if (kind === 'talent') { const [id, lv] = splitOnce(key); ok = tal(player, id) >= Number(lv || 1); }
       else if (kind === 'party') ok = 1 + (this.party?.members.length ?? 0) >= Number(key);
       else if (kind === 'learned') ok = player.skills[key] !== undefined;
+      // 车上的货够不够（门派材料差事，D-125）：cargo:货物:件数
+      else if (kind === 'cargo') { const [g, n] = splitOnce(key); ok = (player.cargo?.[g] ?? 0) >= Number(n || 1); }
+      // 每日差事（D-124）：pick:差事池:差事 —— 今天这件差事有没有被抽中
+      else if (kind === 'pick') { const i = key.lastIndexOf(':'); ok = this.jobPicked(key.slice(0, i), key.slice(i + 1)); }
       else { console.warn('未知条件', c); ok = false; }
       return neg ? !ok : ok;
     });
@@ -272,7 +278,14 @@ export class Game {
       else if (kind === 'travel') this.travel(key);
       else if (kind === 'sectlearn') this.learn(key); // 向本门师父学艺（不要钱，规则同"学"命令）
       else if (kind === 'promote') this.promote(); // 向本门师父申请晋阶（D-099，规则同"晋阶"命令）
-      else if (kind === 'escort') this.hireEscort(); // 车马行雇镖师（D-104）
+      else if (kind === 'escort') this.hireEscort(Number(key) || 1); // 车马行雇镖师（D-104、D-122）
+      else if (kind === 'buycart') this.buyCart(); // 车马行添一辆马车（D-122）
+      else if (kind === 'deliver') { // 交出车上的货（门派材料差事，D-125）：deliver:货物:件数
+        const [g, n] = splitOnce(key);
+        const left = (player.cargo?.[g] ?? 0) - Number(n || 1);
+        if (left > 0) player.cargo[g] = left; else delete player.cargo[g];
+        this.emit('sys', `你从马车上卸下 ${n} 件${this.db.goods[g]?.props.name ?? g}交了上去。`);
+      }
       else if (kind === 'qiyu') this.qiyuEnd(key === 'good'); // 马车奇遇收场：good 发奖励，然后到站（D-114）
       else if (kind === 'study') this.studyBook(key); // 研读奇遇得来的秘籍（D-114）
       else if (kind === 'learn') {
@@ -755,6 +768,28 @@ export class Game {
     return [...COMMANDS, ...verbs, ...c.exits, ...c.npcs.map((n) => n.name), ...c.items.map((i) => i.name)];
   }
 }
+
+/**
+ * 每日差事（D-124）：差事池里写了 ?pick:池:差事 的选项，每天（现实中的日子）按日期抽 CONFIG.jobs[池的前缀] 件。
+ * 只从阶位、门派条件够得着的里面抽，所以低阶弟子不会抽到一堆做不了的。做完一件不会补抽，明天换一批。
+ */
+Game.prototype.jobPicked = function jobPicked(group, id) {
+  const members = [];
+  for (const d of Object.values(this.db.dialog)) {
+    for (const c of d.choices) {
+      const tag = c.cond.find((x) => x.startsWith(`pick:${group}:`));
+      if (tag) members.push({ id: tag.slice(`pick:${group}:`.length), gate: c.cond.filter((x) => /^!?(rank|sect):/.test(x)) });
+    }
+  }
+  const n = CONFIG.jobs[group.split('.')[0]] ?? 3;
+  const day = todayStr();
+  return members
+    .filter((m) => this.check(m.gate))
+    .map((m) => ({ id: m.id, h: hash01(day, group, m.id) }))
+    .sort((a, b) => a.h - b.h)
+    .slice(0, n)
+    .some((m) => m.id === id);
+};
 
 /** 现实中的今天（本地日期）。门派任务每天只能做一次（D-049） */
 export function todayStr() {

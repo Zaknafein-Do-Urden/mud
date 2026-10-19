@@ -2,7 +2,7 @@
 
 === sect: shaolin
 name: 少林
-ranks: 俗家弟子=0, 罗汉堂弟子=100, 般若堂弟子=250, 达摩院弟子=450, 护法金刚=700
+ranks: 俗家弟子=0, 罗汉堂弟子=150, 般若堂弟子=500, 达摩院弟子=1200, 护法金刚=2500
 caps: 40, 70, 100, 140, 180
 examiner: 慧觉
 ---
@@ -252,12 +252,20 @@ talk: shaolin.huiming.talk
 === dialog: shaolin.huiming.task
 ifnone: 慧明禅师：今天的差事都办完了，目前没有门派任务。明日再来吧。
 ---
-* 后山有人作乱吗？ -> shaolin.task.bandit ?!flag:world.shaolin.task_bandit ?!today:world.shaolin.task_bandit
-* 附近可有人滋事？ -> shaolin.task.b2 ?!flag:world.shaolin.task_b2 ?!today:world.shaolin.task_b2
-* 要不要去后山巡视？ -> shaolin.task.patrol ?!flag:world.shaolin.task_patrol ?!today:world.shaolin.task_patrol
-* 可有书信要送去洛阳？ -> shaolin.task.deliver ?!flag:world.shaolin.task_deliver ?!today:world.shaolin.task_deliver
-* 可有更难的差事？ -> shaolin.task.thief ?rank:1 ?!flag:world.shaolin.task_thief ?!today:world.shaolin.task_thief
-* 可有最难办的差事？ -> shaolin.task.b3 ?rank:2 ?!flag:world.shaolin.task_b3 ?!today:world.shaolin.task_b3
+* 后山有人作乱吗？ -> shaolin.task.bandit ?pick:sect.shaolin:bandit ?!flag:world.shaolin.task_bandit ?!today:world.shaolin.task_bandit
+* 附近可有人滋事？ -> shaolin.task.b2 ?pick:sect.shaolin:b2 ?!flag:world.shaolin.task_b2 ?!today:world.shaolin.task_b2
+* 要不要去后山巡视？ -> shaolin.task.patrol ?pick:sect.shaolin:patrol ?!flag:world.shaolin.task_patrol ?!today:world.shaolin.task_patrol
+* 可有书信要送去洛阳？ -> shaolin.task.deliver ?pick:sect.shaolin:deliver ?!flag:world.shaolin.task_deliver ?!today:world.shaolin.task_deliver
+* 可有更难的差事？ -> shaolin.task.thief ?rank:1 ?pick:sect.shaolin:thief ?!flag:world.shaolin.task_thief ?!today:world.shaolin.task_thief
+* 可有最难办的差事？ -> shaolin.task.b3 ?rank:2 ?pick:sect.shaolin:b3 ?!flag:world.shaolin.task_b3 ?!today:world.shaolin.task_b3
+* 后山的药圃可要人照看？ -> shaolin.task.herb ?pick:sect.shaolin:herb ?!flag:world.shaolin.task_herb ?!today:world.shaolin.task_herb
+* 可有经卷要送往别处？ -> shaolin.task.visit ?pick:sect.shaolin:visit ?!flag:world.shaolin.task_visit ?!today:world.shaolin.task_visit
+* 寺里可缺什么东西？ -> shaolin.task.buy ?pick:sect.shaolin:buy ?!flag:world.shaolin.task_buy ?!today:world.shaolin.task_buy
+* 可有香客要人护送？ -> shaolin.task.escort ?pick:sect.shaolin:escort ?!flag:world.shaolin.task_escort ?!today:world.shaolin.task_escort
+* 山门外可有人生事？ -> shaolin.task.rival ?pick:sect.shaolin:rival ?!flag:world.shaolin.task_rival ?!today:world.shaolin.task_rival
+* 可有棘手的差事？ -> shaolin.task.hunt ?pick:sect.shaolin:hunt ?rank:1 ?!flag:world.shaolin.task_hunt ?!today:world.shaolin.task_hunt
+* 师门缺什么材料？ -> shaolin.task.material_ask ?!cargo:tea:100 ?!today:world.shaolin.task_material
+* 交上茶叶 100 件 -> shaolin.task.material ?cargo:tea:100 ?!today:world.shaolin.task_material
 * 告辞
 
 === dialog: shaolin.task.bandit

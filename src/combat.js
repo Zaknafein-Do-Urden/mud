@@ -946,7 +946,7 @@ export function createScaledBattle(db, foeIds, level, meta, seed) {
     };
     return enemyUnit(db, scaled, i);
   });
-  const LABEL = '甲乙丙丁';
+  const LABEL = '甲乙丙丁戊己庚辛';
   if (units.length > 1) units.forEach((u, i) => { u.name += LABEL[i]; });
   const pUnits = playerUnits(db, meta.players);
   delete meta.players;
@@ -957,6 +957,7 @@ export function createScaledBattle(db, foeIds, level, meta, seed) {
     const scaled = { ...a, props: { ...a.props, skills: Object.keys(parseNums(a.props.skills)).map((s) => `${s}=${lv}`).join(', '), attrs: `根骨=${14 + Math.floor(lv / 4)}, 身法=${12 + Math.floor(lv / 5)}, 悟性=12` } };
     return { ...enemyUnit(db, scaled, i), key: 'a' + i, side: 'p', isAlly: true };
   });
+  if (allyUnits.length > 1) allyUnits.forEach((u, i) => { u.name += LABEL[i]; });
   delete meta.allies;
   return { id: '__scaled__', ...meta, seed: seed | 0, round: 0, foeLv: lv, units: [...pUnits, ...allyUnits, ...units], over: null };
 }
@@ -1095,18 +1096,31 @@ export const ADAPT_HP_MIN = CONFIG.adapt.hpMin;
  * - 敌人伤害放缩到打完时主角约掉 ADAPT_TAKEN 的气血。敌人的招按同样的权重分摊到我方各人身上；
  *   敌人按排列顺序一个个倒下：正在打的那个按猜对率算，其余同时出手的按瞎猜（三分之一）算。
  * opts.hard：难度系数（劫道按货值给，1 为标准），乘在回合数和掉血比例上。
- * 返回气血倍率。
+ * opts.solo（劫道，D-122）：每个敌人单独按"主角一个人打它"放缩，不看队友、镖师、客人。
+ *   这样几个劫匪就是几倍主角的战力，队友和镖师是实打实的帮手；镖师也按主角放缩（难度 1），和一个劫匪差不多强。
+ *   opts.each：单个劫匪的强度（车多了每个弱一点，D-122），乘在难度系数上，不受 hardMin 限制。
+ * 返回气血倍率（solo 时是第一个敌人的）。
  */
 export function adaptEnemyHp(db, b, opts = {}) {
   const foes = enemiesOf(b);
-  const team = teamOf(b);
   const players = playersOf(b);
   if (!foes.length || !players.length) return 1;
   const hard = Math.min(CONFIG.adapt.hardMax, Math.max(CONFIG.adapt.hardMin, opts.hard ?? 1));
+  const allies = teamOf(b).filter((u) => !u.isPlayer);
+  if (opts.solo) {
+    const host = players.slice(0, 1);
+    const ms = foes.map((e) => scaleFoes(db, [e], host, [], hard * (opts.each ?? 1)));
+    for (const a of allies) scaleFoes(db, [a], host, [], 1);
+    return ms[0];
+  }
+  return scaleFoes(db, foes, players, allies, hard);
+}
+
+/** 把 foes 放缩到"players 加 allies 一起打"约 ADAPT_ROUNDS × hard 回合打完、主角掉 ADAPT_TAKEN × hard 的气血 */
+function scaleFoes(db, foes, players, allies, hard) {
   const me = players[0];
   const sideOf = (u) => ({ u, best: stanceBest(db, u), moves: stanceMoves(db, u) });
   const pSides = players.map((u, i) => ({ u, w: i === 0 ? ADAPT_HOST : ADAPT_GUEST, side: sideOf(u) }));
-  const allies = team.filter((u) => !u.isPlayer);
   const allyOut = allies.reduce((s, u) => s + meanOut(stanceBest(db, u)), 0) * ADAPT_ALLY;
   const weight = pSides.reduce((s, x) => s + x.w, 0) + allies.length * ADAPT_ALLY;
   const share = 1 / weight; // 敌人的招落在主角身上的比例

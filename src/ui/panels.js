@@ -1,4 +1,4 @@
-// 面板：人物（状态 / 武功 / 天赋 / 背包）、江湖（主线 / 任务 / 百科）、市集、钱庄（D-045）。
+// 面板：人物（状态 / 武功 / 天赋 / 背包）、江湖（主线 / 差事 / 百科）、市集、钱庄（D-045）。
 // 原则：命令能做的事，面板上都有按钮；按钮只是替玩家发送命令，执行结果显示在面板底部，也照常进入正文。
 
 const el = (tag, cls, text) => {
@@ -79,7 +79,7 @@ export function initPanels(api) {
 
   const PANELS = {
     char: { title: '人物', tabs: ['状态', '武功', '天赋', '合击', '背包'], render: renderChar },
-    journal: { title: '江湖', tabs: ['主线', '任务', '百科'], render: renderJournal },
+    journal: { title: '江湖', tabs: ['主线', '差事', '百科'], render: renderJournal },
     market: { title: '市集', tabs: [], render: renderMarket },
     bank: { title: '钱庄', tabs: [], render: renderBank },
   };
@@ -116,7 +116,6 @@ export function initPanels(api) {
         kv('修为', `${v.xiuwei}（刚、巧、守三势最狠一招的攻击值之和，加气血上限的五分之一）`),
         kv('潜能', `${v.potential}（用于修炼武功）`),
         kv('钱财', `身上 ${v.money} 文　钱庄 ${v.bank} 文`),
-        kv('日子', `第 ${v.day} 日`),
       );
       if (v.sect) {
         body.append(kv('门派', `${v.sect.name}　${v.sect.rank}　声望 ${v.sect.rep}`));
@@ -313,7 +312,7 @@ export function initPanels(api) {
       }
       return;
     }
-    if (tab === '任务') {
+    if (tab === '差事') {
       const qs = g.questsView();
       if (!qs.length) body.append(el('p', 'pn-hint', '眼下没有在办的差事。可以去各城衙门、本门师父那里领。'));
       for (const q of qs) {
@@ -435,22 +434,22 @@ export function initPanels(api) {
   function renderMarket() {
     const v = api.game().marketView();
     if (!v) { body.append(el('p', 'pn-hint', '这里不是市集。')); return; }
-    body.append(el('p', 'pn-hint', `${v.city}市集　第 ${v.day} 日行情　身上 ${v.money} 文　马车 ${v.cargoUnits}/${v.cargoCap} 件`));
+    body.append(el('p', 'pn-hint', `${v.city}市集　今日行情　身上 ${v.money} 文　马车 ${v.cargoUnits}/${v.cargoCap} 件`));
     const t = el('table', 'pn-table');
-    t.append(Object.assign(el('tr'), { innerHTML: '<th>货物</th><th>买入</th><th>卖出</th><th>车上</th><th></th>' }));
+    t.append(Object.assign(el('tr'), { innerHTML: '<th>货物</th><th>买入</th><th>存货</th><th>卖出</th><th>车上</th><th></th>' }));
     for (const gd of v.goods) {
       const tr = el('tr');
       const ops = el('td', 'pn-btns');
-      // 本地没有的货（D-076）：显示价格，不能买，但能卖
-      const noBuy = !gd.local;
+      // 存货（D-123）：特产多、外地货零星几件，卖光了今天就买不到；任何货都能卖（D-076）
+      const noBuy = !gd.stock;
       ops.append(
         button('买1', () => act(`买 ${gd.id} 1`), { disabled: noBuy || v.money < gd.buy || v.cargoUnits >= v.cargoCap }),
-        button('买10', () => act(`买 ${gd.id} 10`), { disabled: noBuy || v.money < gd.buy * 10 || v.cargoUnits + 10 > v.cargoCap }),
+        button('买10', () => act(`买 ${gd.id} 10`), { disabled: noBuy || gd.stock < 10 || v.money < gd.buy * 10 || v.cargoUnits + 10 > v.cargoCap }),
         button('买满', () => act(`买 ${gd.id} 全部`), { disabled: noBuy || v.money < gd.buy || v.cargoUnits >= v.cargoCap }),
         button('卖1', () => act(`卖 ${gd.id} 1`), { disabled: !gd.have }),
         button('全卖', () => act(`卖 ${gd.id} 全部`), { disabled: !gd.have }),
       );
-      tr.append(el('td', '', gd.local ? `${gd.name}（特产）` : gd.name), el('td', noBuy ? 'pn-dim' : '', noBuy ? '本地无货' : gd.buy), el('td', '', gd.sell), el('td', '', gd.have || ''), ops);
+      tr.append(el('td', '', gd.local ? `${gd.name}（特产）` : gd.name), el('td', noBuy ? 'pn-dim' : '', noBuy ? '无货' : gd.buy), el('td', noBuy ? 'pn-dim' : '', gd.stock || ''), el('td', '', gd.sell), el('td', '', gd.have || ''), ops);
       t.append(tr);
     }
     body.append(t);

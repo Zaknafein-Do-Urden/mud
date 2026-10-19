@@ -67,13 +67,18 @@ talk: luoyang.officer.talk
 ifnone: 李都头：今天的差事都派完了，明天再来吧。
 ---
 李都头：这位{男:兄弟|女:姑娘}，可是来领差事的？赏钱不多，胜在实在。
-* 有什么除害的差事？ -> luoyang.job.bandit ?!flag:world.job.bandit_luoyang ?!today:world.job.bandit_luoyang
-* 听说城里闹飞贼？ -> luoyang.job.thief ?!flag:world.job.thief_luoyang ?!today:world.job.thief_luoyang
-* 要不要去客栈查查外乡人？ -> luoyang.job.patrol ?!flag:world.job.patrol_luoyang ?!today:world.job.patrol_luoyang
+* 有什么除害的差事？ -> luoyang.job.bandit ?pick:office.luoyang:bandit ?!flag:world.job.bandit_luoyang ?!today:world.job.bandit_luoyang
+* 听说城里闹飞贼？ -> luoyang.job.thief ?pick:office.luoyang:thief ?!flag:world.job.thief_luoyang ?!today:world.job.thief_luoyang
+* 要不要去客栈查查外乡人？ -> luoyang.job.patrol ?pick:office.luoyang:patrol ?!flag:world.job.patrol_luoyang ?!today:world.job.patrol_luoyang
 * 有信要送去长安吗？ -> luoyang.job.mail_changan ?!flag:world.job.mail_changan ?!today:world.job.mailday_luoyang_changan
 * 有信要送去襄阳吗？ -> luoyang.job.mail_xiangyang ?!flag:world.job.mail_xiangyang ?!today:world.job.mailday_luoyang_xiangyang
 * 交上长安衙门托付的书信 -> luoyang.job.deliver_changan ?flag:world.job.mail_luoyang_from_changan
 * 交上襄阳衙门托付的书信 -> luoyang.job.deliver_xiangyang ?flag:world.job.mail_luoyang_from_xiangyang
+* 可有告示要张贴？ -> luoyang.job.notice ?pick:office.luoyang:notice ?!flag:world.job.notice_luoyang ?!today:world.job.notice_luoyang
+* 钱庄那边可有事？ -> luoyang.job.ledger ?pick:office.luoyang:ledger ?!flag:world.job.ledger_luoyang ?!today:world.job.ledger_luoyang
+* 要不要去市集巡夜？ -> luoyang.job.night ?pick:office.luoyang:night ?!flag:world.job.night_luoyang ?!today:world.job.night_luoyang
+* 客栈里可有人闹事？ -> luoyang.job.drunk ?pick:office.luoyang:drunk ?!flag:world.job.drunk_luoyang ?!today:world.job.drunk_luoyang
+* 车马行那边可有可疑的人？ -> luoyang.job.kidnap ?pick:office.luoyang:kidnap ?!flag:world.job.kidnap_luoyang ?!today:world.job.kidnap_luoyang
 * 离开
 
 === dialog: luoyang.job.thief

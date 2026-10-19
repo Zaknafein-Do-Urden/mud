@@ -2,7 +2,7 @@
 
 === sect: huashan
 name: 华山
-ranks: 外门弟子=0, 入门弟子=100, 亲传弟子=250, 华山剑客=450, 华山长老=700
+ranks: 外门弟子=0, 入门弟子=150, 亲传弟子=500, 华山剑客=1200, 华山长老=2500
 caps: 40, 70, 100, 140, 180
 examiner: 梁师兄
 ---
@@ -249,12 +249,20 @@ do: give:w.mujian
 === dialog: huashan.mu.task
 ifnone: 穆清风：今天的差事都办完了，目前没有门派任务。明日再来吧。
 ---
-* 山上可有贼人？ -> huashan.task.bandit ?!flag:world.huashan.task_bandit ?!today:world.huashan.task_bandit
-* 附近可有人滋事？ -> huashan.task.b2 ?!flag:world.huashan.task_b2 ?!today:world.huashan.task_b2
-* 要不要去苍龙岭巡视？ -> huashan.task.patrol ?!flag:world.huashan.task_patrol ?!today:world.huashan.task_patrol
-* 可有书信要送去长安？ -> huashan.task.deliver ?!flag:world.huashan.task_deliver ?!today:world.huashan.task_deliver
-* 可有更难的差事？ -> huashan.task.spy ?rank:1 ?!flag:world.huashan.task_spy ?!today:world.huashan.task_spy
-* 可有最难办的差事？ -> huashan.task.b3 ?rank:2 ?!flag:world.huashan.task_b3 ?!today:world.huashan.task_b3
+* 山上可有贼人？ -> huashan.task.bandit ?pick:sect.huashan:bandit ?!flag:world.huashan.task_bandit ?!today:world.huashan.task_bandit
+* 附近可有人滋事？ -> huashan.task.b2 ?pick:sect.huashan:b2 ?!flag:world.huashan.task_b2 ?!today:world.huashan.task_b2
+* 要不要去苍龙岭巡视？ -> huashan.task.patrol ?pick:sect.huashan:patrol ?!flag:world.huashan.task_patrol ?!today:world.huashan.task_patrol
+* 可有书信要送去长安？ -> huashan.task.deliver ?pick:sect.huashan:deliver ?!flag:world.huashan.task_deliver ?!today:world.huashan.task_deliver
+* 可有更难的差事？ -> huashan.task.spy ?rank:1 ?pick:sect.huashan:spy ?!flag:world.huashan.task_spy ?!today:world.huashan.task_spy
+* 可有最难办的差事？ -> huashan.task.b3 ?rank:2 ?pick:sect.huashan:b3 ?!flag:world.huashan.task_b3 ?!today:world.huashan.task_b3
+* 山上可要采药？ -> huashan.task.herb ?pick:sect.huashan:herb ?!flag:world.huashan.task_herb ?!today:world.huashan.task_herb
+* 可有人要接？ -> huashan.task.visit ?pick:sect.huashan:visit ?!flag:world.huashan.task_visit ?!today:world.huashan.task_visit
+* 派里可缺什么东西？ -> huashan.task.buy ?pick:sect.huashan:buy ?!flag:world.huashan.task_buy ?!today:world.huashan.task_buy
+* 可有师妹要下山？ -> huashan.task.escort ?pick:sect.huashan:escort ?!flag:world.huashan.task_escort ?!today:world.huashan.task_escort
+* 山下可有人挑衅？ -> huashan.task.rival ?pick:sect.huashan:rival ?!flag:world.huashan.task_rival ?!today:world.huashan.task_rival
+* 可有棘手的差事？ -> huashan.task.hunt ?pick:sect.huashan:hunt ?rank:1 ?!flag:world.huashan.task_hunt ?!today:world.huashan.task_hunt
+* 师门缺什么材料？ -> huashan.task.material_ask ?!cargo:herbs:100 ?!today:world.huashan.task_material
+* 交上药材 100 件 -> huashan.task.material ?cargo:herbs:100 ?!today:world.huashan.task_material
 * 告辞
 
 === dialog: huashan.task.bandit

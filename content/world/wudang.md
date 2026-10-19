@@ -2,7 +2,7 @@
 
 === sect: wudang
 name: 武当
-ranks: 记名弟子=0, 入门弟子=100, 三代弟子=250, 二代弟子=450, 真武护法=700
+ranks: 记名弟子=0, 入门弟子=150, 三代弟子=500, 二代弟子=1200, 真武护法=2500
 caps: 40, 70, 100, 140, 180
 examiner: 明月
 ---
@@ -280,12 +280,20 @@ do: give:w.songwen
 === dialog: wudang.qingxu.task
 ifnone: 清虚道长：今天的差事都办完了，目前没有门派任务。明日再来吧。
 ---
-* 山下可有不太平的事？ -> wudang.task.bandit ?!flag:world.wudang.task_bandit ?!today:world.wudang.task_bandit
-* 附近可有人滋事？ -> wudang.task.b2 ?!flag:world.wudang.task_b2 ?!today:world.wudang.task_b2
-* 要不要去西边密林巡视？ -> wudang.task.patrol ?!flag:world.wudang.task_patrol ?!today:world.wudang.task_patrol
-* 可有书信要送去襄阳？ -> wudang.task.deliver ?!flag:world.wudang.task_deliver ?!today:world.wudang.task_deliver
-* 可有更难的差事？ -> wudang.task.spy ?rank:1 ?!flag:world.wudang.task_spy ?!today:world.wudang.task_spy
-* 可有最难办的差事？ -> wudang.task.b3 ?rank:2 ?!flag:world.wudang.task_b3 ?!today:world.wudang.task_b3
+* 山下可有不太平的事？ -> wudang.task.bandit ?pick:sect.wudang:bandit ?!flag:world.wudang.task_bandit ?!today:world.wudang.task_bandit
+* 附近可有人滋事？ -> wudang.task.b2 ?pick:sect.wudang:b2 ?!flag:world.wudang.task_b2 ?!today:world.wudang.task_b2
+* 要不要去西边密林巡视？ -> wudang.task.patrol ?pick:sect.wudang:patrol ?!flag:world.wudang.task_patrol ?!today:world.wudang.task_patrol
+* 可有书信要送去襄阳？ -> wudang.task.deliver ?pick:sect.wudang:deliver ?!flag:world.wudang.task_deliver ?!today:world.wudang.task_deliver
+* 可有更难的差事？ -> wudang.task.spy ?rank:1 ?pick:sect.wudang:spy ?!flag:world.wudang.task_spy ?!today:world.wudang.task_spy
+* 可有最难办的差事？ -> wudang.task.b3 ?rank:2 ?pick:sect.wudang:b3 ?!flag:world.wudang.task_b3 ?!today:world.wudang.task_b3
+* 山里可要采药？ -> wudang.task.herb ?pick:sect.wudang:herb ?!flag:world.wudang.task_herb ?!today:world.wudang.task_herb
+* 可有拜帖要送？ -> wudang.task.visit ?pick:sect.wudang:visit ?!flag:world.wudang.task_visit ?!today:world.wudang.task_visit
+* 观里可缺什么东西？ -> wudang.task.buy ?pick:sect.wudang:buy ?!flag:world.wudang.task_buy ?!today:world.wudang.task_buy
+* 可有师弟要下山？ -> wudang.task.escort ?pick:sect.wudang:escort ?!flag:world.wudang.task_escort ?!today:world.wudang.task_escort
+* 山门前可有人闹事？ -> wudang.task.rival ?pick:sect.wudang:rival ?!flag:world.wudang.task_rival ?!today:world.wudang.task_rival
+* 可有棘手的差事？ -> wudang.task.hunt ?pick:sect.wudang:hunt ?rank:1 ?!flag:world.wudang.task_hunt ?!today:world.wudang.task_hunt
+* 师门缺什么材料？ -> wudang.task.material_ask ?!cargo:porcelain:100 ?!today:world.wudang.task_material
+* 交上瓷器 100 件 -> wudang.task.material ?cargo:porcelain:100 ?!today:world.wudang.task_material
 * 告辞
 
 === dialog: wudang.task.bandit

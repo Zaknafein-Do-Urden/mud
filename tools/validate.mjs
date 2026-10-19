@@ -48,7 +48,9 @@ function checkConds(b, conds) {
     else if (kind === 'learned' && !db.skill[key]) err(b, `learned 条件引用了不存在的武功: ${key}`);
     else if (kind === 'stance' && !/^[刚巧守]:\d+$/.test(key)) err(b, `stance 条件格式应为 stance:刚:45，却是: ${c}`);
     else if (['maxhp', 'xiuwei', 'inner', 'party'].includes(kind) && Number.isNaN(Number(key))) err(b, `${kind} 条件需要数字: ${c}`);
-    else if (!['flag', 'has', 'visited', 'sect', 'rank', 'gender', 'money', 'today', 'maxhp', 'xiuwei', 'inner', 'stance', 'talent', 'party', 'learned'].includes(kind)) err(b, `未知条件: ${c}`);
+    else if (kind === 'cargo') { const [g, n] = key.split(':'); if (!db.goods[g] || Number.isNaN(Number(n))) err(b, `cargo 格式应为 cargo:货物:件数，却是: ${c}`); }
+    else if (kind === 'pick' && !/^(sect|office)\.[\w]+:[\w]+$/.test(key)) err(b, `pick 格式应为 pick:sect.门派:差事 或 pick:office.城市:差事，却是: ${c}`);
+    else if (!['flag', 'has', 'visited', 'sect', 'rank', 'gender', 'money', 'today', 'maxhp', 'xiuwei', 'inner', 'stance', 'talent', 'party', 'learned', 'cargo', 'pick'].includes(kind)) err(b, `未知条件: ${c}`);
   }
 }
 
@@ -68,7 +70,9 @@ function checkEffects(b, effects) {
     else if (kind === 'learn' || kind === 'sectlearn') { if (!db.skill[key]) err(b, `${kind} 目标武功不存在: ${key}`); }
     else if (kind === 'rep') { const [sect, n] = key.split(':'); if (!db.sect[sect] || Number.isNaN(Number(n))) err(b, `rep 格式应为 rep:门派:数值，却是: ${e}`); }
     else if (kind === 'potential') { if (Number.isNaN(Number(key))) err(b, `potential 需要数字: ${e}`); }
-    else if (kind === 'heal' || kind === 'promote' || kind === 'escort') { /* 无参数 */ }
+    else if (kind === 'heal' || kind === 'promote' || kind === 'buycart') { /* 无参数 */ }
+    else if (kind === 'escort') { if (key && Number.isNaN(Number(key))) err(b, `escort 需要数字: ${e}`); }
+    else if (kind === 'deliver') { const [g, n] = key.split(':'); if (!db.goods[g] || Number.isNaN(Number(n))) err(b, `deliver 格式应为 deliver:货物:件数，却是: ${e}`); }
     else if (kind === 'money' || kind === 'pay') { if (Number.isNaN(Number(key))) err(b, `${kind} 需要数字: ${e}`); }
     else if (kind === 'qiyu') { if (!['good', 'bad'].includes(key)) err(b, `qiyu 效果只能是 qiyu:good 或 qiyu:bad: ${e}`); }
     else if (kind === 'study') { if (!db.skill[key]) err(b, `study 目标武功不存在: ${key}`); }

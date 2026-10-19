@@ -3,7 +3,7 @@
 
 === sect: gaibang
 name: 丐帮
-ranks: 一袋弟子=0, 二袋弟子=100, 三袋弟子=250, 四袋弟子=450, 五袋弟子=700
+ranks: 一袋弟子=0, 二袋弟子=150, 三袋弟子=500, 四袋弟子=1200, 五袋弟子=2500
 caps: 40, 70, 100, 140, 180
 # 晋阶考核时与之过招的同门（照搬玩家当前的功夫，势均力敌）
 examiner: 黎生
@@ -236,12 +236,20 @@ talk: gaibang.lu.talk
 === dialog: gaibang.lu.task
 ifnone: 鲁有脚：今天的差事都办完了，目前没有门派任务。明日再来吧。
 ---
-* 城外有人欺压百姓吗？ -> gaibang.lu.task1 ?!flag:world.gb.task_pipi ?!today:world.gb.task_pipi
-* 附近可有人滋事？ -> gaibang.task.b2 ?!flag:world.gaibang.task_b2 ?!today:world.gaibang.task_b2
-* 要不要去西湖断桥巡视？ -> gaibang.task.patrol ?!flag:world.gaibang.task_patrol ?!today:world.gaibang.task_patrol
-* 可有书信要送去嘉兴？ -> gaibang.task.deliver ?!flag:world.gaibang.task_deliver ?!today:world.gaibang.task_deliver
-* 有没有难一些的差事？ -> gaibang.lu.task2 ?rank:1 ?!flag:world.gb.task_snake ?!today:world.gb.task_snake
-* 可有最难办的差事？ -> gaibang.task.b3 ?rank:2 ?!flag:world.gaibang.task_b3 ?!today:world.gaibang.task_b3
+* 城外有人欺压百姓吗？ -> gaibang.lu.task1 ?pick:sect.gaibang:task1 ?!flag:world.gb.task_pipi ?!today:world.gb.task_pipi
+* 附近可有人滋事？ -> gaibang.task.b2 ?pick:sect.gaibang:b2 ?!flag:world.gaibang.task_b2 ?!today:world.gaibang.task_b2
+* 要不要去西湖断桥巡视？ -> gaibang.task.patrol ?pick:sect.gaibang:patrol ?!flag:world.gaibang.task_patrol ?!today:world.gaibang.task_patrol
+* 可有书信要送去嘉兴？ -> gaibang.task.deliver ?pick:sect.gaibang:deliver ?!flag:world.gaibang.task_deliver ?!today:world.gaibang.task_deliver
+* 有没有难一些的差事？ -> gaibang.lu.task2 ?rank:1 ?pick:sect.gaibang:task2 ?!flag:world.gb.task_snake ?!today:world.gb.task_snake
+* 可有最难办的差事？ -> gaibang.task.b3 ?rank:2 ?pick:sect.gaibang:b3 ?!flag:world.gaibang.task_b3 ?!today:world.gaibang.task_b3
+* 茶楼里可有消息要打听？ -> gaibang.task.teahouse ?pick:sect.gaibang:teahouse ?!flag:world.gaibang.task_teahouse ?!today:world.gaibang.task_teahouse
+* 嘉兴那边的弟兄可要人传话？ -> gaibang.task.visit ?pick:sect.gaibang:visit ?!flag:world.gaibang.task_visit ?!today:world.gaibang.task_visit
+* 帮里可缺什么东西？ -> gaibang.task.buy ?pick:sect.gaibang:buy ?!flag:world.gaibang.task_buy ?!today:world.gaibang.task_buy
+* 可有小兄弟要人照看？ -> gaibang.task.escort ?pick:sect.gaibang:escort ?!flag:world.gaibang.task_escort ?!today:world.gaibang.task_escort
+* 城门口可有人闹事？ -> gaibang.task.rival ?pick:sect.gaibang:rival ?!flag:world.gaibang.task_rival ?!today:world.gaibang.task_rival
+* 可有棘手的人要对付？ -> gaibang.task.hunt ?pick:sect.gaibang:hunt ?rank:1 ?!flag:world.gaibang.task_hunt ?!today:world.gaibang.task_hunt
+* 师门缺什么材料？ -> gaibang.task.material_ask ?!cargo:fur:100 ?!today:world.gaibang.task_material
+* 交上皮货 100 件 -> gaibang.task.material ?cargo:fur:100 ?!today:world.gaibang.task_material
 * 告辞
 
 === dialog: gaibang.lu.task1

@@ -69,11 +69,16 @@ talk: suzhou.officer.talk
 ifnone: 沈推官：今日的差事都派出去了，明日请早。
 ---
 沈推官：这位{男:壮士|女:女侠}是外乡来的罢？苏州城里太平，城外的水上可就未必了。
-* 太湖上的水匪要不要管？ -> suzhou.job.bandit ?!flag:world.job.bandit_suzhou ?!today:world.job.bandit_suzhou
-* 听说绣市上丢了东西？ -> suzhou.job.thief ?!flag:world.job.thief_suzhou ?!today:world.job.thief_suzhou
-* 要不要去客栈查查外乡人？ -> suzhou.job.patrol ?!flag:world.job.patrol_suzhou ?!today:world.job.patrol_suzhou
+* 太湖上的水匪要不要管？ -> suzhou.job.bandit ?pick:office.suzhou:bandit ?!flag:world.job.bandit_suzhou ?!today:world.job.bandit_suzhou
+* 听说绣市上丢了东西？ -> suzhou.job.thief ?pick:office.suzhou:thief ?!flag:world.job.thief_suzhou ?!today:world.job.thief_suzhou
+* 要不要去客栈查查外乡人？ -> suzhou.job.patrol ?pick:office.suzhou:patrol ?!flag:world.job.patrol_suzhou ?!today:world.job.patrol_suzhou
 * 有信要送去嘉兴吗？ -> suzhou.job.mail_jiaxing ?!flag:world.job.mail_jiaxing ?!today:world.job.mailday_suzhou_jiaxing
 * 交上嘉兴衙门托付的书信 -> suzhou.job.deliver_jiaxing ?flag:world.job.mail_suzhou_from_jiaxing
+* 可有告示要张贴？ -> suzhou.job.notice ?pick:office.suzhou:notice ?!flag:world.job.notice_suzhou ?!today:world.job.notice_suzhou
+* 钱庄那边可有事？ -> suzhou.job.ledger ?pick:office.suzhou:ledger ?!flag:world.job.ledger_suzhou ?!today:world.job.ledger_suzhou
+* 要不要去市集巡夜？ -> suzhou.job.night ?pick:office.suzhou:night ?!flag:world.job.night_suzhou ?!today:world.job.night_suzhou
+* 客栈里可有人闹事？ -> suzhou.job.drunk ?pick:office.suzhou:drunk ?!flag:world.job.drunk_suzhou ?!today:world.job.drunk_suzhou
+* 车马行那边可有可疑的人？ -> suzhou.job.kidnap ?pick:office.suzhou:kidnap ?!flag:world.job.kidnap_suzhou ?!today:world.job.kidnap_suzhou
 * 告辞
 
 === dialog: suzhou.job.bandit

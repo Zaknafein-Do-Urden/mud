@@ -72,11 +72,16 @@ talk: fuzhou.officer.talk
 ifnone: 吴捕头：今日的差事派完了，明日赶早。
 ---
 吴捕头：这位{男:壮士|女:女侠}是外路来的罢？来得正好，衙门里人手紧。
-* 江上的水匪要不要管？ -> fuzhou.job.bandit ?!flag:world.job.bandit_fuzhou ?!today:world.job.bandit_fuzhou
-* 听说市上丢了东西？ -> fuzhou.job.thief ?!flag:world.job.thief_fuzhou ?!today:world.job.thief_fuzhou
-* 要不要去客栈查查外乡人？ -> fuzhou.job.patrol ?!flag:world.job.patrol_fuzhou ?!today:world.job.patrol_fuzhou
+* 江上的水匪要不要管？ -> fuzhou.job.bandit ?pick:office.fuzhou:bandit ?!flag:world.job.bandit_fuzhou ?!today:world.job.bandit_fuzhou
+* 听说市上丢了东西？ -> fuzhou.job.thief ?pick:office.fuzhou:thief ?!flag:world.job.thief_fuzhou ?!today:world.job.thief_fuzhou
+* 要不要去客栈查查外乡人？ -> fuzhou.job.patrol ?pick:office.fuzhou:patrol ?!flag:world.job.patrol_fuzhou ?!today:world.job.patrol_fuzhou
 * 有信要送去临安吗？ -> fuzhou.job.mail_linan ?!flag:world.job.mail_linan ?!today:world.job.mailday_fuzhou_linan
 * 交上临安府托付的书信 -> fuzhou.job.deliver_linan ?flag:world.job.mail_fuzhou_from_linan
+* 可有告示要张贴？ -> fuzhou.job.notice ?pick:office.fuzhou:notice ?!flag:world.job.notice_fuzhou ?!today:world.job.notice_fuzhou
+* 钱庄那边可有事？ -> fuzhou.job.ledger ?pick:office.fuzhou:ledger ?!flag:world.job.ledger_fuzhou ?!today:world.job.ledger_fuzhou
+* 要不要去市集巡夜？ -> fuzhou.job.night ?pick:office.fuzhou:night ?!flag:world.job.night_fuzhou ?!today:world.job.night_fuzhou
+* 客栈里可有人闹事？ -> fuzhou.job.drunk ?pick:office.fuzhou:drunk ?!flag:world.job.drunk_fuzhou ?!today:world.job.drunk_fuzhou
+* 车马行那边可有可疑的人？ -> fuzhou.job.kidnap ?pick:office.fuzhou:kidnap ?!flag:world.job.kidnap_fuzhou ?!today:world.job.kidnap_fuzhou
 * 告辞
 
 === dialog: fuzhou.job.bandit

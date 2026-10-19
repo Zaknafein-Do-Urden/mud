@@ -227,15 +227,20 @@ talk: linan.officer.talk
 ifnone: 张捕头：今天的差事都派完了，明天再来吧。
 ---
 张捕头：这位{男:兄弟|女:姑娘}，可是来领差事的？临安城里差事多，赏钱也痛快。
-* 有什么除害的差事？ -> linan.job.bandit ?!flag:world.job.bandit_linan ?!today:world.job.bandit_linan
-* 听说城里闹飞贼？ -> linan.job.thief ?!flag:world.job.thief_linan ?!today:world.job.thief_linan
-* 要不要去客栈查查外乡人？ -> linan.job.patrol ?!flag:world.job.patrol_linan ?!today:world.job.patrol_linan
+* 有什么除害的差事？ -> linan.job.bandit ?pick:office.linan:bandit ?!flag:world.job.bandit_linan ?!today:world.job.bandit_linan
+* 听说城里闹飞贼？ -> linan.job.thief ?pick:office.linan:thief ?!flag:world.job.thief_linan ?!today:world.job.thief_linan
+* 要不要去客栈查查外乡人？ -> linan.job.patrol ?pick:office.linan:patrol ?!flag:world.job.patrol_linan ?!today:world.job.patrol_linan
 * 有信要送去嘉兴吗？ -> linan.job.mail_jiaxing ?!flag:world.job.mail_jiaxing ?!today:world.job.mailday_linan_jiaxing
 * 有信要送去襄阳吗？ -> linan.job.mail_xiangyang ?!flag:world.job.mail_xiangyang ?!today:world.job.mailday_linan_xiangyang
 * 有信要送去福州吗？ -> linan.job.mail_fuzhou ?!flag:world.job.mail_fuzhou ?!today:world.job.mailday_linan_fuzhou
 * 交上嘉兴衙门托付的书信 -> linan.job.deliver_jiaxing ?flag:world.job.mail_linan_from_jiaxing
 * 交上福州府托付的书信 -> linan.job.deliver_fuzhou ?flag:world.job.mail_linan_from_fuzhou
 * 交上襄阳衙门托付的书信 -> linan.job.deliver_xiangyang ?flag:world.job.mail_linan_from_xiangyang
+* 可有告示要张贴？ -> linan.job.notice ?pick:office.linan:notice ?!flag:world.job.notice_linan ?!today:world.job.notice_linan
+* 钱庄那边可有事？ -> linan.job.ledger ?pick:office.linan:ledger ?!flag:world.job.ledger_linan ?!today:world.job.ledger_linan
+* 要不要去市集巡夜？ -> linan.job.night ?pick:office.linan:night ?!flag:world.job.night_linan ?!today:world.job.night_linan
+* 客栈里可有人闹事？ -> linan.job.drunk ?pick:office.linan:drunk ?!flag:world.job.drunk_linan ?!today:world.job.drunk_linan
+* 车马行那边可有可疑的人？ -> linan.job.kidnap ?pick:office.linan:kidnap ?!flag:world.job.kidnap_linan ?!today:world.job.kidnap_linan
 * 离开
 
 === dialog: linan.job.bandit

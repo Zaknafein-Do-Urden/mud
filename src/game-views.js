@@ -5,7 +5,7 @@ import { maxMp, skillCap, trainCost, sectRanks, expNeed, MAX_OUTER, movesOf, inn
 import { parseList } from './content.js';
 import { TALENT_TREE, talentPointsSpent, canAddTalent, tal } from './talents.js';
 import { xiuwei } from './combat.js';
-import { cargoUnits, CARGO_CAP } from './economy.js';
+import { cargoUnits, cargoCapOf } from './economy.js';
 
 const words = (s = '') => s.split(/[\s,]+/).filter(Boolean);
 
@@ -319,12 +319,12 @@ export const views = {
         };
       }),
       cargo: Object.entries(p.cargo ?? {}).map(([id, n]) => ({ id, name: this.db.goods[id]?.props.name ?? id, count: n })),
-      cargoUnits: cargoUnits(p.cargo), cargoCap: CARGO_CAP,
+      cargoUnits: cargoUnits(p.cargo), cargoCap: cargoCapOf(p),
       money: p.money ?? 0, bank: p.bank ?? 0,
     };
   },
 
-  /** 任务清单：flag 正设着的 quest 块 */
+  /** 差事清单：flag 正设着的 quest 块 */
   questsView() {
     return Object.values(this.db.quest ?? {})
       .filter((q) => this.state.flags[q.props.flag])
@@ -369,7 +369,7 @@ export const views = {
     return {
       city: this.db.city[this.cityHere()]?.props.name ?? '', day: this.state.day ?? 1,
       goods: this.marketList().map((g) => ({ ...g, have: p.cargo?.[g.id] ?? 0 })),
-      money: p.money ?? 0, cargoUnits: cargoUnits(p.cargo), cargoCap: CARGO_CAP,
+      money: p.money ?? 0, cargoUnits: cargoUnits(p.cargo), cargoCap: cargoCapOf(p),
     };
   },
 

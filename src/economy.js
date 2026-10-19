@@ -7,7 +7,7 @@ export const CARGO_CAP = CONFIG.economy.cargoCap; // 马车最多装 100 件货�
 export const SELL_RATE = CONFIG.economy.sellRate; // 卖价是行情价的九成（买卖差价）
 
 /** 稳定的伪随机 0~1：同一城市、货物、日子总是同一个数（价格每天波动，刷新页面不变） */
-function hash01(...parts) {
+export function hash01(...parts) {
   let h = 2166136261;
   for (const ch of parts.join('|')) {
     h ^= ch.charCodeAt(0);
@@ -61,6 +61,36 @@ export function goodsPrice(db, cityId, goodsId, day) {
   return Math.max(1, Math.round(Number(g.props.price) * goodsMult(db, cityId, goodsId) * wave));
 }
 
+/** 某种货在某城市的存货上限（D-123）：特产 500，外地货 100 */
+export function stockCap(db, cityId, goodsId) {
+  return goodsLocal(db, cityId, goodsId) ? CONFIG.economy.stockLocal : CONFIG.economy.stockForeign;
+}
+
+/**
+ * 存货补回来（D-123）：rec = {n: 上次记下的存货, day: 记下的日子}。缺口每天剩 stockKeep，先快后慢，约 7 天补满。
+ * 没有记录就是满的。
+ */
+export function stockNow(cap, rec, day) {
+  if (!rec) return cap;
+  const gap = (cap - rec.n) * CONFIG.economy.stockKeep ** Math.max(0, day - rec.day);
+  return gap < Math.max(1, cap * CONFIG.economy.stockSnap) ? cap : Math.floor(cap - gap);
+}
+
+/** 买入价（D-123）：特产照行情价；外地货要加价，倒卖外地货怎么都亏 */
+export function buyPrice(db, cityId, goodsId, day) {
+  const price = goodsPrice(db, cityId, goodsId, day);
+  if (price === null) return null;
+  return goodsLocal(db, cityId, goodsId) ? price : Math.round(price * CONFIG.economy.foreignBuyMarkup);
+}
+
+/** 车队（D-122）：有几辆车、能装多少件 */
+export function cartsOf(p) { return p.carts ?? 1; }
+export function cargoCapOf(p) { return cartsOf(p) * CARGO_CAP; }
+/** 下一辆车的价钱；车队满了返回 null */
+export function nextCartPrice(p) { return CONFIG.economy.cartPrices[cartsOf(p) - 1] ?? null; }
+/** 上路的车数：装了货的车，空车也算一辆。劫匪看见几辆车就来几个人 */
+export function cartsLoaded(cargo) { return Math.max(1, Math.ceil(cargoUnits(cargo) / CARGO_CAP)); }
+
 export function cargoUnits(cargo) {
   return Object.values(cargo ?? {}).reduce((a, n) => a + n, 0);
 }
@@ -81,22 +111,25 @@ export function robberyChance(days, value) {
   return Math.min(R.maxChance, R.perDay * days + R.valueWeight * (value / (value + R.valueScale)));
 }
 
-/** 雇镖师护送的价钱（D-104）：50 文起，加货值的 8% */
-export function escortFee(value) {
-  return Math.round(CONFIG.robbery.escortBaseFee + value * CONFIG.robbery.escortFeeRate);
+/** 雇一个镖师的价钱（D-104、D-122）：50 文起，加每辆车平均货值的 8%。一车一个镖师，合计约货值的 8% */
+export function escortFee(value, carts = 1) {
+  return Math.round(CONFIG.robbery.escortBaseFee + value / Math.max(1, carts) * CONFIG.robbery.escortFeeRate);
 }
 /** 有镖师护送时，被劫的概率乘这个系数 */
 export const ESCORT_RATE = CONFIG.robbery.escortRate;
 
 /**
- * 劫匪的人数与难度系数：取决于货物价值加身上现钱（D-040）。
- * 强弱本身按我方战斗力自适应（D-115），货越值钱，盯上你的人越多、越狠（hard 1.0 ~ 1.2）。
+ * 劫匪的人数与强弱（D-040、D-122）：几辆车就几个劫匪；货物加身上现钱越值钱越狠（hard 1.0 ~ 1.2）。
+ * 每个劫匪单独按主角战力 × hard × each 放缩（adaptEnemyHp 的 solo）。each = 1 − 0.1 × (车数 − 1)，
+ * 一到五辆车总战力约是主角的 1 / 1.8 / 2.4 / 2.8 / 3 倍；三成的时候折扣在 0 ~ 0.4 之间随机，劫匪时强时弱。
  */
-export function robbers(total) {
+export function robbers(total, carts = 1, rand = Math.random) {
   const R = CONFIG.robbery;
-  const count = 1 + R.countAt.filter((x) => total >= x).length;
+  const count = Math.max(1, carts);
   const hard = 1 + R.hardExtra * Math.min(1, Math.sqrt(total / R.hardScale));
-  return { count, hard };
+  const [lo, hi] = R.swingRange;
+  const fall = rand() < R.swingChance ? lo + (hi - lo) * rand() : R.cartFalloff * (count - 1);
+  return { count, hard, each: Math.max(0.1, 1 - fall) };
 }
 
 /** 主角的武功水平：出招武功的平均等级（劫匪等按这个生成武功等级，D-115） */

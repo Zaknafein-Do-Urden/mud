@@ -324,6 +324,8 @@ export function initParty(hooks) {
     g.state.settled[key] = true;
     for (const [id, amt] of Object.entries(msg.exp ?? {})) gainExp(hooks.db(), p, id, amt);
     p.potential = (p.potential ?? 0) + (msg.potential ?? 0);
+    p.money = (p.money ?? 0) + (msg.money ?? 0); // 组队奇遇分到的钱（D-126）
+    if (msg.attr && p.attrs?.[msg.attr] !== undefined) p.attrs[msg.attr] += 1;
     if (typeof msg.hp === 'number') p.hp = msg.hp;
     g.normalizeHp();
     hooks.save();

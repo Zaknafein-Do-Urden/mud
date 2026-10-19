@@ -73,11 +73,16 @@ talk: dali.officer.talk
 ifnone: 高提刑：今日的差事都派完了，明日再来。
 ---
 高提刑：这位{男:壮士|女:女侠}面生得很，是从北边过来的罢？正好，衙门里有几桩琐事，缺人手。
-* 点苍山的马贼要不要管？ -> dali.job.bandit ?!flag:world.job.bandit_dali ?!today:world.job.bandit_dali
-* 听说街上丢了东西？ -> dali.job.thief ?!flag:world.job.thief_dali ?!today:world.job.thief_dali
-* 要不要去客栈查查外乡人？ -> dali.job.patrol ?!flag:world.job.patrol_dali ?!today:world.job.patrol_dali
+* 点苍山的马贼要不要管？ -> dali.job.bandit ?pick:office.dali:bandit ?!flag:world.job.bandit_dali ?!today:world.job.bandit_dali
+* 听说街上丢了东西？ -> dali.job.thief ?pick:office.dali:thief ?!flag:world.job.thief_dali ?!today:world.job.thief_dali
+* 要不要去客栈查查外乡人？ -> dali.job.patrol ?pick:office.dali:patrol ?!flag:world.job.patrol_dali ?!today:world.job.patrol_dali
 * 有信要送去成都吗？ -> dali.job.mail_chengdu ?!flag:world.job.mail_chengdu ?!today:world.job.mailday_dali_chengdu
 * 交上成都衙门托付的书信 -> dali.job.deliver_chengdu ?flag:world.job.mail_dali_from_chengdu
+* 可有告示要张贴？ -> dali.job.notice ?pick:office.dali:notice ?!flag:world.job.notice_dali ?!today:world.job.notice_dali
+* 钱庄那边可有事？ -> dali.job.ledger ?pick:office.dali:ledger ?!flag:world.job.ledger_dali ?!today:world.job.ledger_dali
+* 要不要去市集巡夜？ -> dali.job.night ?pick:office.dali:night ?!flag:world.job.night_dali ?!today:world.job.night_dali
+* 客栈里可有人闹事？ -> dali.job.drunk ?pick:office.dali:drunk ?!flag:world.job.drunk_dali ?!today:world.job.drunk_dali
+* 车马行那边可有可疑的人？ -> dali.job.kidnap ?pick:office.dali:kidnap ?!flag:world.job.kidnap_dali ?!today:world.job.kidnap_dali
 * 告辞
 
 === dialog: dali.job.bandit

@@ -280,7 +280,7 @@ $('lobby').addEventListener('close', () => party.closeSearch());
 
 function refreshStatus() {
   const st = game.statusView();
-  $('status-text').textContent = `${game.state.player.name}　气血 ${st.hp}/${st.maxHp}　内力 ${st.mp}　潜能 ${st.potential}　${st.money} 文　第 ${st.day} 日`;
+  $('status-text').textContent = `${game.state.player.name}　气血 ${st.hp}/${st.maxHp}　内力 ${st.mp}　潜能 ${st.potential}　${st.money} 文`;
   statusBox.classList.toggle('low', st.hp < st.maxHp * 0.3);
 }
 
