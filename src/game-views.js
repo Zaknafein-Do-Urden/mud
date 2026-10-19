@@ -144,6 +144,82 @@ export const views = {
     return { name: m.props.name, level, unlocked: level <= lv, power, mp: Number(m.props.mp ?? 0), est, tip: lines.join('\n') };
   },
 
+  /**
+   * 江湖百科（D-111）：门派介绍和该门派可能学到的全部武学。
+   * 说明文字不按玩家的等级估算（估算伤害在武功页看），只写武学本身的数据。
+   */
+  wikiView() {
+    const p = this.state.player;
+    const num = (v, d = 0) => (v === undefined || v === '' ? d : Number(v));
+    return Object.values(this.db.wiki ?? {}).sort((a, b) => num(a.props.order, 99) - num(b.props.order, 99)).map((w) => {
+      const sect = w.props.sect ? this.db.sect[w.props.sect] : null;
+      const ranks = sect ? sectRanks(sect) : [];
+      const caps = (sect?.props.caps ?? '').split(',').map(Number);
+      // 正文：单独一行【标题】起一节，空行分段
+      const sections = [];
+      let para = [];
+      const flush = () => { if (para.length) sections.at(-1)?.paras.push(para.join('')); para = []; };
+      for (const l of w.lines) {
+        const h = l.text.trim().match(/^【(.+)】$/);
+        if (h) { flush(); sections.push({ title: h[1], paras: [] }); }
+        else if (!l.text.trim()) flush();
+        else { if (!sections.length) sections.push({ title: '', paras: [] }); para.push(this.fmt(l.text)); }
+      }
+      flush();
+      const skills = Object.values(this.db.skill)
+        .filter((sk) => (sect ? sk.props.sect === sect.id : sk.id.startsWith(w.props.prefix)))
+        .map((sk) => this.wikiSkill(sk, ranks, caps, w))
+        .sort((a, b) => a.rank - b.rank || ['内功', '外功', '轻功'].indexOf(a.kind) - ['内功', '外功', '轻功'].indexOf(b.kind));
+      return {
+        id: w.id, name: w.props.name ?? sect?.props.name ?? w.id,
+        seat: w.props.seat ?? '', master: w.props.master ?? '', style: w.props.style ?? '', quest: w.props.quest ?? '',
+        sections,
+        ranks: ranks.map((r, i) => ({ name: r.name, rep: r.rep, cap: caps[i] ?? 0 })),
+        mine: !!sect && p.sect?.id === sect.id, myRank: sect && p.sect?.id === sect.id ? p.sect.rank : -1,
+        skills,
+      };
+    });
+  },
+
+  /** 百科里一门武学的说明：来源、上限、每一招的数据 */
+  wikiSkill(sk, ranks, caps, w) {
+    const p = this.state.player;
+    const num = (v, d) => (v === undefined || v === '' ? d : Number(v));
+    const rank = num(sk.props.rank, 0);
+    const secret = sk.props.secret === 'true';
+    const kind = sk.props.kind;
+    const stance = kind === '外功' ? this.stancesOf(sk) : '';
+    const weapon = sk.props.weapon && sk.props.weapon !== '拳' ? sk.props.weapon : '';
+    const source = secret ? `门派绝学：${ranks[rank]?.name ?? ''}向师父请缨，做完绝学任务才得${w.props.quest ? `（${w.props.quest}）` : ''}`
+      : ranks.length ? `${ranks[rank]?.name ?? ''}起可学，本门最高阶时上限 ${caps.at(-1) ?? ''} 级`
+      : `武馆花钱学，上限 50 级`;
+    const lines = [`${sk.props.name}　${kind}${stance ? '·' + stance : ''}${weapon ? `　要有${weapon}` : ''}`, source];
+    if (kind === '内功') {
+      lines.push(`每升一级：气血上限 +${num(sk.props.hp, 6)}、内力上限 +${num(sk.props.mp, 8)}。`);
+      const aff = sk.props.affinity && sk.props.affinity !== '无' ? sk.props.affinity : '';
+      lines.push(`装备时所有招式威力 +等级%${aff ? `，${aff}招再 +等级×0.5%` : ''}。`);
+      if (num(sk.props.absorb, 0) > 0) lines.push(`装备时，没被克制的攻击会吸取对手内力（伤害的 ${Math.round(num(sk.props.absorb, 0) * 100)}%）。`);
+    } else if (kind === '轻功') {
+      lines.push('装备时：身法 +等级÷4；巧招威力 +等级×0.3%。');
+      const traits = parseList(sk.props.traits).map((t) => t.split('@'));
+      if (traits.length) lines.push('特性：' + traits.map(([n, need]) => `${n}（${need || 1} 级）`).join('、'));
+    }
+    const desc = sk.lines.map((l) => this.fmt(l.text)).join('');
+    const moves = movesOf(this.db, sk.id, 999).map((m) => {
+      const st = m.props.stance ?? sk.props.stance;
+      const effects = parseList(m.props.effects).map((e) => EFFECT_TEXT[e.split(':')[0]] ?? e);
+      const ml = [`${m.props.name}（${st}${m.props.support === 'true' ? '·辅助' : ''}）　${num(m.props.level, 0)} 级领悟`, `威力 ${num(m.props.power, 0)}　耗内力 ${num(m.props.mp, 0)}`];
+      if (effects.length) ml.push('效果：' + effects.join('；'));
+      return { name: m.props.name, stance: st, level: num(m.props.level, 0), tip: ml.join('\n') };
+    });
+    if (moves.length) lines.push(`招式：${moves.map((m) => `${m.name}（${m.stance}，${m.level} 级）`).join('、')}`);
+    return {
+      id: sk.id, name: sk.props.name, kind, stance, weapon, rank, rankName: ranks[rank]?.name ?? '', secret,
+      learned: p.skills[sk.id] !== undefined, desc, moves,
+      lines, tip: [...lines, '', desc].join('\n').trim(),
+    };
+  },
+
   /** 合击（D-065）：与自己武功有关的合击，以及双方的条件 */
   comboView() {
     const p = this.state.player;

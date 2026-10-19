@@ -31,7 +31,7 @@ for (const [f, ns] of files) {
 }
 console.warn = origWarn;
 
-const KNOWN = new Set(['meta', 'room', 'npc', 'item', 'dialog', 'entry', 'storyline', 'chapter', 'trigger', 'use', 'patch', 'skill', 'move', 'enemy', 'battle', 'sect', 'city', 'goods', 'quest', 'goal', 'combo']);
+const KNOWN = new Set(['meta', 'room', 'npc', 'item', 'dialog', 'entry', 'storyline', 'chapter', 'trigger', 'use', 'patch', 'skill', 'move', 'enemy', 'battle', 'sect', 'city', 'goods', 'quest', 'goal', 'combo', 'wiki']);
 const words = (s = '') => s.split(/[\s,]+/).filter(Boolean);
 const linkTarget = (id) => id.startsWith('go:') || ['npc', 'item', 'room', 'entry', 'storyline', 'skill', 'sect'].some((k) => db[k][id]);
 
@@ -164,6 +164,11 @@ for (const b of all) {
   }
   if (b.type === 'combo') {
     for (const side of [b.props.a, b.props.b]) if ((side ?? '').trim().startsWith('base.')) err(b, `合击不能用武馆的基础武功（${side}）：合击要么是两个门派的武功配合，要么是同一门派内部的（D-098）`);
+  }
+  if (b.type === 'wiki') {
+    // 江湖百科（D-111）：门派条目指向门派；没有门派的条目用 prefix 指定武功
+    if (b.props.sect && !db.sect[b.props.sect]) err(b, `百科条目的门派不存在: ${b.props.sect}`);
+    if (!b.props.sect && !(b.props.prefix && Object.keys(db.skill).some((id) => id.startsWith(b.props.prefix)))) err(b, '百科条目要写 sect，或者写能对上武功的 prefix');
   }
   if (b.type === 'goal' && !b.props.name) err(b, '目标要写 name（只显示做什么），正文写具体怎么做（点"提示"才显示，D-074）');
   if (b.type === 'storyline' && b.props.level) err(b, '主线的建议等级改用 xiuwei: 起-止（建议修为，D-075）');

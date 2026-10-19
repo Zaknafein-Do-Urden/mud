@@ -20,7 +20,7 @@ const DIRS = new Set(Object.values(DIR_ALIAS));
 // 主线中只给一次的奖励类效果（D-042）
 const REWARDS = new Set(['give', 'money', 'potential', 'learn', 'rep', 'cap']);
 
-const COMMANDS = ['look', 'go', 'talk', 'use', 'inventory', 'help', '状态', '武功', '修炼', '装备', '卸下', '学', '晋阶', '休息', '叛出师门', '行情', '买', '卖', '货物', '乘车', '存', '取', '存款', '天赋'];
+const COMMANDS = ['look', 'go', 'talk', 'use', 'inventory', 'help', '状态', '武功', '修炼', '装备', '卸下', '学', '晋阶', '休息', '叛出师门', '行情', '买', '卖', '货物', '乘车', '存', '取', '存款', '天赋', '百科'];
 
 export class Game {
   constructor(db, state) {
@@ -105,6 +105,8 @@ export class Game {
         this.showGoals(false); break;
       case 'hint': case '提示':
         this.showGoals(true); break;
+      case '百科': case 'wiki':
+        this.showWiki(arg); break;
       case 'skills': case '武功':
         this.showSkills(); break;
       case 'train': case '修炼': case '练':
@@ -620,6 +622,31 @@ export class Game {
     if (!hints && lines.some((s) => s.goalHint)) this.emit('sys', '（不知道怎么做？输入 提示 查看。）');
   }
 
+  /** 江湖百科（D-111）：不带参数列出条目，带门派名显示介绍和武学 */
+  showWiki(arg) {
+    const all = this.wikiView();
+    const key = (arg ?? '').trim();
+    const w = key && all.find((x) => x.name === key || x.id === key || x.name.startsWith(key));
+    if (!w) {
+      if (key) this.emit('err', `百科里没有「${key}」。`);
+      this.emit('sys', `【江湖百科】${all.map((x) => x.name).join('、')}。输入 百科 少林 查看。`);
+      return;
+    }
+    this.emit('sys', `【${w.name}】驻地：${w.seat}　师父：${w.master}　侧重：${w.style}`);
+    if (w.quest) this.emit('sys', `绝学任务：${w.quest}（本门第四阶起向师父请缨）`);
+    for (const sec of w.sections) {
+      if (sec.title) this.emit('sys', `〔${sec.title}〕`);
+      for (const p of sec.paras) this.emit('sys', `　${p}`);
+    }
+    if (w.ranks.length) this.emit('sys', `〔阶位〕${w.ranks.map((r) => `${r.name}（声望 ${r.rep}，上限 ${r.cap} 级）`).join('、')}`);
+    this.emit('sys', '〔武学〕');
+    for (const sk of w.skills) {
+      const where = sk.secret ? `绝学任务（${sk.rankName}）` : sk.rankName || '武馆';
+      const moves = sk.moves.length ? `：${sk.moves.map((m) => `${m.name}（${m.stance}，${m.level}级）`).join('、')}` : '';
+      this.emit('sys', `　${where}　${sk.name}（${sk.kind}${sk.stance ? '·' + sk.stance : ''}${sk.weapon ? '，要有' + sk.weapon : ''}）${sk.learned ? '［已学］' : ''}${moves}`);
+    }
+  }
+
   help() {
     [
       '【命令】',
@@ -634,6 +661,7 @@ export class Game {
       '  叛出师门               离开门派：本门武功等级减半且不能再提升',
       '  天赋 / 天赋 加 截脉     查看、点选天赋（门派每晋升一阶 1 点，每条主线 3 点；天赋 重置 免费）',
       '  目标 / 提示            查看各主线的当前目标；不知道怎么做时用 提示 看具体做法',
+      '  百科 / 百科 少林        查看各门派的来历、武功路数和能学到的全部武学',
       '  休息                   在旅店休息，恢复气血（过去一天）',
       '  乘车 / 乘车 襄阳        在车马行坐马车去别的城市（路上可能遇到劫道）',
       '  行情 / 买 / 卖 / 货物   在市集看行情、买卖货物；货物装在马车上',

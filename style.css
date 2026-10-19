@@ -349,6 +349,12 @@ body.map-open #side { display: flex; }
 .pn-stance.st-巧 { color: var(--st-qiao); }
 .pn-stance.st-守 { color: var(--st-shou); }
 .pn-danger { color: var(--err); }
+/* 江湖百科（D-111） */
+.pn-wiki-p { margin: 0 0 6px; line-height: 1.7; font-size: 14px; }
+.pn-wiki-me td { color: var(--accent); font-weight: bold; }
+.pn-move.st-刚 { color: var(--st-gang); }
+.pn-move.st-巧 { color: var(--st-qiao); }
+.pn-move.st-守 { color: var(--st-shou); }
 .pn-tree { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
 .pn-branch .pn-sub { border-bottom-width: 2px; }
 .pn-branch.st-刚 .pn-sub { color: var(--st-gang); }

@@ -1,4 +1,4 @@
-// 面板：人物（状态 / 武功 / 天赋 / 背包）、江湖（主线 / 任务）、市集、钱庄（D-045）。
+// 面板：人物（状态 / 武功 / 天赋 / 背包）、江湖（主线 / 任务 / 百科）、市集、钱庄（D-045）。
 // 原则：命令能做的事，面板上都有按钮；按钮只是替玩家发送命令，执行结果显示在面板底部，也照常进入正文。
 
 const el = (tag, cls, text) => {
@@ -62,6 +62,7 @@ export function initPanels(api) {
   const body = document.getElementById('panel-body');
   const feedback = document.getElementById('panel-feedback');
   let current = null; // {kind, tab}
+  let wikiSel = null; // 百科页选中的条目（D-111）
 
   document.getElementById('panel-close').addEventListener('click', () => dlg.close());
 
@@ -78,7 +79,7 @@ export function initPanels(api) {
 
   const PANELS = {
     char: { title: '人物', tabs: ['状态', '武功', '天赋', '合击', '背包'], render: renderChar },
-    journal: { title: '江湖', tabs: ['主线', '任务'], render: renderJournal },
+    journal: { title: '江湖', tabs: ['主线', '任务', '百科'], render: renderJournal },
     market: { title: '市集', tabs: [], render: renderMarket },
     bank: { title: '钱庄', tabs: [], render: renderBank },
   };
@@ -320,6 +321,83 @@ export function initPanels(api) {
         box.append(el('div', 'pn-skill-name', q.name), el('div', 'pn-moves', q.desc));
         if (q.where) box.append(kv('地点', q.where));
         body.append(box);
+      }
+      return;
+    }
+    if (tab === '百科') renderWiki(g);
+  }
+
+  /** 江湖百科（D-111）：门派介绍 + 能学到的全部武学；悬停武功名、招式名看详细数据，手机上点武功名展开 */
+  function renderWiki(g) {
+    const all = g.wikiView();
+    if (!all.length) return;
+    const w = all.find((x) => x.id === wikiSel) ?? all.find((x) => x.mine) ?? all[0];
+    wikiSel = w.id;
+    body.append(row(...all.map((x) => button(x.name, () => { wikiSel = x.id; render(); }, { cls: 'pn-tab pn-wiki-tab' + (x.id === w.id ? ' on' : '') }))));
+
+    const head = el('div', 'pn-story');
+    head.append(el('h3', 'pn-name', `${w.name}${w.mine ? '　（本门）' : ''}`));
+    if (w.seat) head.append(kv('驻地', w.seat));
+    if (w.master) head.append(kv('师父', w.master));
+    if (w.style) head.append(kv('侧重', w.style));
+    if (w.quest) head.append(kv('绝学任务', `${w.quest}（本门第四阶起向师父请缨）`));
+    for (const sec of w.sections) {
+      if (sec.title) head.append(el('h4', 'pn-sub', sec.title));
+      for (const p of sec.paras) head.append(el('p', 'pn-wiki-p', p));
+    }
+    body.append(head);
+
+    if (w.ranks.length) {
+      body.append(el('h4', 'pn-sub', '阶位'));
+      const t = el('table', 'pn-table');
+      t.append(Object.assign(el('tr'), { innerHTML: '<th>阶位</th><th>所需声望</th><th>本门武功上限</th>' }));
+      w.ranks.forEach((r, i) => {
+        const tr = el('tr', i === w.myRank ? 'pn-wiki-me' : '');
+        tr.append(el('td', '', r.name + (i === w.myRank ? '（你）' : '')), el('td', '', r.rep), el('td', '', `${r.cap} 级`));
+        t.append(tr);
+      });
+      body.append(t);
+    }
+
+    body.append(el('h4', 'pn-sub', '武学'), el('p', 'pn-hint', '鼠标悬停武功名、招式名查看详细数据；手机上点武功名展开说明。'));
+    // 按来源分组：各阶位，绝学任务单独一组
+    const groups = new Map();
+    for (const sk of w.skills) {
+      const key = sk.secret ? `门派绝学（${sk.rankName}起请缨）` : sk.rankName ? `${sk.rankName}可学` : '武馆';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(sk);
+    }
+    for (const [key, list] of groups) {
+      body.append(el('h4', 'pn-sub pn-wiki-group', key));
+      for (const sk of list) {
+        const r = el('div', 'pn-skill' + (sk.learned ? ' on' : ''));
+        const h = el('div', 'pn-skill-head');
+        const nameEl = el('span', 'pn-skill-name pn-has-info', sk.name);
+        nameEl.title = sk.tip;
+        const info = el('div', 'pn-skill-info');
+        info.hidden = true;
+        for (const line of sk.lines) info.append(el('p', '', line));
+        if (sk.desc) info.append(el('p', 'pn-skill-desc', sk.desc));
+        nameEl.addEventListener('click', () => { info.hidden = !info.hidden; });
+        h.append(
+          el('span', `pn-stance st-${sk.stance ? sk.stance[0] : '无'}`, sk.stance || sk.kind[0]),
+          nameEl,
+          el('span', 'pn-v', `${sk.kind}${sk.weapon ? '·要有' + sk.weapon : ''}${sk.learned ? '　已学' : ''}`),
+        );
+        r.append(h, info);
+        if (sk.moves.length) {
+          const mv = el('div', 'pn-moves');
+          sk.moves.forEach((m, i) => {
+            const span = el('span', `pn-move pn-has-info st-${m.stance}`, `${m.name}（${m.stance}·${m.level}级）`);
+            span.title = m.tip;
+            if (i) mv.append('　');
+            mv.append(span);
+          });
+          r.append(mv);
+        } else if (sk.desc) {
+          r.append(el('div', 'pn-moves', sk.desc));
+        }
+        body.append(r);
       }
     }
   }

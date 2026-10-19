@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "mud", "runtimeExecutable": "python", "runtimeArgs": ["-m", "http.server", "8000"], "port": 8000 }
+    { "name": "mud", "runtimeExecutable": "python", "runtimeArgs": ["-m", "http.server", "8000"], "port": 8000 },
+    { "name": "mud-alt", "runtimeExecutable": "python", "runtimeArgs": ["-m", "http.server", "8002"], "port": 8002, "autoPort": false }
   ]
 }
