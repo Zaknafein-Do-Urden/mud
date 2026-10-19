@@ -49,6 +49,9 @@ export const CONFIG = {
   // ---- 武学威力报表（power.js）----
   power: {
     standard: 25, // 标准威力
+    advancedBonus: 28, // 高级兵器（能买到的最好一档，百炼）的加成 %：兵器武功配它和同阶同势拳掌战力持平；店里卖的不能超过它（D-119）
+    advancedBand: 0.05, // 上面这条"持平"允许的偏差
+    qiaoFromGang: 0.85, // 某阶没有巧招拳掌时，用刚招拳掌基准乘这个数当巧的基准（D-119）
   },
 
   // ---- 经济、跑商（economy.js，ECONOMY.md）----

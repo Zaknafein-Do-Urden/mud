@@ -121,6 +121,7 @@ skills: base.quan=20, base.dao=18, base.zhaojia=16, base.tuna=20
 ai: 刚=3, 巧=2, 守=1
 cunning: 15
 potential: 42
+weaponBonus: 75
 ---
 在点苍山下劫马队的贼人，皮帽上插着一根山鸡翎，骑马比走路还稳。
 

@@ -33,7 +33,7 @@ rank: 0
 skill: huashan.jianfa
 name: 苍松迎客
 level: 0
-power: 19
+power: 12
 mp: 8
 omen: $N长剑斜指，剑身微微晃动，如松枝迎风……
 ---
@@ -43,7 +43,7 @@ $N长剑一摆，「$招」，剑尖带着嗤嗤风声刺向$n$部位！
 skill: huashan.jianfa
 name: 有凤来仪
 level: 20
-power: 24
+power: 16
 mp: 11
 effects: 破绽
 omen: $N足尖点地，身子轻轻一旋，剑光闪烁……
@@ -54,7 +54,7 @@ $N身形一转，「$招」剑势连绵，五点寒星罩向$n周身！
 skill: huashan.jianfa
 name: 金雁横空
 level: 40
-power: 32
+power: 21
 mp: 15
 effects: 点穴, 群攻
 omen: $N纵身而起，长剑在空中划出一道弧光……
@@ -164,7 +164,7 @@ rank: 4
 skill: huashan.dugu
 name: 破剑式
 level: 0
-power: 44
+power: 48
 mp: 24
 effects: 破绽, 缴械:40
 omen: $N长剑随意垂着，整个人却像一张拉满的弓……
@@ -175,7 +175,7 @@ $N看准$n招式中的破绽，「$招」一剑刺出，正是对方不得不救
 skill: huashan.dugu
 name: 破气式
 level: 30
-power: 50
+power: 54
 mp: 28
 effects: 化内:1.0
 omen: $N闭目凝神，剑尖遥遥指着对方丹田……
@@ -389,6 +389,7 @@ ai: 巧=3, 守=1
 cunning: 10
 potential: 12
 hpx: 0.7
+weaponBonus: 62
 ---
 一个刚入门的华山弟子，手里握着木剑，跃跃欲试。
 
@@ -494,6 +495,7 @@ cunning: 30
 # 藏招：20% 的回合不露预兆
 obscure: 20
 potential: 90
+weaponBonus: 53
 ---
 一个中年剑客，剑法沉稳老辣，自称是嵩山派门下。
 

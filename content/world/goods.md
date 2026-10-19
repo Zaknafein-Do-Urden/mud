@@ -75,6 +75,7 @@ escort: true
 attrs: 根骨=16, 身法=13, 悟性=12
 skills: base.dao=1, base.quan=1, base.zhaojia=1, base.tuna=1
 ai: 刚=3, 守=2
+weaponBonus: 80
 ---
 镖局里走惯了长路的汉子，一口鬼头刀，一面镖旗，见了劫匪眼睛都不眨。
 

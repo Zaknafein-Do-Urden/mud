@@ -32,14 +32,16 @@ export function skillPower(db, skillId, lv) {
   return Math.round(best * (1 + lv * 0.02));
 }
 
-/** 敌人战斗力：它最强一门外功在它的等级下的威力 × 它的内功加成 */
+/** 敌人战斗力：它最强一门外功在它的等级下的威力 × 它的内功加成；兵器武功再乘它的 weaponBonus（D-119） */
 export function enemyPower(db, enemyId) {
   const foe = db.enemy[enemyId];
   if (!foe) return 0;
   const skills = Object.fromEntries(list(foe.props.skills).map((x) => { const [k, v] = x.split('='); return [k.trim(), Number(v)]; }));
   const innerId = Object.keys(skills).find((id) => db.skill[id]?.props.kind === '内功');
   const inner = 1 + (innerId ? skills[innerId] : 0) * 0.01;
-  const best = Math.max(0, ...Object.entries(skills).filter(([id]) => db.skill[id]?.props.kind === '外功').map(([id, lv]) => skillPower(db, id, lv)));
+  const wb = 1 + num(foe.props.weaponBonus) / 100;
+  const armed = (id) => db.skill[id]?.props.weapon && db.skill[id].props.weapon !== '拳';
+  const best = Math.max(0, ...Object.entries(skills).filter(([id]) => db.skill[id]?.props.kind === '外功').map(([id, lv]) => skillPower(db, id, lv) * (armed(id) ? wb : 1)));
   return Math.round(best * inner);
 }
 
@@ -80,3 +82,63 @@ export function checkStoryGrants(db, storylines, blocksByFile) {
   }
   return out;
 }
+
+/**
+ * 拳掌与兵器（D-119）：同阶同势比较"最狠一招"（威力 × 效果系数，按这一阶的上限能领悟到的招）。
+ * 规则：兵器武功 × (1 + 高级兵器加成) ≈ 拳掌基准（偏差不超过 advancedBand）。
+ * 即拳掌基础威力高一些、不吃兵器加成；配能买到的高级兵器（百炼，+28%）两边持平，
+ * 只有剧情、任务给的顶级兵器（+40% 以上）才让兵器武功胜过拳掌。
+ * 阶：武馆一阶；门派按 rank，绝学任务的奖励（secret）算镇派一阶。
+ * 拳掌基准：这一阶同势拳掌攻招里最狠的一招；没有巧招拳掌时用刚招基准 × qiaoFromGang；都没有就往下一阶找。
+ * 返回 [{skill, name, tier, stance, weapon, wp, base, top, target, ok}]（top：这类兵器最好的加成，只作参考）
+ */
+export function weaponRule(db) {
+  const ranksOf = (sect) => (sect?.props.caps ?? '').split(',').filter(Boolean).length;
+  const tierOf = (sk) => {
+    if (sk.id.startsWith('base.')) return { key: 0, name: '武馆', cap: CONFIG.character.baseCap };
+    const sect = db.sect[sk.props.sect];
+    const n = ranksOf(sect);
+    const r = sk.props.secret === 'true' ? n - 1 : num(sk.props.rank);
+    const caps = (sect?.props.caps ?? '').split(',').map(Number);
+    return { key: r + 1, name: `门派第 ${r + 1} 阶`, cap: caps[r] ?? 999 };
+  };
+  // 每类兵器最好的加成（从物品里取）
+  const top = {};
+  for (const it of Object.values(db.item)) if (it.props.weapon) top[it.props.weapon] = Math.max(top[it.props.weapon] ?? 0, num(it.props.bonus));
+  // 门派和武馆的攻招，按 (阶, 势, 拳/兵器) 取最狠一招
+  const best = {}; // `${tier}|${stance}|${weapon}` -> wp
+  const rows = [];
+  for (const sk of Object.values(db.skill)) {
+    if (sk.props.kind !== '外功' || !(sk.props.sect || sk.id.startsWith('base.'))) continue;
+    const t = tierOf(sk);
+    const weapon = sk.props.weapon && sk.props.weapon !== '拳' ? sk.props.weapon : '';
+    const per = {};
+    for (const m of Object.values(db.move)) {
+      if (m.props.skill !== sk.id || m.props.support === 'true' || num(m.props.level) > t.cap) continue;
+      const st = m.props.stance ?? sk.props.stance;
+      if (st === '守') continue;
+      per[st] = Math.max(per[st] ?? 0, num(m.props.power) * effectFactor(m.props.effects));
+    }
+    for (const [st, wp] of Object.entries(per)) {
+      const k = `${t.key}|${st}|${weapon ? 'w' : 'f'}`;
+      best[k] = Math.max(best[k] ?? 0, wp);
+      if (weapon && st === (sk.props.stance ?? st)) rows.push({ skill: sk.id, name: sk.props.name, tier: t, stance: st, weapon, wp });
+    }
+  }
+  const baseOf = (key, st) => {
+    for (let k = key; k >= 0; k--) {
+      if (best[`${k}|${st}|f`]) return best[`${k}|${st}|f`];
+      if (st === '巧' && best[`${k}|刚|f`]) return best[`${k}|刚|f`] * CONFIG.power.qiaoFromGang;
+      if (k === 1) break; // 门派第 1 阶往下不去找武馆
+    }
+    return 0;
+  };
+  for (const r of rows) {
+    r.base = baseOf(r.tier.key, r.stance);
+    r.top = top[r.weapon] ?? 0;
+    r.target = r.base / (1 + CONFIG.power.advancedBonus / 100);
+    r.ok = r.base > 0 && Math.abs(r.wp / r.target - 1) <= CONFIG.power.advancedBand;
+  }
+  return rows;
+}
+

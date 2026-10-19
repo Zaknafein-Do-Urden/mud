@@ -90,6 +90,17 @@ omen: $N掌心向下，指尖微微翘起……
 ---
 $N掌势绵软，「$招」，掌底却暗藏一缕指力，直透$n$部位的穴道！
 
+=== move: wudang.mianzhang.3
+skill: wudang.mianzhang
+name: 绵绵不绝
+level: 40
+power: 30
+mp: 16
+effects: 点穴
+omen: $N双掌一前一后缓缓推出，掌力若有若无，连绵不断……
+---
+$N一掌接着一掌，「$招」，掌力绵绵密密，叫$n避无可避，掌掌都按在穴道上！
+
 === skill: wudang.rouyun
 weapon: 剑
 name: 柔云剑法
@@ -104,7 +115,7 @@ rank: 1
 skill: wudang.rouyun
 name: 白云出岫
 level: 0
-power: 21
+power: 15
 mp: 9
 omen: $N剑尖斜指地面，身形微侧……
 ---
@@ -114,7 +125,7 @@ $N长剑一挑，「$招」，剑光如一缕白云从山谷中飘出，点向$n
 skill: wudang.rouyun
 name: 云横秦岭
 level: 30
-power: 29
+power: 21
 mp: 14
 effects: 破绽, 群攻
 omen: $N长剑平举，剑身轻颤……

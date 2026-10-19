@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse, addBlocks, emptyDb, parseMap, parseList, splitLinks } from '../src/content.js';
-import { checkStoryGrants } from '../src/power.js';
+import { checkStoryGrants, weaponRule } from '../src/power.js';
+import { CONFIG } from '../src/config.js';
 import { enemyXiuwei } from '../src/combat.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'content');
@@ -309,6 +310,19 @@ for (const g of Object.values(db.goods)) {
   const storylines = Object.fromEntries(Object.entries(index.storylines).map(([k, s]) => [k, [...(s.hook ?? []), ...(s.files ?? [])]]));
   for (const r of checkStoryGrants(db, storylines, byFile)) {
     if (!r.ok) errors.push(`${r.file} [${r.where}] ${db.skill[r.skill].props.name}上限 ${r.cap} 的威力是 ${r.wp}，超过了到这一章为止必须打赢的最强战斗力 ${r.cp}。降低上限，或者放到更晚的章节（node tools/power.mjs 看详情）`);
+  }
+}
+
+// 拳掌与兵器（D-119，docs/POWER.md）：兵器武功配高级兵器（能买到的最好一档）和同阶同势拳掌战力持平；
+// 店里卖的兵器（对话里 pay 了再 give）加成不能超过高级兵器，更好的只能从剧情、任务得到
+for (const r of weaponRule(db)) {
+  if (!r.ok) errors.push(`[skill: ${r.skill}] ${r.name}（${r.tier.name}·${r.stance}·${r.weapon}）最狠一招的攻击值 ${r.wp.toFixed(1)}，应约为同阶同势拳掌 ${r.base.toFixed(1)} ÷ ${(1 + CONFIG.power.advancedBonus / 100).toFixed(2)} = ${r.target.toFixed(1)}（±${CONFIG.power.advancedBand * 100}%，D-119）`);
+}
+for (const b of all) for (const c of b.choices ?? []) {
+  if (!c.effects.some((e) => e.startsWith('pay:'))) continue;
+  for (const e of c.effects.filter((x) => x.startsWith('give:'))) {
+    const it = db.item[e.slice(5)];
+    if (it?.props.weapon && Number(it.props.bonus ?? 0) > CONFIG.power.advancedBonus) errors.push(`${b.file} [${b.type}: ${b.id}] 店里卖的${it.props.name}加成 ${it.props.bonus}% 超过了高级兵器的 ${CONFIG.power.advancedBonus}%：顶级兵器只能从剧情、任务得到（D-119）`);
   }
 }
 

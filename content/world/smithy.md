@@ -26,7 +26,7 @@ bonus: 12
 白蜡木的枪杆又韧又直，枪头是襄阳的好铁。边军里用的就是这种枪。
 
 # 上等兵器（D-104）：给后期的钱一个去处。精钢 +20%（两家铁匠都打），百炼 +28%（只有襄阳张铁匠打）。
-# 门派绝学任务的真武剑（+40%）、孔雀翎（+45%）仍然更好。
+# 门派绝学任务的真武剑（+40%）、青竹棒（+40%）、孔雀翎（+45%）是顶级兵器，只从任务得到。店里卖的不超过 +28%（D-119，校验会查）。
 === item: w.jinggang_jian
 name: 精钢剑
 slot: weapon
@@ -91,6 +91,23 @@ bonus: 18
 ---
 武当山上流传的古剑，剑身有松树般的纹理，轻巧而坚韧。
 
+# 暗器（D-119）：唐门的暗器功夫原先只有绝学任务的孔雀翎能加成，补上铺子里能买的两档。
+=== item: w.jinggang_biao
+name: 精钢飞镖
+slot: weapon
+weapon: 暗器
+bonus: 20
+---
+一囊精钢打的柳叶飞镖，镖身薄而沉，出手不飘。
+
+=== item: w.bailian_biao
+name: 百炼梅花镖
+slot: weapon
+weapon: 暗器
+bonus: 28
+---
+张铁匠用百炼钢打的梅花镖，五瓣镖刃，打中了就嵌在肉里。
+
 # ---------------- 临安铁匠铺 ----------------
 
 === npc: linan.smith
@@ -109,6 +126,7 @@ talk: linan.smith.talk
 * 买一柄精钢剑（剑法伤害 +20%，600 文） ?money:600 !pay:600 !give:w.jinggang_jian
 * 买一口精钢刀（刀法伤害 +20%，600 文） ?money:600 !pay:600 !give:w.jinggang_dao
 * 买一杆精钢枪（枪法伤害 +20%，600 文） ?money:600 !pay:600 !give:w.jinggang_qiang
+* 买一囊精钢飞镖（暗器伤害 +20%，600 文） ?money:600 !pay:600 !give:w.jinggang_biao
 * 随便看看
 
 === patch: linan.market
@@ -132,9 +150,11 @@ talk: xiangyang.smith.talk
 * 买一柄精钢剑（剑法伤害 +20%，560 文） ?money:560 !pay:560 !give:w.jinggang_jian
 * 买一口精钢刀（刀法伤害 +20%，560 文） ?money:560 !pay:560 !give:w.jinggang_dao
 * 买一杆精钢枪（枪法伤害 +20%，560 文） ?money:560 !pay:560 !give:w.jinggang_qiang
+* 买一囊精钢飞镖（暗器伤害 +20%，560 文） ?money:560 !pay:560 !give:w.jinggang_biao
 * 打一柄百炼剑（剑法伤害 +28%，2400 文） ?money:2400 !pay:2400 !give:w.bailian_jian
 * 打一口百炼刀（刀法伤害 +28%，2400 文） ?money:2400 !pay:2400 !give:w.bailian_dao
 * 打一杆百炼枪（枪法伤害 +28%，2400 文） ?money:2400 !pay:2400 !give:w.bailian_qiang
+* 打一囊百炼梅花镖（暗器伤害 +28%，2400 文） ?money:2400 !pay:2400 !give:w.bailian_biao
 * 随便看看
 
 === patch: xiangyang.market

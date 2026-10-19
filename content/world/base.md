@@ -97,7 +97,7 @@ weapon: 刀
 skill: base.dao
 name: 力劈
 level: 0
-power: 26
+power: 15
 mp: 10
 omen: $N双手握刀，刀身缓缓举过头顶……|$N拖刀而立，脚下踏实……
 ---
@@ -107,7 +107,7 @@ $N双手握刀，一招「$招」当头劈下，刀风直扑$n$部位！
 skill: base.dao
 name: 横扫千军
 level: 20
-power: 34
+power: 20
 mp: 15
 effects: 破绽, 群攻
 omen: $N把刀横在身侧，腰身微拧……
@@ -126,7 +126,7 @@ weapon: 剑
 skill: base.jian
 name: 直刺
 level: 0
-power: 17
+power: 13
 mp: 6
 omen: $N剑尖微颤，对准了你的胸口……|$N手腕一沉，剑身平平端在身前……
 ---
@@ -136,7 +136,7 @@ $N踏步进身，「$招」一剑笔直刺向$n$部位！
 skill: base.jian
 name: 挑腕
 level: 25
-power: 22
+power: 16
 mp: 9
 effects: 缴械:20
 omen: $N剑尖下垂，盯着你握兵器的手……

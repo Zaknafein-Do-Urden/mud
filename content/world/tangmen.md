@@ -34,7 +34,7 @@ rank: 0
 skill: tangmen.feihuang
 name: 飞蝗扑面
 level: 0
-power: 19
+power: 17
 mp: 8
 omen: $N右手垂在袖中，袖口微微鼓动……
 ---
@@ -44,7 +44,7 @@ $N袖口一扬，「$招」，几颗石子如飞蝗般直扑$n$部位！
 skill: tangmen.feihuang
 name: 连珠三石
 level: 20
-power: 23
+power: 21
 mp: 11
 effects: 破绽, 群攻
 omen: $N指间夹着三颗石子，眼睛死死盯着对方……
@@ -155,7 +155,7 @@ rank: 4
 skill: tangmen.baoyu
 name: 暴雨梨花
 level: 0
-power: 46
+power: 44
 mp: 26
 effects: 点穴, 破绽, 群攻
 omen: $N手里多了一只小小的铁匣，匣口对着前方……
@@ -371,6 +371,7 @@ ai: 巧=3, 守=1
 cunning: 10
 potential: 12
 hpx: 0.7
+weaponBonus: 11
 ---
 一个扎着双髻的小姑娘，把一把石子在手里抛来抛去。
 

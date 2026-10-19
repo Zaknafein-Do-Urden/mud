@@ -185,6 +185,8 @@ function enemyUnit(db, foe, i) {
     skills, outer: Object.keys(skills).filter((id) => db.skill[id]?.props.kind === '外功'),
     cunning: num(foe.props.cunning), obscure: num(foe.props.obscure), ai: parseNums(foe.props.ai), pattern: parseList(foe.props.pattern), patIdx: 0,
     potential: num(foe.props.potential),
+    // 敌人手里兵器的加成 %（D-119）：作用在他兵器武功的招式上。D-119 降了兵器武功的基础威力，用它把原有敌人的强度补回来
+    foeWbonus: num(foe.props.weaponBonus),
     level: avgLevel(skills),
     status: {}, intent: null,
   };
@@ -616,6 +618,7 @@ const AOE_RATE = CONFIG.combat.aoeRate;
 function attackValue(db, u, m) {
   const innerSk = u.innerId ? db.skill[u.innerId] : null;
   const bonus = 1 + (u.isPlayer && m.weapon === u.wtype && !u.disarmed ? u.wbonus / 100 : 0) // 兵器加成（D-057）
+    + (!u.isPlayer && u.foeWbonus && m.weapon !== '拳' && !u.disarmed ? u.foeWbonus / 100 : 0) // 敌人的兵器加成（D-119）
     + (m.stance === '巧' ? (u.lightLv ?? 0) * 0.003 : 0); // 轻功：巧招 +0.3% / 级（D-062）
   return m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, m.stance) * bonus;
 }

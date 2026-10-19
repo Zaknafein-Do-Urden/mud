@@ -14,6 +14,7 @@ skills: base.dao=60, base.quan=55, base.zhaojia=50, base.tuna=50
 ai: 刚=3, 守=1
 cunning: 15
 potential: 80
+weaponBonus: 70
 ---
 金国派来的武士，皮甲外罩着汉人的衣裳，腰里的弯刀却藏不住。
 
@@ -35,7 +36,7 @@ secret: true
 skill: gaibang.dagou
 name: 绊字诀
 level: 0
-power: 50
+power: 34
 mp: 22
 effects: 破绽
 omen: $N手中竹棒贴地一晃，棒梢在你脚边绕来绕去……|$N身子一矮，竹棒压得极低……
@@ -46,7 +47,7 @@ $N竹棒贴地横扫，「$招」，棒梢像一条青蛇缠向$n的脚踝，跟
 skill: gaibang.dagou
 name: 封字诀
 level: 30
-power: 58
+power: 40
 mp: 26
 effects: 点穴
 omen: $N竹棒在身前舞成一团青光，把你的去路全封住了……
@@ -57,7 +58,7 @@ $N竹棒左封右挡，「$招」，$n无论往哪边闪，棒头都等在那里
 skill: gaibang.dagou
 name: 天下无狗
 level: 60
-power: 70
+power: 48
 mp: 34
 effects: 破绽, 群攻
 omen: $N竹棒一抖，化作满天棒影……
@@ -68,7 +69,7 @@ $N竹棒连环急点，「$招」，四面八方都是棒影，$n避无可避！
 name: 青竹棒
 slot: weapon
 weapon: 棍
-bonus: 20
+bonus: 40
 ---
 一根寻常的青竹棒，被握得油光发亮。鲁长老说，打狗棒法使得好不好，不在棒子。
 
@@ -383,6 +384,7 @@ ai: 巧=3, 刚=1, 守=2
 cunning: 40
 obscure: 25
 potential: 400
+weaponBonus: 52
 ---
 一个五十来岁的剑客，两鬓斑白，背负长剑，站在峰顶的风里一动不动。剑法是华山的路数，却比华山的更快、更狠。
 
@@ -484,6 +486,7 @@ ai: 巧=3, 刚=1, 守=2
 cunning: 40
 obscure: 25
 potential: 400
+weaponBonus: 8
 ---
 一个瘦长的汉子，脸色苍白，十根手指又细又长。唐家的子弟，二十年前因为偷学禁术被逐出唐家堡。
 

@@ -117,6 +117,7 @@ skills: base.quan=22, base.dao=18, base.zhaojia=18, base.tuna=20
 ai: 刚=3, 巧=2, 守=1
 cunning: 15
 potential: 48
+weaponBonus: 75
 ---
 常年在船上讨生活的人，腿脚在晃动的甲板上比在地上还稳，一身水腥气。
 
