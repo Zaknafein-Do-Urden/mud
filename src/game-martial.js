@@ -4,7 +4,7 @@ import { maxHp, maxMp, skillCap, trainCost, sectRanks, bestInnerLv, MAX_OUTER, m
 import { TALENT_TREE, talentPointsSpent, canAddTalent, findTalent, tal } from './talents.js';
 import { adaptEnemyHp, teamOf, xiuwei } from './combat.js';
 import { todayStr } from './game.js';
-import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, playersOf, enemiesOf, hpText, moveInfo, canUse, comboHint } from './combat.js';
+import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, playersOf, enemiesOf, hpText, moveInfo, canUse, comboHint, aimSeenBy } from './combat.js';
 
 const KIND_LABEL = { 外功: '外功', 内功: '内功', 轻功: '轻功' };
 
@@ -464,13 +464,13 @@ export const martial = {
       // 队友的状态与本回合已选的招式（D-019：队友出招实时可见）
       team: teamOf(b).filter((u) => u !== me).map((u) => ({
         name: u.name, hp: u.hp, maxHp: u.maxHp, npc: !!u.isAlly,
-        chosen: !u.intent ? null : u.intent.type === 'rest' ? '调息' : u.intent.type === 'move' ? `${moveInfo(this.db, u.intent.move).name}（${u.intent.stance}）` : '……',
+        chosen: !u.intent ? null : u.intent.type === 'rest' ? '调息' : u.intent.type === 'move' ? `${moveInfo(this.db, u.intent.move).name}（${u.intent.stance}）${u.intent.stance === '守' ? '' : ` → ${b.units.find((x) => x.key === u.intent.target)?.name ?? ''}`}` : '……',
       })),
       chosen: !!me.intent,
       isHost: pid === 'host',
       round: b.round,
       me: { hp: me.hp, maxHp: me.maxHp, mp: me.mp, maxMp: me.maxMp, status: Object.keys(me.status).filter((k) => !k.endsWith('dot')) },
-      enemies: enemiesOf(b).map((e, i) => ({ n: i + 1, key: e.key, name: e.name, hp: e.hp, maxHp: e.maxHp, hpText: hpText(e), status: Object.keys(e.status).filter((k) => !k.endsWith('dot')), dead: e.hp <= 0 })),
+      enemies: enemiesOf(b).map((e, i) => ({ n: i + 1, key: e.key, name: e.name, hp: e.hp, maxHp: e.maxHp, hpText: hpText(e), status: Object.keys(e.status).filter((k) => !k.endsWith('dot')), dead: e.hp <= 0, aim: e.hp > 0 ? aimSeenBy(b, e, me) : null })),
       moves: unitMoves(this.db, me).map((m, i) => {
         const armedOk = canUse(me, m);
         const hint = comboHint(this.db, b, me, m);

@@ -327,7 +327,7 @@ export function initPanels(api) {
     if (tab === '百科') renderWiki(g);
   }
 
-  /** 百科「招式效果」页（D-112）：每种效果一段说明，悬停"举例"看哪些门派招式带它 */
+  /** 百科「战斗规则」页（D-112、D-113）：每种效果一段说明，悬停"举例"看哪些门派招式带它 */
   function renderEffects(g) {
     for (const grp of g.effectsView()) {
       body.append(el('h4', 'pn-sub', grp.group), el('p', 'pn-hint', grp.note));
@@ -359,7 +359,7 @@ export function initPanels(api) {
     wikiSel = w?.id ?? 'effects';
     body.append(row(
       ...all.map((x) => button(x.name, () => { wikiSel = x.id; render(); }, { cls: 'pn-tab pn-wiki-tab' + (x.id === wikiSel ? ' on' : '') })),
-      button('招式效果', () => { wikiSel = 'effects'; render(); }, { cls: 'pn-tab pn-wiki-tab' + (wikiSel === 'effects' ? ' on' : '') }),
+      button('战斗规则', () => { wikiSel = 'effects'; render(); }, { cls: 'pn-tab pn-wiki-tab' + (wikiSel === 'effects' ? ' on' : '') }),
     ));
     if (!w) { renderEffects(g); return; }
 

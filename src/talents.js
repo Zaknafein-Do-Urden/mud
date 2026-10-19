@@ -27,7 +27,7 @@ export const TALENT_TREE = [
     id: 'dongcha', name: '洞察', desc: '看破虚招、藏招，看清对手的意图',
     nodes: [
       { id: 'huiyan', name: '慧眼', max: 3, desc: '看破虚招、看穿藏招的概率 +10% / 级' },
-      { id: 'liaodi', name: '料敌', max: 1, desc: '每回合看出每个对手这一招要打谁（组队、有队友时护法用得上）' },
+      { id: 'liaodi', name: '料敌', max: 1, desc: '对手的目标人人看得见，但虚招会摆出假目标、藏招看不出目标；料敌能看穿每个对手这一招真正要打谁' },
       { id: 'houfa', name: '后发制人', max: 2, desc: '你的招克制了对手时，有 20% / 级的机会让他露出破绽（下一次受伤 +30%）' },
       { id: 'xianji', name: '洞察先机', max: 1, desc: '对手的藏招对你无效：总能看出他要出的势' },
     ],

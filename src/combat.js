@@ -79,6 +79,12 @@ function rand(b) {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 const pick = (b, arr) => arr[Math.floor(rand(b) * arr.length)];
+/** 按权重随机挑一个 */
+function pickWeighted(b, arr, weightOf) {
+  const ws = arr.map(weightOf);
+  let r = rand(b) * ws.reduce((a, c) => a + c, 0);
+  return arr.find((_, i) => (r -= ws[i]) < 0) ?? arr[arr.length - 1];
+}
 
 const num = (v, d = 0) => (v === undefined || v === '' ? d : Number(v));
 const alive = (u) => u.hp > 0;
@@ -244,6 +250,16 @@ export const enemiesOf = (b) => b.units.filter((u) => u.side === 'e');
 
 // ---- 回合开始：敌人决定意图，透露预兆 ----
 
+/** 敌人这一招真正要打的人；守招不打人 */
+const realAim = (u) => (u.intent?.type === 'move' && u.intent.stance !== '守' ? u.intent.target : null);
+
+/** pid 那位玩家在面板上看到的敌人目标（D-113）：料敌看真的，其他人看预兆摆出来的 */
+export function aimSeenBy(b, u, me) {
+  const key = tal(me, 'liaodi') ? realAim(u) : u.aim;
+  const t = key && b.units.find((x) => x.key === key && alive(x));
+  return t ? (t === me ? '你' : t.name) : null;
+}
+
 function chooseEnemyIntent(db, b, u) {
   const moves = unitMoves(db, u).filter((m) => m.mp <= u.mp && canUse(u, m));
   if (!moves.length) return { type: 'rest' };
@@ -260,14 +276,27 @@ function chooseEnemyIntent(db, b, u) {
   // 该势中威力最大的招式
   const move = moves.filter((m) => m.stance === stance).sort((a, c) => c.power - a.power)[0];
   const foes = b.units.filter((x) => x.side !== u.side && alive(x));
-  const target = stance === '守' ? u.key : pick(b, foes).key;
+  const target = stance === '守' ? u.key : enemyTarget(b, u, foes).key;
   return { type: 'move', move: move.id, stance, target };
+}
+
+/**
+ * 敌人挑谁打（D-113）：加权随机，不定死。
+ * 仇恨：上回合谁伤它最重，谁的权重最高（+2）；补刀：越狡诈（cunning）的敌人越爱盯气血少的人。
+ */
+function enemyTarget(b, u, foes) {
+  const hurt = u.hurtBy ?? {};
+  const top = Math.max(0, ...foes.map((f) => hurt[f.key] ?? 0));
+  return pickWeighted(b, foes, (f) => 1
+    + (top > 0 ? 2 * (hurt[f.key] ?? 0) / top : 0)
+    + (u.cunning / 15) * (1 - f.hp / f.maxHp));
 }
 
 export function beginRound(db, b, emit) {
   b.round++;
   emit('round', `【第 ${b.round} 回合】`);
   for (const u of enemiesOf(b).filter(alive)) {
+    u.aim = null;
     u.intent = u.status.点穴 ? { type: 'stunned' } : chooseEnemyIntent(db, b, u);
     if (u.intent.type === 'stunned') { emit('omen', `${u.name}穴道受制，僵立当场。`); continue; }
     if (u.intent.type === 'rest') { emit('omen', fill(pick(b, OMEN_REST), { N: u.name })); continue; }
@@ -286,7 +315,10 @@ export function beginRound(db, b, emit) {
     let shown = real;
     const feint = rand(b) * 100 < u.cunning;
     if (feint) shown = pick(b, STANCES.filter((s) => s !== shown));
-    emit('omen', fill(omenText(db, b, u, shown), { N: u.name }));
+    // 目标跟着预兆走（D-113）：露出守势就看不出打谁；真守假攻时，摆出来的目标也是假的
+    if (shown !== '守') u.aim = real === '守' ? pick(b, teamOf(b).filter(alive)).key : u.intent.target;
+    const aimed = b.units.find((x) => x.key === u.aim);
+    emit('omen', fill(omenText(db, b, u, shown), { N: u.name }) + (aimed ? `（看样子是冲着${aimed.name}来的）` : ''));
     // 看破虚招：每位玩家各自判定，提示只给看破的人（D-017）
     if (feint) {
       for (const me of playersOf(b).filter(alive)) {
@@ -294,12 +326,14 @@ export function beginRound(db, b, emit) {
       }
     }
   }
-  // 料敌（D-107）：看出每个对手这一招打谁
+  // 料敌（D-107、D-113）：目标人人看得见，料敌看的是真目标，藏招、虚招都瞒不过
   for (const me of playersOf(b).filter((x) => alive(x) && tal(x, 'liaodi'))) {
     for (const u of enemiesOf(b).filter(alive)) {
-      if (u.intent?.type !== 'move' || u.intent.stance === '守') continue;
-      const t = b.units.find((x) => x.key === u.intent.target);
-      if (t) emit('hint', `（料敌）${u.name}这一招是冲着${t === me ? '你' : t.name}来的。`, { to: me.pid });
+      if (u.intent?.type !== 'move') continue;
+      const real = realAim(u);
+      if (real === u.aim) continue;
+      const t = b.units.find((x) => x.key === real);
+      emit('hint', t ? `（料敌）${u.name}这一招其实是冲着${t === me ? '你' : t.name}来的。` : `（料敌）${u.name}这一招并不打人。`, { to: me.pid });
     }
   }
   // NPC 队友在敌人之后出招，并公开（D-072）
@@ -312,12 +346,14 @@ export function beginRound(db, b, emit) {
 /**
  * NPC 队友的出招（D-072）：挑一个敌人，一半的机会读对它的预兆、出克制它的势，否则按自己的路数。
  * 回合开始就决定并公开，玩家据此配合（合击、护法、辅助）。
+ * 挑敌人（D-113）：偏向玩家上回合打的那个（好凑合击，+2），也偏向气血少的（收人头，最多 +2）。
  */
 function chooseAllyIntent(db, b, u) {
   const moves = unitMoves(db, u).filter((m) => m.mp <= u.mp && canUse(u, m) && !m.support);
   const foes = enemiesOf(b).filter(alive);
   if (!moves.length || !foes.length) return { type: 'rest' };
-  const foe = pick(b, foes);
+  const marked = new Set(playersOf(b).filter(alive).map((p) => p.lastTarget));
+  const foe = pickWeighted(b, foes, (e) => 1 + (marked.has(e.key) ? 2 : 0) + 2 * (1 - e.hp / e.maxHp));
   const stances = STANCES.filter((s) => moves.some((m) => m.stance === s));
   let stance;
   const want = foe.intent?.type === 'move' ? COUNTER[foe.intent.stance] : null;
@@ -402,7 +438,7 @@ export function setPlayerIntent(db, b, input, pid = 'host') {
 export function resolveRound(db, b, emit) {
   const units = b.units.filter(alive);
   // 本回合谁打了谁、谁护了谁（合击判定用，D-065）
-  for (const u of b.units) { u.roundHit = null; u.roundGuard = null; }
+  for (const u of b.units) { u.roundHit = null; u.roundGuard = null; u.hurtBy = {}; }
   const byKey = Object.fromEntries(b.units.map((u) => [u.key, u]));
   const posture = {};
   const protects = {};
@@ -573,6 +609,12 @@ function attackValue(db, u, m) {
   return m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, m.stance) * bonus;
 }
 
+/** 记下本回合谁伤了 target 多少：下回合敌人按这个挑目标（仇恨，D-113） */
+function hurt(target, by, dmg) {
+  target.hurtBy ??= {};
+  target.hurtBy[by.key] = (target.hurtBy[by.key] ?? 0) + dmg;
+}
+
 function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
   const ctx = { N: u.name, n: target.name, move: m.name, part: pick(b, PARTS), W: u.weaponName };
   if (!opts.quiet) emit('act', fill(actText(b, u, m), ctx));
@@ -604,6 +646,7 @@ function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
   if (outcome) emit('tag', fill(outcome, ctx));
   else if (tPosture === '无') emit('tag', fill('$n门户大开，结结实实挨了这一下。', ctx));
   target.hp = Math.max(0, target.hp - dmg);
+  hurt(target, u, dmg);
   emit('hit', `${target.name}${woundText(dmg / target.maxHp)}。（气血 -${dmg}）`, { target: target.key });
   // 背水（D-107）：每场一次，致命一击留一口气
   if (target.hp <= 0 && tal(target, 'beishui') && !target.beishui) {
@@ -653,6 +696,7 @@ function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
   if (m.stance === '巧' && mult >= 1 && alive(target) && hasTrait(u, '燕返') && rand(b) < 0.2) {
     const extra = Math.max(1, Math.round(dmg * 0.5));
     target.hp = Math.max(0, target.hp - extra);
+    hurt(target, u, extra);
     emit('tag', `${u.name}身形一折，如燕子回翔，又补上一击！（气血 -${extra}）`);
   }
 
@@ -664,6 +708,7 @@ function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
       const counter = gm.power * (1 + (target.skills[gm.skill] ?? 0) * 0.02) * innerBonus(target.innerLv, tInner, '守');
       const cd = Math.max(1, Math.round(counter * (100 / (100 + u.innerLv))));
       u.hp = Math.max(0, u.hp - cd);
+      hurt(u, target, cd);
       emit('tag', `反震之力直透${u.name}臂膀！（气血 -${cd}）`);
       // 守化解了巧招，也算克制：后发制人、吐纳；借力吸走对手内力（D-107）
       countered(b, target, u, emit);
@@ -751,6 +796,8 @@ function resolveCombos(db, b, emit) {
       if (!target || !alive(target)) continue;
       const dmg = Math.max(1, best.dmg);
       target.hp = Math.max(0, target.hp - dmg);
+      hurt(target, best.P, dmg / 2);
+      hurt(target, best.Q, dmg / 2);
       emit('combo', `★ 合击「${best.c.props.name}」！`);
       emit('act', fill(best.c.lines.map((l) => l.text).join('') || '$A与$B一左一右，同时攻向$n！', { N: best.P.name, n: target.name }).replaceAll('$A', best.P.name).replaceAll('$B', best.Q.name));
       emit('hit', `${target.name}${woundText(dmg / target.maxHp)}。（合击 气血 -${dmg}）`, { target: target.key });

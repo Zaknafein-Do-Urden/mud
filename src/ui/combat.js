@@ -1,5 +1,5 @@
 // 战斗面板：对手状态、自身气血内力、按势配色的招式卡片（UX.md §5）。
-// 面板只整理引擎给出的信息，不显示对手本回合的真实意图（D-019）。
+// 面板只整理引擎给出的信息，不显示对手本回合的真实意图（D-019）；对手的目标照预兆摆出来的显示（D-113）。
 
 const el = (tag, cls, text) => {
   const e = document.createElement(tag);
@@ -44,6 +44,7 @@ export function renderCombat(root, view, run, secondsLeft = 0) {
     row.disabled = e.dead;
     row.append(el('span', 'cb-name', e.name), bar(e.hp, e.maxHp, 'hp'), el('span', 'cb-text', `${e.hpText} ${e.hp}/${e.maxHp}`));
     if (e.status.length) row.append(el('span', 'cb-status', e.status.join(' ')));
+    if (e.aim) row.append(el('span', 'cb-aim' + (e.aim === '你' ? ' me' : ''), `→ ${e.aim}`));
     row.title = alive.length > 1 ? '点击选为目标' : '';
     row.addEventListener('click', () => {
       target = e;

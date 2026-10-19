@@ -626,7 +626,7 @@ export class Game {
   showWiki(arg) {
     const all = this.wikiView();
     const key = (arg ?? '').trim();
-    if (key && '招式效果'.includes(key) && key.length >= 2 || key === 'effects') {
+    if (key && key.length >= 2 && ['招式效果', '战斗规则'].some((t) => t.includes(key)) || key === 'effects') {
       for (const grp of this.effectsView()) {
         this.emit('sys', `〔${grp.group}〕${grp.note}`);
         for (const it of grp.items) this.emit('sys', `　${it.name}：${it.text}`);
@@ -636,7 +636,7 @@ export class Game {
     const w = key && all.find((x) => x.name === key || x.id === key || x.name.startsWith(key));
     if (!w) {
       if (key) this.emit('err', `百科里没有「${key}」。`);
-      this.emit('sys', `【江湖百科】${all.map((x) => x.name).join('、')}、招式效果。输入 百科 少林、百科 效果 查看。`);
+      this.emit('sys', `【江湖百科】${all.map((x) => x.name).join('、')}、战斗规则。输入 百科 少林、百科 规则 查看。`);
       return;
     }
     this.emit('sys', `【${w.name}】驻地：${w.seat}　师父：${w.master}　侧重：${w.style}`);
