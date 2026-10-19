@@ -28,7 +28,7 @@ where: linan.teahouse
 do: flag:world.gaibang.task_visit
 ---
 鲁有脚：嘉兴有几个本帮弟兄在客栈后院落脚。你去传个话：这个月的帮会改在城隍庙后殿。
-（门派任务：去嘉兴客栈）
+（门派任务：去嘉兴烟雨客栈）
 
 === trigger: world.t.gaibang_visit
 room: jiaxing.inn
@@ -257,7 +257,7 @@ where: huashan.gate
 do: flag:world.shaolin.task_buy
 ---
 慧明禅师：香积厨的灯油快用完了。你进城去市集，找卖油的刘施主，记在寺里的账上。
-（门派任务：去洛阳市集）
+（门派任务：去洛阳南市）
 
 === trigger: world.t.shaolin_buy
 room: luoyang.market
@@ -464,8 +464,8 @@ where: shaolin.gate
 === dialog: wudang.task.buy
 do: flag:world.wudang.task_buy
 ---
-清虚道长：观里写符的朱砂用完了。你去襄阳市集，找药铺的孙掌柜，他知道要哪一种。
-（门派任务：去襄阳市集）
+清虚道长：观里写符的朱砂用完了。你去襄阳樊城集，找药铺的孙掌柜，他知道要哪一种。
+（门派任务：去襄阳樊城集）
 
 === trigger: world.t.wudang_buy
 room: xiangyang.market
@@ -479,7 +479,7 @@ name: 武当：观里可缺什么东西
 flag: world.wudang.task_buy
 where: xiangyang.market
 ---
-清虚道长的差遣：观里写符的朱砂用完了。你去襄阳市集，找药铺的孙掌柜，他知道要哪一种。
+清虚道长的差遣：观里写符的朱砂用完了。你去襄阳樊城集，找药铺的孙掌柜，他知道要哪一种。
 
 === dialog: wudang.task.escort
 do: flag:world.wudang.task_escort
@@ -653,8 +653,8 @@ where: huashan.cliff
 === dialog: huashan.task.visit
 do: flag:world.huashan.task_visit
 ---
-穆清风：一位远房师叔从江南来，在洛阳客栈落脚。你去接一接，告诉他山上的路。
-（门派任务：去洛阳客栈）
+穆清风：一位远房师叔从江南来，在洛阳牡丹客栈落脚。你去接一接，告诉他山上的路。
+（门派任务：去洛阳牡丹客栈）
 
 === trigger: world.t.huashan_visit
 room: luoyang.inn
@@ -668,13 +668,13 @@ name: 华山：可有人要接
 flag: world.huashan.task_visit
 where: luoyang.inn
 ---
-穆清风的差遣：一位远房师叔从江南来，在洛阳客栈落脚。你去接一接，告诉他山上的路。
+穆清风的差遣：一位远房师叔从江南来，在洛阳牡丹客栈落脚。你去接一接，告诉他山上的路。
 
 === dialog: huashan.task.buy
 do: flag:world.huashan.task_buy
 ---
-穆清风：练功房的木人桩散了架。你去长安市集找木匠，订三副新的。
-（门派任务：去长安市集）
+穆清风：练功房的木人桩散了架。你去长安西市找木匠，订三副新的。
+（门派任务：去长安西市）
 
 === trigger: world.t.huashan_buy
 room: changan.market
@@ -688,7 +688,7 @@ name: 华山：派里可缺什么东西
 flag: world.huashan.task_buy
 where: changan.market
 ---
-穆清风的差遣：练功房的木人桩散了架。你去长安市集找木匠，订三副新的。
+穆清风的差遣：练功房的木人桩散了架。你去长安西市找木匠，订三副新的。
 
 === dialog: huashan.task.escort
 do: flag:world.huashan.task_escort
@@ -862,8 +862,8 @@ where: tangmen.bamboo
 === dialog: tangmen.task.visit
 do: flag:world.tangmen.task_visit
 ---
-唐姥姥：有个外省的客商在成都客栈，要订一批机括。你去问清楚要几件、什么时候要，别多嘴。
-（门派任务：去成都客栈）
+唐姥姥：有个外省的客商在成都芙蓉客栈，要订一批机括。你去问清楚要几件、什么时候要，别多嘴。
+（门派任务：去成都芙蓉客栈）
 
 === trigger: world.t.tangmen_visit
 room: chengdu.inn
@@ -877,13 +877,13 @@ name: 唐门：可有客人要接
 flag: world.tangmen.task_visit
 where: chengdu.inn
 ---
-唐姥姥的差遣：有个外省的客商在成都客栈，要订一批机括。你去问清楚要几件、什么时候要，别多嘴。
+唐姥姥的差遣：有个外省的客商在成都芙蓉客栈，要订一批机括。你去问清楚要几件、什么时候要，别多嘴。
 
 === dialog: tangmen.task.buy
 do: flag:world.tangmen.task_buy
 ---
-唐姥姥：暗器房的鹿皮手套磨破了。去成都市集买二十副，挑厚的。
-（门派任务：去成都市集）
+唐姥姥：暗器房的鹿皮手套磨破了。去成都锦官市买二十副，挑厚的。
+（门派任务：去成都锦官市）
 
 === trigger: world.t.tangmen_buy
 room: chengdu.market
@@ -897,7 +897,7 @@ name: 唐门：堡里可缺什么东西
 flag: world.tangmen.task_buy
 where: chengdu.market
 ---
-唐姥姥的差遣：暗器房的鹿皮手套磨破了。去成都市集买二十副，挑厚的。
+唐姥姥的差遣：暗器房的鹿皮手套磨破了。去成都锦官市买二十副，挑厚的。
 
 === dialog: tangmen.task.escort
 do: flag:world.tangmen.task_escort

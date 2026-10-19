@@ -214,6 +214,7 @@ talk: gaibang.lu.talk
 === dialog: gaibang.lu.talk
 ---
 ?sect:none 鲁有脚：嘿，看你的样子不像是来讨饭的。来我们这破庙做什么？
+?!sect:none ?!sect:gaibang 鲁有脚：你已经拜了别家的师父，丐帮就不抢人了。破庙里稻草多，歇歇脚倒是无妨。
 ?sect:gaibang 鲁有脚：好徒儿，今日有什么事？想学功夫只管开口；声望够了就说“晋阶”，过了黎生那一关才算数。
 * 久仰丐帮威名，想拜入门下 -> gaibang.lu.join ?sect:none
 * 请师父传授武功 -> world.sect.teach ?sect:gaibang

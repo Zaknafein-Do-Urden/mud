@@ -17,27 +17,30 @@ exits: 北=xiangyang.office, 南=xiangyang.station, 东=xiangyang.market, 西=xi
 城墙又高又厚，街上随处可见披甲的军士。汉水的腥风从城外吹来，带着几分肃杀。
 
 === room: xiangyang.market
-name: 襄阳·市集
+name: 襄阳·樊城集
 exits: 西=xiangyang.center, 北=xiangyang.bank
 market: true
 ---
+集市挨着汉水码头，对岸就是樊城，渡船一趟趟把货运过来。
 市集上铁匠铺的叮当声不绝于耳，刀枪锄犁都有，价钱比江南便宜得多。汉水上游采来的药材也在这里集散。
 在这里可以 行情、买、卖。
 
 === room: xiangyang.bank
-name: 襄阳·钱庄
+name: 襄阳·汉江钱庄
 exits: 南=xiangyang.market
 bank: true
 ---
+“汉江”钱庄在襄阳开了三代，城头上打仗那几年也没关过门。
 钱庄门口站着两个护院，柜台上的算盘珠子拨得飞快。
 在这里可以 存、取、存款。
 
 === room: xiangyang.inn
-name: 襄阳·客栈
+name: 襄阳·安远客栈
 exits: 东=xiangyang.center
 inn: true
 shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
+客栈名叫“安远”，取的是守边安民的意思，掌柜的早年在襄阳守军里吃过粮，见了当兵的格外客气。
 一间宽敞的客栈，大堂里坐满了南来北往的商旅和军汉。
 在这里可以 休息、修炼。
 
@@ -89,8 +92,8 @@ ifnone: 王捕头：今天的差事都派完了，明天再来吧。
 === dialog: xiangyang.job.thief
 do: flag:world.job.thief_xiangyang
 ---
-王捕头：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去市集把他揪出来，赏钱一百二十文。
-（差事：在襄阳市集缉拿飞贼）
+王捕头：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去樊城集把他揪出来，赏钱一百二十文。
+（差事：在襄阳樊城集缉拿飞贼）
 
 === enemy: world.foe.xiangyang_thief
 weapon: 匕首
@@ -105,7 +108,7 @@ potential: 36
 
 === npc: world.npc.xiangyang_thief
 name: 飞贼
-brief: 在襄阳市集偷东西的飞贼。
+brief: 在襄阳樊城集偷东西的飞贼。
 if: flag:world.job.thief_xiangyang
 talk: world.xiangyang_thief.talk
 ---
@@ -136,8 +139,8 @@ npcs: world.npc.xiangyang_thief
 === dialog: xiangyang.job.patrol
 do: flag:world.job.patrol_xiangyang
 ---
-王捕头：近来外乡人多，去客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。
-（差事：去襄阳客栈查访）
+王捕头：近来外乡人多，去安远客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。
+（差事：去安远客栈查访）
 
 === trigger: world.t.xiangyang_patrol
 room: xiangyang.inn
@@ -234,14 +237,14 @@ name: 缉拿：襄阳飞贼
 flag: world.job.thief_xiangyang
 where: xiangyang.market
 ---
-襄阳衙门的差事：去市集缉拿飞贼。赏钱 120 文。
+襄阳衙门的差事：去樊城集缉拿飞贼。赏钱 120 文。
 
 === quest: world.q.xiangyang_patrol
-name: 查访：襄阳客栈
+name: 查访：安远客栈
 flag: world.job.patrol_xiangyang
 where: xiangyang.inn
 ---
-襄阳衙门的差事：去客栈查访外乡人。赏钱 40 文。
+襄阳衙门的差事：去安远客栈查访外乡人。赏钱 40 文。
 
 === quest: world.q.xiangyang_bandit
 name: 除害：汉水水匪

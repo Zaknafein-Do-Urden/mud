@@ -17,27 +17,30 @@ exits: 北=chengdu.office, 南=chengdu.station, 东=chengdu.market, 西=chengdu.
 街边的茶馆里坐满了人，掏耳朵的、算命的、唱川戏的，热闹得很。
 
 === room: chengdu.market
-name: 成都·市集
+name: 成都·锦官市
 exits: 西=chengdu.center, 北=chengdu.bank
 market: true
 ---
+成都古称锦官城，这条街上的锦缎铺子少说也有二三十家。
 蜀锦的颜色艳得晃眼，药铺门口晒着成筐的川芎、黄连。
 在这里可以 行情、买、卖。
 
 === room: chengdu.bank
-name: 成都·钱庄
+name: 成都·交子钱庄
 exits: 南=chengdu.market
 bank: true
 ---
+交子最早就出在成都，这家钱庄挂着“交子”的招牌，说是从那时传下来的老字号。
 钱庄的掌柜一边喝盖碗茶一边打算盘，不慌不忙。
 在这里可以 存、取、存款。
 
 === room: chengdu.inn
-name: 成都·客栈
+name: 成都·芙蓉客栈
 exits: 东=chengdu.center
 inn: true
 shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
+院墙上爬满了芙蓉花，到了秋天开得满城都是，客栈因此得名。大堂角落里有人摆了龙门阵，一壶茶能吹一下午。
 客栈的老板娘泼辣能干，一嗓子能喊到后街。
 在这里可以 休息、修炼。
 
@@ -85,8 +88,8 @@ ifnone: 周捕头：今天的差事都派完了，明天再来吧。
 === dialog: chengdu.job.thief
 do: flag:world.job.thief_chengdu
 ---
-周捕头：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去市集把他揪出来，赏钱一百二十文。
-（差事：在成都市集缉拿飞贼）
+周捕头：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去锦官市把他揪出来，赏钱一百二十文。
+（差事：在成都锦官市缉拿飞贼）
 
 === enemy: world.foe.chengdu_thief
 weapon: 匕首
@@ -101,7 +104,7 @@ potential: 46
 
 === npc: world.npc.chengdu_thief
 name: 飞贼
-brief: 在成都市集偷东西的飞贼。
+brief: 在成都锦官市偷东西的飞贼。
 if: flag:world.job.thief_chengdu
 talk: world.chengdu_thief.talk
 ---
@@ -132,8 +135,8 @@ npcs: world.npc.chengdu_thief
 === dialog: chengdu.job.patrol
 do: flag:world.job.patrol_chengdu
 ---
-周捕头：近来外乡人多，去客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。
-（差事：去成都客栈查访）
+周捕头：近来外乡人多，去芙蓉客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。
+（差事：去芙蓉客栈查访）
 
 === trigger: world.t.chengdu_patrol
 room: chengdu.inn
@@ -218,14 +221,14 @@ name: 缉拿：成都飞贼
 flag: world.job.thief_chengdu
 where: chengdu.market
 ---
-成都衙门的差事：去市集缉拿飞贼。赏钱 120 文。
+成都衙门的差事：去锦官市缉拿飞贼。赏钱 120 文。
 
 === quest: world.q.chengdu_patrol
-name: 查访：成都客栈
+name: 查访：芙蓉客栈
 flag: world.job.patrol_chengdu
 where: chengdu.inn
 ---
-成都衙门的差事：去客栈查访外乡人。赏钱 40 文。
+成都衙门的差事：去芙蓉客栈查访外乡人。赏钱 40 文。
 
 === quest: world.q.chengdu_bandit
 name: 除害：蜀道山贼

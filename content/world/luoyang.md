@@ -17,27 +17,30 @@ exits: 北=luoyang.office, 南=luoyang.station, 东=luoyang.market, 西=luoyang.
 宫阙的残垣还在，只是城头换了旗号。街上汉人、女真人混杂，说话都压着嗓子。
 
 === room: luoyang.market
-name: 洛阳·市集
+name: 洛阳·南市
 exits: 西=luoyang.center, 北=luoyang.bank
 market: true
 ---
+南市是洛阳的老市，从隋唐时就在这儿，坊门虽倒，买卖照旧。
 瓷器摊子一字排开，青瓷白瓷在日头下泛着光。卖茶的却少，价钱贵得吓人。
 在这里可以 行情、买、卖。
 
 === room: luoyang.bank
-name: 洛阳·钱庄
+name: 洛阳·晋源钱庄
 exits: 南=luoyang.market
 bank: true
 ---
+东家是山西人，招牌上“晋源”二字写得方方正正，跟掌柜的为人一样。
 钱庄的掌柜是个精明的山西人，金国的交钞、宋国的铜钱都收。
 在这里可以 存、取、存款。
 
 === room: luoyang.inn
-name: 洛阳·客栈
+name: 洛阳·牡丹客栈
 exits: 东=luoyang.center
 inn: true
 shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
+洛阳牡丹甲天下，客栈就取了这个名字，连门帘上都绣着两朵大红牡丹。
 客栈的院子里种着几株牡丹，可惜不是花开的时节。
 在这里可以 休息、修炼。
 
@@ -85,8 +88,8 @@ ifnone: 李都头：今天的差事都派完了，明天再来吧。
 === dialog: luoyang.job.thief
 do: flag:world.job.thief_luoyang
 ---
-李都头：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去市集把他揪出来，赏钱一百二十文。
-（差事：在洛阳市集缉拿飞贼）
+李都头：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去南市把他揪出来，赏钱一百二十文。
+（差事：在洛阳南市缉拿飞贼）
 
 === enemy: world.foe.luoyang_thief
 weapon: 匕首
@@ -101,7 +104,7 @@ potential: 42
 
 === npc: world.npc.luoyang_thief
 name: 飞贼
-brief: 在洛阳市集偷东西的飞贼。
+brief: 在洛阳南市偷东西的飞贼。
 if: flag:world.job.thief_luoyang
 talk: world.luoyang_thief.talk
 ---
@@ -132,8 +135,8 @@ npcs: world.npc.luoyang_thief
 === dialog: luoyang.job.patrol
 do: flag:world.job.patrol_luoyang
 ---
-李都头：近来外乡人多，去客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。
-（差事：去洛阳客栈查访）
+李都头：近来外乡人多，去牡丹客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。
+（差事：去牡丹客栈查访）
 
 === trigger: world.t.luoyang_patrol
 room: luoyang.inn
@@ -218,14 +221,14 @@ name: 缉拿：洛阳飞贼
 flag: world.job.thief_luoyang
 where: luoyang.market
 ---
-洛阳衙门的差事：去市集缉拿飞贼。赏钱 120 文。
+洛阳衙门的差事：去南市缉拿飞贼。赏钱 120 文。
 
 === quest: world.q.luoyang_patrol
-name: 查访：洛阳客栈
+name: 查访：牡丹客栈
 flag: world.job.patrol_luoyang
 where: luoyang.inn
 ---
-洛阳衙门的差事：去客栈查访外乡人。赏钱 40 文。
+洛阳衙门的差事：去牡丹客栈查访外乡人。赏钱 40 文。
 
 === quest: world.q.luoyang_bandit
 name: 除害：邙山盗墓贼

@@ -16,27 +16,30 @@ exits: 北=jiaxing.office, 南=jiaxing.station, 东=jiaxing.market, 西=jiaxing.
 青石板路被雨水洗得发亮，河道从城中穿过，乌篷船咿咿呀呀地摇过石拱桥。
 
 === room: jiaxing.market
-name: 嘉兴·市集
+name: 嘉兴·河埠丝市
 exits: 西=jiaxing.center, 北=jiaxing.bank
 market: true
 ---
+市集顺着运河的河埠头摆开，船直接靠岸卸货，蚕丝、湖绉论担称。
 沿河的市集，丝绸铺子一家挨着一家，还有挑着盐担子吆喝的小贩。
 在这里可以 行情、买、卖。
 
 === room: jiaxing.bank
-name: 嘉兴·钱庄
+name: 嘉兴·丰裕钱庄
 exits: 南=jiaxing.market
 bank: true
 ---
+“丰裕”是嘉兴城里几十年的老字号，蚕农卖了丝，头一件事就是来这里存钱。
 一间老字号钱庄，柜台后的账房先生戴着一副铜框眼镜。
 在这里可以 存、取、存款。
 
 === room: jiaxing.inn
-name: 嘉兴·客栈
+name: 嘉兴·烟雨客栈
 exits: 东=jiaxing.center
 inn: true
 shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
+客栈借了南湖烟雨楼的名头，楼上客房的窗子正对湖心岛。
 临河的客栈，推开窗就能看见南湖上的烟雨。
 在这里可以 休息、修炼。
 
@@ -82,8 +85,8 @@ ifnone: 孙捕头：今天的差事都派完了，明天再来吧。
 === dialog: jiaxing.job.thief
 do: flag:world.job.thief_jiaxing
 ---
-孙捕头：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去市集把他揪出来，赏钱一百二十文。
-（差事：在嘉兴市集缉拿飞贼）
+孙捕头：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去河埠丝市把他揪出来，赏钱一百二十文。
+（差事：在嘉兴河埠丝市缉拿飞贼）
 
 === enemy: world.foe.jiaxing_thief
 weapon: 匕首
@@ -98,7 +101,7 @@ potential: 26
 
 === npc: world.npc.jiaxing_thief
 name: 飞贼
-brief: 在嘉兴市集偷东西的飞贼。
+brief: 在嘉兴河埠丝市偷东西的飞贼。
 if: flag:world.job.thief_jiaxing
 talk: world.jiaxing_thief.talk
 ---
@@ -129,8 +132,8 @@ npcs: world.npc.jiaxing_thief
 === dialog: jiaxing.job.patrol
 do: flag:world.job.patrol_jiaxing
 ---
-孙捕头：近来外乡人多，去客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。
-（差事：去嘉兴客栈查访）
+孙捕头：近来外乡人多，去烟雨客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。
+（差事：去烟雨客栈查访）
 
 === trigger: world.t.jiaxing_patrol
 room: jiaxing.inn
@@ -203,14 +206,14 @@ name: 缉拿：嘉兴飞贼
 flag: world.job.thief_jiaxing
 where: jiaxing.market
 ---
-嘉兴衙门的差事：去市集缉拿飞贼。赏钱 120 文。
+嘉兴衙门的差事：去河埠丝市缉拿飞贼。赏钱 120 文。
 
 === quest: world.q.jiaxing_patrol
-name: 查访：嘉兴客栈
+name: 查访：烟雨客栈
 flag: world.job.patrol_jiaxing
 where: jiaxing.inn
 ---
-嘉兴衙门的差事：去客栈查访外乡人。赏钱 40 文。
+嘉兴衙门的差事：去烟雨客栈查访外乡人。赏钱 40 文。
 
 === quest: world.q.jiaxing_bandit
 name: 除害：南湖水贼

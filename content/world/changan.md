@@ -17,27 +17,30 @@ exits: 北=changan.office, 南=changan.station, 东=changan.market, 西=changan.
 城郭依旧宏大，坊墙却已倒了大半。驼队从西门进来，驼铃声在街上回荡。
 
 === room: changan.market
-name: 长安·市集
+name: 长安·西市
 exits: 西=changan.center, 北=changan.bank
 market: true
 ---
+西市自唐时便是胡商云集之地，如今虽不比当年，驼队一来，照样挤得水泄不通。
 皮货、青盐堆成了小山，胡商操着生硬的汉话讨价还价。
 在这里可以 行情、买、卖。
 
 === room: changan.bank
-name: 长安·钱庄
+name: 长安·聚源钱庄
 exits: 南=changan.market
 bank: true
 ---
+门楣上“聚源”两个大字是前朝老匾，据说东家祖上给西域商队兑过金子。
 钱庄门面不大，后院却有一间铁皮包着的库房。
 在这里可以 存、取、存款。
 
 === room: changan.inn
-name: 长安·客栈
+name: 长安·驼铃客栈
 exits: 东=changan.center
 inn: true
 shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
+檐下挂着一串旧驼铃，风一吹叮当作响，客栈的名字就是这么来的。后院拴着几峰骆驼，大堂里飘着羊肉泡馍的香味。
 客栈的伙计会说三四种话，回回、党项、女真的客人都招呼得来。
 在这里可以 休息、修炼。
 
@@ -85,8 +88,8 @@ ifnone: 赵捕快：今天的差事都派完了，明天再来吧。
 === dialog: changan.job.thief
 do: flag:world.job.thief_changan
 ---
-赵捕快：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去市集把他揪出来，赏钱一百二十文。
-（差事：在长安市集缉拿飞贼）
+赵捕快：这几天市集上丢东西的人多，是个手脚利落的飞贼干的。去西市把他揪出来，赏钱一百二十文。
+（差事：在长安西市缉拿飞贼）
 
 === enemy: world.foe.changan_thief
 weapon: 匕首
@@ -101,7 +104,7 @@ potential: 50
 
 === npc: world.npc.changan_thief
 name: 飞贼
-brief: 在长安市集偷东西的飞贼。
+brief: 在长安西市偷东西的飞贼。
 if: flag:world.job.thief_changan
 talk: world.changan_thief.talk
 ---
@@ -132,8 +135,8 @@ npcs: world.npc.changan_thief
 === dialog: changan.job.patrol
 do: flag:world.job.patrol_changan
 ---
-赵捕快：近来外乡人多，去客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。
-（差事：去长安客栈查访）
+赵捕快：近来外乡人多，去驼铃客栈查一查住店的有没有可疑之人。不用动手，看一圈回来就行。赏钱四十文。
+（差事：去驼铃客栈查访）
 
 === trigger: world.t.changan_patrol
 room: changan.inn
@@ -218,14 +221,14 @@ name: 缉拿：长安飞贼
 flag: world.job.thief_changan
 where: changan.market
 ---
-长安衙门的差事：去市集缉拿飞贼。赏钱 120 文。
+长安衙门的差事：去西市缉拿飞贼。赏钱 120 文。
 
 === quest: world.q.changan_patrol
-name: 查访：长安客栈
+name: 查访：驼铃客栈
 flag: world.job.patrol_changan
 where: changan.inn
 ---
-长安衙门的差事：去客栈查访外乡人。赏钱 40 文。
+长安衙门的差事：去驼铃客栈查访外乡人。赏钱 40 文。
 
 === quest: world.q.changan_bandit
 name: 除害：关中刀客

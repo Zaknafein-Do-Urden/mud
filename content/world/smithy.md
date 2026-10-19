@@ -136,7 +136,7 @@ npcs: linan.smith
 
 === npc: xiangyang.smith
 name: 张铁匠
-brief: 襄阳市集的铁匠，兵器便宜。
+brief: 襄阳樊城集的铁匠，兵器便宜。
 talk: xiangyang.smith.talk
 ---
 一个满脸烟灰的老铁匠，他打的刀剑在军中很有名气。
