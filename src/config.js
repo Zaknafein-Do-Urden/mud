@@ -89,7 +89,7 @@ export const CONFIG = {
     // 劫匪人数 = 装了货的车数（空车也算一辆，D-122）；每个劫匪单独按主角战力 × 难度系数 × 单个强度放缩
     // 单个强度 = 1 − cartFalloff × (车数 − 1)：一到五辆车总战力约 1 / 1.8 / 2.4 / 2.8 / 3 倍主角
     cartFalloff: 0.1,
-    swingChance: 0.3, // 有这个概率，上面的折扣改成在 swingRange 里随机取（劫匪时强时弱）
+    swingPerCart: 0.1, // 每辆车多这么多概率，上面的折扣改成在 swingRange 里随机取（一辆 10% …… 五辆 50%，劫匪时强时弱）
     swingRange: [0, 0.4],
     hardExtra: 0.2, // 货越值钱越难：难度系数最多加几成
     hardScale: 50000, // 货值加现钱到这个数时加满

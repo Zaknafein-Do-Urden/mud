@@ -121,14 +121,14 @@ export const ESCORT_RATE = CONFIG.robbery.escortRate;
 /**
  * 劫匪的人数与强弱（D-040、D-122）：几辆车就几个劫匪；货物加身上现钱越值钱越狠（hard 1.0 ~ 1.2）。
  * 每个劫匪单独按主角战力 × hard × each 放缩（adaptEnemyHp 的 solo）。each = 1 − 0.1 × (车数 − 1)，
- * 一到五辆车总战力约是主角的 1 / 1.8 / 2.4 / 2.8 / 3 倍；三成的时候折扣在 0 ~ 0.4 之间随机，劫匪时强时弱。
+ * 一到五辆车总战力约是主角的 1 / 1.8 / 2.4 / 2.8 / 3 倍；有 10% × 车数的概率折扣改在 0 ~ 0.4 之间随机，劫匪时强时弱。
  */
 export function robbers(total, carts = 1, rand = Math.random) {
   const R = CONFIG.robbery;
   const count = Math.max(1, carts);
   const hard = 1 + R.hardExtra * Math.min(1, Math.sqrt(total / R.hardScale));
   const [lo, hi] = R.swingRange;
-  const fall = rand() < R.swingChance ? lo + (hi - lo) * rand() : R.cartFalloff * (count - 1);
+  const fall = rand() < R.swingPerCart * count ? lo + (hi - lo) * rand() : R.cartFalloff * (count - 1);
   return { count, hard, each: Math.max(0.1, 1 - fall) };
 }
 
