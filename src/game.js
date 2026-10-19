@@ -239,11 +239,12 @@ export class Game {
     return new Set(Object.values(this.db.chapter).filter((c) => c.props.done && this.check(words(c.props.done))).map((c) => c.id));
   }
 
-  /** 主线章节完成：门派声望约等于两个每日任务（一阶 60、二阶 70、三阶起 90，D-103） */
+  /** 主线章节完成：给当前门派声望，按阶位取 CONFIG.rep.chapter（D-103、D-137：一章约等于半天的门派差事） */
   chapterRep(chapterId) {
     const p = this.state.player;
     if (!p.sect) return;
-    const rep = [60, 70, 90][Math.min(p.sect.rank, 2)];
+    const per = CONFIG.rep.chapter;
+    const rep = per[Math.min(p.sect.rank, per.length - 1)];
     const sect = this.db.sect[p.sect.id]?.props.name ?? '';
     this.emit('sys', `你在江湖上的作为传回了${sect}，同门都与有荣焉。`);
     this.addRep(p.sect.id, rep);
