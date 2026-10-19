@@ -1,13 +1,14 @@
 // 存档：localStorage 自动存档 + 文本导出导入。见 DEVLOG D-001 / D-002 / D-005。
 
 import { newPlayer } from './character.js';
+import { CONFIG } from './config.js';
 
 const PREFIX = 'wuxia-mud:'; // 同一 github.io 用户下所有项目共享 localStorage，必须加前缀
 // 存档位：默认 1；地址栏 ?slot=2 可以用另一个存档（同一浏览器开两个窗口联机时用）
 const SLOT = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('slot')) || '1';
 const SLOT_KEY = PREFIX + 'save:' + SLOT.replace(/[^\w-]/g, '');
 const EXPORT_TAG = 'WXMUD1';
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 
 export function newState(startRoom) {
   const now = Date.now();
@@ -91,6 +92,17 @@ const migrations = {
   12: (s) => {
     const { escort, ...rest } = s;
     return { ...rest, ...(escort ? { escort: 1 } : {}), player: { carts: 1, ...s.player } };
+  },
+  // v14：门派材料差事的件数改成接差事时掷定（D-134）。已经接了的按 10 件算；内力从此战斗之间保留（D-133），旧档按满的算；
+  // 背包里补上新角色带的初级吃喝
+  13: (s) => {
+    const rolls = { ...(s.rolls ?? {}) };
+    for (const sect of ['gaibang', 'shaolin', 'wudang', 'huashan', 'tangmen']) {
+      if (s.flags?.[`world.${sect}.task_material_on`]) rolls[`world.${sect}.material`] ??= 10;
+    }
+    const inventory = { ...s.player.inventory };
+    for (const [id, n] of Object.entries(CONFIG.food.starter)) inventory[id] = (inventory[id] ?? 0) + n;
+    return { ...s, rolls, player: { mp: null, ...s.player, inventory } };
   },
 };
 

@@ -248,8 +248,10 @@ ifnone: 鲁有脚：今天的差事都办完了，目前没有门派任务。明
 * 可有小兄弟要人照看？ -> gaibang.task.escort ?pick:sect.gaibang:escort ?!flag:world.gaibang.task_escort ?!today:world.gaibang.task_escort
 * 城门口可有人闹事？ -> gaibang.task.rival ?pick:sect.gaibang:rival ?!flag:world.gaibang.task_rival ?!today:world.gaibang.task_rival
 * 可有棘手的人要对付？ -> gaibang.task.hunt ?pick:sect.gaibang:hunt ?rank:1 ?!flag:world.gaibang.task_hunt ?!today:world.gaibang.task_hunt
-* 师门缺什么材料？ -> gaibang.task.material_ask ?!flag:world.gaibang.task_material_on ?!cargo:fur:100 ?!today:world.gaibang.task_material
-* 交上皮货 100 件 -> gaibang.task.material ?cargo:fur:100 ?!today:world.gaibang.task_material
+* 伙房可缺吃的？ -> gaibang.task.food_ask ?pick:sect.gaibang:food ?!flag:world.gaibang.task_food ?!today:world.gaibang.task_food
+* 交上叫化鸡 {@world.gaibang.food} 件 -> gaibang.task.food ?flag:world.gaibang.task_food ?has:food.jiaohuaji:@world.gaibang.food
+* 师门缺什么材料？ -> gaibang.task.material_ask ?!flag:world.gaibang.task_material_on ?!today:world.gaibang.task_material
+* 交上皮货 {@world.gaibang.material} 件 -> gaibang.task.material ?flag:world.gaibang.task_material_on ?cargo:fur:@world.gaibang.material ?!today:world.gaibang.task_material
 * 告辞
 
 === dialog: gaibang.lu.task1

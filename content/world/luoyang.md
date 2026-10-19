@@ -36,6 +36,7 @@ bank: true
 name: 洛阳·客栈
 exits: 东=luoyang.center
 inn: true
+shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
 客栈的院子里种着几株牡丹，可惜不是花开的时节。
 在这里可以 休息、修炼。

@@ -327,6 +327,7 @@ export function initParty(hooks) {
     p.money = (p.money ?? 0) + (msg.money ?? 0); // 组队奇遇分到的钱（D-126）
     if (msg.attr && p.attrs?.[msg.attr] !== undefined) p.attrs[msg.attr] += 1;
     if (typeof msg.hp === 'number') p.hp = msg.hp;
+    if (typeof msg.mp === 'number') p.mp = msg.mp; // 内力也带出战斗（D-133）
     g.normalizeHp();
     hooks.save();
     sendChar();
@@ -348,8 +349,10 @@ export function initParty(hooks) {
     if (['离开队伍', '退出队伍'].includes(v)) { leaveGuest(true); return []; }
     if (GUEST_LOCAL.has(v) || v === '修炼') {
       if (v === '修炼') return [{ cls: 'err', text: '在队伍中不能修炼。离队后去旅店或本门驻地吧。' }];
+      const eating = ['吃', '喝', 'eat', 'drink'].includes(v);
+      if (eating && guestView.combat) return [{ cls: 'err', text: '打斗中腾不出手吃喝。' }]; // D-133
       const out = g.exec(cmd);
-      if (['装备', 'equip', '卸下', 'unequip', '天赋', 'talent'].includes(v)) sendChar();
+      if (eating || ['装备', 'equip', '卸下', 'unequip', '天赋', 'talent'].includes(v)) sendChar();
       return out;
     }
     if (guestView.combat || ['l', 'look', '看', '观察', '说', 'say', '建议', 'suggest'].includes(v)) {

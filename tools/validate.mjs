@@ -39,7 +39,7 @@ const linkTarget = (id) => id.startsWith('go:') || ['npc', 'item', 'room', 'entr
 function checkConds(b, conds) {
   for (const c of conds) {
     const [kind, key] = c.replace(/^!/, '').split(/:(.*)/);
-    if (kind === 'has' && !db.item[key]) err(b, `条件引用了不存在的物品: ${key}`);
+    if (kind === 'has') { const [id, n] = key.split(':'); if (!db.item[id] || !amt(n)) err(b, `has 格式应为 has:物品 或 has:物品:件数，却是: ${c}`); }
     else if (kind === 'visited' && !db.room[key]) err(b, `条件引用了不存在的房间: ${key}`);
     else if (kind === 'sect' && key !== 'none' && !db.sect[key]) err(b, `条件引用了不存在的门派: ${key}`);
     else if (kind === 'rank' && Number.isNaN(Number(key))) err(b, `rank 条件需要数字: ${c}`);
@@ -48,12 +48,13 @@ function checkConds(b, conds) {
     else if (kind === 'learned' && !db.skill[key]) err(b, `learned 条件引用了不存在的武功: ${key}`);
     else if (kind === 'stance' && !/^[刚巧守]:\d+$/.test(key)) err(b, `stance 条件格式应为 stance:刚:45，却是: ${c}`);
     else if (['maxhp', 'xiuwei', 'inner', 'party'].includes(kind) && Number.isNaN(Number(key))) err(b, `${kind} 条件需要数字: ${c}`);
-    else if (kind === 'cargo') { const [g, n] = key.split(':'); if (!db.goods[g] || Number.isNaN(Number(n))) err(b, `cargo 格式应为 cargo:货物:件数，却是: ${c}`); }
+    else if (kind === 'cargo') { const [g, n] = key.split(':'); if (!db.goods[g] || !amt(n)) err(b, `cargo 格式应为 cargo:货物:件数，却是: ${c}`); }
     else if (kind === 'pick' && !/^(sect|office)\.[\w]+:[\w]+$/.test(key)) err(b, `pick 格式应为 pick:sect.门派:差事 或 pick:office.城市:差事，却是: ${c}`);
     else if (!['flag', 'has', 'visited', 'sect', 'rank', 'gender', 'money', 'today', 'maxhp', 'xiuwei', 'inner', 'stance', 'talent', 'party', 'learned', 'cargo', 'pick'].includes(kind)) err(b, `未知条件: ${c}`);
   }
 }
 
+const amt = (n) => n === undefined || n === '' || /^@[\w.]+$/.test(n) || !Number.isNaN(Number(n));
 function checkEffects(b, effects) {
   const ns = owner.get(b.file);
   for (const e of effects) {
@@ -61,7 +62,9 @@ function checkEffects(b, effects) {
     if (kind === 'flag' || kind === 'unflag') {
       const prefix = ns === 'world' ? 'world.' : `${ns}.`;
       if (!key.startsWith(prefix)) err(b, `只能写 ${prefix}* 标记，却写了: ${key}`);
-    } else if (kind === 'give' || kind === 'take') { if (!db.item[key]) err(b, `效果引用了不存在的物品: ${key}`); }
+    } else if (kind === 'give') { if (!db.item[key]) err(b, `效果引用了不存在的物品: ${key}`); }
+    else if (kind === 'take') { const [id, n] = key.split(':'); if (!db.item[id] || !amt(n)) err(b, `take 格式应为 take:物品 或 take:物品:件数，却是: ${e}`); }
+    else if (kind === 'roll') { if (!/^[\w.]+:\d+~\d+$/.test(key)) err(b, `roll 格式应为 roll:名字:5~10，却是: ${e}`); }
     else if (kind === 'goto') { if (!db.room[key]) err(b, `goto 目标房间不存在: ${key}`); }
     else if (kind === 'start') { if (!db.storyline[key]) err(b, `start 目标主线不存在: ${key}`); }
     else if (kind === 'chapter') { if (!db.chapter[key]) err(b, `chapter 目标章节不存在: ${key}`); }
@@ -72,7 +75,7 @@ function checkEffects(b, effects) {
     else if (kind === 'potential') { if (Number.isNaN(Number(key))) err(b, `potential 需要数字: ${e}`); }
     else if (kind === 'heal' || kind === 'promote' || kind === 'buycart') { /* 无参数 */ }
     else if (kind === 'escort') { if (key && Number.isNaN(Number(key))) err(b, `escort 需要数字: ${e}`); }
-    else if (kind === 'deliver') { const [g, n] = key.split(':'); if (!db.goods[g] || Number.isNaN(Number(n))) err(b, `deliver 格式应为 deliver:货物:件数，却是: ${e}`); }
+    else if (kind === 'deliver') { const [g, n] = key.split(':'); if (!db.goods[g] || !amt(n)) err(b, `deliver 格式应为 deliver:货物:件数，却是: ${e}`); }
     else if (kind === 'money' || kind === 'pay') { if (Number.isNaN(Number(key))) err(b, `${kind} 需要数字: ${e}`); }
     else if (kind === 'qiyu') { if (!['good', 'bad'].includes(key)) err(b, `qiyu 效果只能是 qiyu:good 或 qiyu:bad: ${e}`); }
     else if (kind === 'study') { if (!db.skill[key]) err(b, `study 目标武功不存在: ${key}`); }
@@ -125,6 +128,9 @@ for (const b of all) {
   if (b.type === 'trigger') {
     if (!db.room[b.props.room]) err(b, `触发房间不存在: ${b.props.room}`);
     if (b.props.dialog && !db.dialog[b.props.dialog]) err(b, `触发对话不存在: ${b.props.dialog}`);
+  }
+  if (b.type === 'room' && b.props.shop) {
+    for (const id of parseList(b.props.shop)) if (!db.item[id]?.props.price) err(b, `shop 里的物品不存在或没写 price: ${id}`);
   }
   if (b.type === 'use') {
     if (!db.item[b.props.item]) err(b, `物品不存在: ${b.props.item}`);

@@ -13,11 +13,29 @@ export const martial = {
 
   hpMax() { return maxHp(this.db, this.state.player); },
 
-  /** 首次计算或最大值变化后修正当前气血 */
+  /** 首次计算或最大值变化后修正当前气血、内力 */
   normalizeHp() {
     const p = this.state.player;
     const m = this.hpMax();
     if (p.hp === null || p.hp === undefined || p.hp > m) p.hp = m;
+    const mm = this.mpMax();
+    if (p.mp === null || p.mp === undefined || p.mp > mm) p.mp = mm;
+  },
+
+  mpMax() { return maxMp(this.db, this.state.player); },
+
+  /** 气血、内力都回满（住店、被人救起、剧情里的疗伤） */
+  fullHeal() {
+    const p = this.state.player;
+    p.hp = this.hpMax();
+    p.mp = this.mpMax();
+  },
+
+  /** 打输了：气血、内力都只剩一成左右（CONFIG.outcome.loseHpRate） */
+  loseHeal() {
+    const p = this.state.player;
+    p.hp = Math.max(1, Math.round(this.hpMax() * CONFIG.outcome.loseHpRate));
+    p.mp = Math.round(this.mpMax() * CONFIG.outcome.loseHpRate);
   },
 
   showStatus() {
@@ -26,7 +44,7 @@ export const martial = {
     const sect = p.sect ? this.db.sect[p.sect.id] : null;
     const rank = sect ? sectRanks(sect)[p.sect.rank]?.name : null;
     this.emit('sys', `【${p.name}】${p.gender ?? ''}`);
-    this.emit('sys', `气血 ${p.hp}/${this.hpMax()}　内力 ${maxMp(this.db, p)}（战斗开始时回满）　潜能 ${p.potential}`);
+    this.emit('sys', `气血 ${p.hp}/${this.hpMax()}　内力 ${p.mp}/${this.mpMax()}　潜能 ${p.potential}`);
     this.emit('sys', `身上 ${p.money ?? 0} 文　存款 ${p.bank ?? 0} 文`);
     this.emit('sys', `根骨 ${p.attrs.根骨}　身法 ${p.attrs.身法}　悟性 ${p.attrs.悟性}`);
     this.emit('sys', sect ? `门派：[[${sect.props.name}|${sect.id}]]　${rank}　声望 ${p.sect.rep}` : '门派：无（江湖散人）');
@@ -129,10 +147,10 @@ export const martial = {
   rest() {
     if (this.room()?.props.inn !== 'true') { this.emit('err', '这里没法好好休息。去旅店或本门驻地吧。'); return; }
     const p = this.state.player;
-    p.hp = this.hpMax();
+    this.fullHeal();
     this.state.day = (this.state.day ?? 1) + 1;
     const msg = this.room().props.restmsg ?? '你要了一间客房，美美睡了一觉。醒来时神清气爽。';
-    this.emit('sys', `${msg}（气血全满）`);
+    this.emit('sys', `${msg}（气血、内力全满）`);
   },
 
   // ---- 天赋（D-044）----
@@ -402,6 +420,8 @@ export const martial = {
     const me = playerUnitOf(b);
     // 打赢了，战斗中倒下的人也回到 1 点气血，接着走剧情（D-115）
     p.hp = Math.max(result === 'win' ? CONFIG.outcome.reviveHp : 0, me.hp);
+    // 内力也带出战斗（D-133）：吸内可能暂时高过上限，这里夹回去
+    p.mp = Math.max(0, Math.min(me.mp, this.mpMax()));
     // 战斗中换过兵器就保留新的；被打飞的兵器战后拾回（D-057）
     if (me.wid !== (p.equip?.weapon ?? null)) { p.equip ??= {}; p.equip.weapon = me.wid; }
     if (me.dropped) this.emit('sys', `战后你拾回了被打飞的${this.db.item[me.dropped]?.props.name ?? '兵器'}。`, { to: 'host' });
@@ -428,11 +448,11 @@ export const martial = {
     } else if (result === 'lose') {
       this.emit('combat', '——你眼前一黑，什么也不知道了。——');
       if (block?.props.lose) {
-        p.hp = Math.max(1, Math.round(this.hpMax() * CONFIG.outcome.loseHpRate));
+        this.loseHeal();
         this.showDialog(block.props.lose);
       } else {
         // 战败无惩罚：被人救起，回到最近的旅店（D-016）
-        p.hp = this.hpMax();
+        this.fullHeal();
         const meta = this.db.meta.game.props;
         const inn = [p.lastInn, meta.inn, meta.start].find((r) => r && this.db.room[r]);
         this.emit('story', '不知过了多久，你悠悠醒转，原来是被路过的好心人救了回来。');
@@ -458,6 +478,7 @@ export const martial = {
       this.emit('story', `师父点了点头：“好，从今日起，你便是本门${ranks[b.exam.rank]?.name}了。”（天赋点 +1）`);
     } else {
       p.hp = Math.max(1, p.hp, Math.round(this.hpMax() * CONFIG.outcome.loseHpRate));
+      p.mp = Math.max(p.mp, Math.round(this.mpMax() * CONFIG.outcome.loseHpRate));
       this.emit('combat', result === 'flee' ? '——你认输了。——' : '——考核未过。——');
       this.emit('story', '师父摆摆手：“火候还差些，回去再练练。准备好了随时再来。”');
     }
@@ -506,7 +527,7 @@ export const martial = {
   statusView() {
     const p = this.state.player;
     this.normalizeHp();
-    return { hp: p.hp, maxHp: this.hpMax(), mp: maxMp(this.db, p), potential: p.potential, money: p.money ?? 0, day: this.state.day ?? 1 };
+    return { hp: p.hp, maxHp: this.hpMax(), mp: p.mp, maxMp: this.mpMax(), potential: p.potential, money: p.money ?? 0, day: this.state.day ?? 1 };
   },
 };
 

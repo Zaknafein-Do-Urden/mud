@@ -292,8 +292,10 @@ ifnone: 清虚道长：今天的差事都办完了，目前没有门派任务。
 * 可有师弟要下山？ -> wudang.task.escort ?pick:sect.wudang:escort ?!flag:world.wudang.task_escort ?!today:world.wudang.task_escort
 * 山门前可有人闹事？ -> wudang.task.rival ?pick:sect.wudang:rival ?!flag:world.wudang.task_rival ?!today:world.wudang.task_rival
 * 可有棘手的差事？ -> wudang.task.hunt ?pick:sect.wudang:hunt ?rank:1 ?!flag:world.wudang.task_hunt ?!today:world.wudang.task_hunt
-* 师门缺什么材料？ -> wudang.task.material_ask ?!flag:world.wudang.task_material_on ?!cargo:porcelain:100 ?!today:world.wudang.task_material
-* 交上瓷器 100 件 -> wudang.task.material ?cargo:porcelain:100 ?!today:world.wudang.task_material
+* 丹房可缺什么？ -> wudang.task.food_ask ?pick:sect.wudang:food ?!flag:world.wudang.task_food ?!today:world.wudang.task_food
+* 交上女儿红 {@world.wudang.food} 件 -> wudang.task.food ?flag:world.wudang.task_food ?has:food.nverhong:@world.wudang.food
+* 师门缺什么材料？ -> wudang.task.material_ask ?!flag:world.wudang.task_material_on ?!today:world.wudang.task_material
+* 交上瓷器 {@world.wudang.material} 件 -> wudang.task.material ?flag:world.wudang.task_material_on ?cargo:porcelain:@world.wudang.material ?!today:world.wudang.task_material
 * 告辞
 
 === dialog: wudang.task.bandit

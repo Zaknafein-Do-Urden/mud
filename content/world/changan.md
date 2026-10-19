@@ -36,6 +36,7 @@ bank: true
 name: 长安·客栈
 exits: 东=changan.center
 inn: true
+shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
 客栈的伙计会说三四种话，回回、党项、女真的客人都招呼得来。
 在这里可以 休息、修炼。

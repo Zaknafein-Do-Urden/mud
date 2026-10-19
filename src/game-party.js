@@ -6,13 +6,13 @@
 
 import { CONFIG } from './config.js';
 import { playerUnitOf, playersOf, intentsReady, moveInfo } from './combat.js';
-import { expPerUse, gainExp, maxHp } from './character.js';
+import { expPerUse, gainExp, maxHp, maxMp } from './character.js';
 
 export const MAX_GUESTS = CONFIG.party.maxGuests;
 
 /** 客人在本地自己处理的命令（查看自己、调整武功天赋等），不发给房主 */
 export const GUEST_LOCAL = new Set(['状态', 'hp', 'score', '武功', 'skills', '天赋', 'talent', '装备', 'equip', '卸下', 'unequip',
-  'i', 'inv', 'inventory', '背包', '物品', 'help', 'h', '帮助', '?', '货物', 'cargo']);
+  'i', 'inv', 'inventory', '背包', '物品', 'help', 'h', '帮助', '?', '货物', 'cargo', '吃', '喝', 'eat', 'drink']);
 
 /** 房主执行后不广播给客人的命令（房主自己的私事） */
 export const HOST_PRIVATE = new Set([...GUEST_LOCAL, '行情', '市场', 'market', '买', 'buy', '卖', 'sell', '存', '取', '存款', '银票',
@@ -44,6 +44,7 @@ export const party = {
     if (this.party.members.length >= MAX_GUESTS) return null;
     const snapCopy = structuredClone(snap);
     snapCopy.hp = maxHp(this.db, snapCopy); // 入队时按满血计
+    snapCopy.mp = maxMp(this.db, snapCopy);
     this.party.members.push({ pid, name: snap.name, snap: snapCopy });
     this.emit('party', `${snap.name}加入了队伍。`);
     return this.out;
@@ -68,9 +69,12 @@ export const party = {
   updateSnap(pid, snap) {
     const m = this.member(pid);
     if (!m || this.state.battle) return; // 战斗中不换，打完再说
-    const hp = m.snap.hp;
+    const { hp, mp } = m.snap;
     m.snap = structuredClone(snap);
-    m.snap.hp = Math.min(hp ?? Infinity, maxHp(this.db, m.snap));
+    // 客人自己吃喝过（D-133）就按客人报的来，只升不降
+    const keep = (old, now) => (old == null ? Infinity : Math.max(old, now ?? 0));
+    m.snap.hp = Math.min(keep(hp, snap.hp), maxHp(this.db, m.snap));
+    m.snap.mp = Math.min(keep(mp, snap.mp), maxMp(this.db, m.snap));
   },
 
   /** 客人发来的命令。返回输出条目（带 to 的只给某人） */
@@ -170,9 +174,10 @@ export const party = {
       m.snap.potential = (m.snap.potential ?? 0) + pot;
       const mhp = maxHp(this.db, m.snap);
       m.snap.hp = result === 'win' ? Math.max(CONFIG.outcome.reviveHp, u.hp) : mhp;
+      m.snap.mp = result === 'win' ? Math.max(0, Math.min(u.mp, maxMp(this.db, m.snap))) : maxMp(this.db, m.snap);
       if (texts.length) this.emit('sys', '实战经验：' + texts.join('，'), { to: m.pid });
       if (pot) this.emit('sys', `获得潜能 ${pot} 点。`, { to: m.pid });
-      this.outbox.push({ to: m.pid, msg: { t: 'settle', seq: ++this.settleSeq, exp: amounts, potential: pot, hp: m.snap.hp } });
+      this.outbox.push({ to: m.pid, msg: { t: 'settle', seq: ++this.settleSeq, exp: amounts, potential: pot, hp: m.snap.hp, mp: m.snap.mp } });
     }
   },
 

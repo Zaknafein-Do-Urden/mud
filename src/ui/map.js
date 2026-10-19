@@ -28,8 +28,21 @@ function shortName(name) {
  * 属于别的区域，画成按钮，以前按钮不占格，会压在同方向的房间上。
  * 返回 { pos: 房间 → [x, y], outs: "来处|去处" → {from, to, dir, x, y, moved} }。
  */
-export function layout(game, region) {
-  const rooms = Object.keys(game.db.room).filter((id) => regionOf(id) === region);
+export function layout(game, region, here) {
+  let rooms = Object.keys(game.db.room).filter((id) => regionOf(id) === region);
+  // 给了 here 就只排和它连通的那一块（D-132）：同一个区域前缀下可能挂着互不相通的几处地方，
+  // 比如 shediao.jiaxing 下的醉仙楼（城里）和法华寺（城外），不该画在一张图上
+  if (here && rooms.includes(here)) {
+    const adj = new Map(rooms.map((id) => [id, new Set()]));
+    for (const id of rooms) {
+      for (const to of Object.values(game.exitsOf(id))) {
+        if (adj.has(to)) { adj.get(id).add(to); adj.get(to).add(id); }
+      }
+    }
+    const comp = new Set([here]);
+    for (const q = [here]; q.length;) for (const to of adj.get(q.shift())) if (!comp.has(to)) { comp.add(to); q.push(to); }
+    rooms = rooms.filter((id) => comp.has(id));
+  }
   const pos = new Map();
   const used = new Set();
   const key = (x, y) => `${x},${y}`;
@@ -141,7 +154,7 @@ export function renderMap(root, game, onWalk, override) {
   const here = override?.room ?? game.state.player.room;
   const region = regionOf(here);
   // 每次重新布局：开销很小，而且出口可能随剧情标记变化（patch）
-  const { pos, outs: allOuts } = layout(game, region);
+  const { pos, outs: allOuts } = layout(game, region, here);
   const visited = override ? Object.fromEntries([...(override.visited ?? []), here].map((r) => [r, true])) : game.state.visited;
 
   // 要画的房间：去过的 + 与去过的相邻的（同区域）

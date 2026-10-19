@@ -79,6 +79,10 @@ export const CONFIG = {
     sect: 4, // 门派每天抽几件（只从当前阶位够得着的里面抽；材料差事不算在内）
     office: 3, // 衙门每天抽几件（送信、交信不算在内）
   },
+  // 吃喝（D-133）：回多少、卖多少钱写在 content/world/food.md 的物品上
+  food: {
+    starter: { 'food.mantou': 10, 'food.mijiu': 10 }, // 新角色背包里带的初级吃喝；D-133 之前的老存档也补这么多
+  },
 
   // ---- 劫道、镖师（economy.js、game-trade.js，D-040、D-104、D-115）----
   robbery: {

@@ -36,6 +36,7 @@ bank: true
 name: 襄阳·客栈
 exits: 东=xiangyang.center
 inn: true
+shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
 一间宽敞的客栈，大堂里坐满了南来北往的商旅和军汉。
 在这里可以 休息、修炼。

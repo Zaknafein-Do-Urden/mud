@@ -39,6 +39,7 @@ bank: true
 name: 大理·洱海客栈
 exits: 东=dali.center
 inn: true
+shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
 客栈临着洱海，推开窗就是一片水。晚上听得见浪拍在石堤上的声音。
 掌柜的是个白族妇人，说一口夹生的汉话，待客却极热络，开口就要留你多住几日。

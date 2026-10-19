@@ -261,8 +261,10 @@ ifnone: 穆清风：今天的差事都办完了，目前没有门派任务。明
 * 可有师妹要下山？ -> huashan.task.escort ?pick:sect.huashan:escort ?!flag:world.huashan.task_escort ?!today:world.huashan.task_escort
 * 山下可有人挑衅？ -> huashan.task.rival ?pick:sect.huashan:rival ?!flag:world.huashan.task_rival ?!today:world.huashan.task_rival
 * 可有棘手的差事？ -> huashan.task.hunt ?pick:sect.huashan:hunt ?rank:1 ?!flag:world.huashan.task_hunt ?!today:world.huashan.task_hunt
-* 师门缺什么材料？ -> huashan.task.material_ask ?!flag:world.huashan.task_material_on ?!cargo:herbs:100 ?!today:world.huashan.task_material
-* 交上药材 100 件 -> huashan.task.material ?cargo:herbs:100 ?!today:world.huashan.task_material
+* 弟子们可缺吃的？ -> huashan.task.food_ask ?pick:sect.huashan:food ?!flag:world.huashan.task_food ?!today:world.huashan.task_food
+* 交上酱牛肉 {@world.huashan.food} 件 -> huashan.task.food ?flag:world.huashan.task_food ?has:food.niurou:@world.huashan.food
+* 师门缺什么材料？ -> huashan.task.material_ask ?!flag:world.huashan.task_material_on ?!today:world.huashan.task_material
+* 交上药材 {@world.huashan.material} 件 -> huashan.task.material ?flag:world.huashan.task_material_on ?cargo:herbs:@world.huashan.material ?!today:world.huashan.task_material
 * 告辞
 
 === dialog: huashan.task.bandit

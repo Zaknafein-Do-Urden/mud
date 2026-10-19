@@ -35,6 +35,7 @@ bank: true
 name: 嘉兴·客栈
 exits: 东=jiaxing.center
 inn: true
+shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
 临河的客栈，推开窗就能看见南湖上的烟雨。
 在这里可以 休息、修炼。

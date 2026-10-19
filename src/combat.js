@@ -130,7 +130,8 @@ function playerUnit(db, p, key = 'p0', pid = 'host', named = false) {
   const mhp = maxHp(db, p);
   return {
     key, pid, side: 'p', name: named ? p.name : '你', isPlayer: true, lastTarget: null,
-    hp: p.hp ?? mhp, maxHp: mhp, mp: maxMp(db, p), maxMp: maxMp(db, p),
+    // 气血、内力都从战前带进来（D-133：内力不再开打就回满，靠住店、喝酒补）
+    hp: p.hp ?? mhp, maxHp: mhp, mp: Math.min(p.mp ?? maxMp(db, p), maxMp(db, p)), maxMp: maxMp(db, p),
     speed: speed(db, p), innerLv: inner.lv, innerId: inner.id, wuxing: p.attrs.悟性,
     skills: { ...p.skills }, outer: [...p.loadout.outer], light: p.loadout.light,
     talents: { ...(p.talents ?? {}) },
@@ -918,6 +919,7 @@ export function hpText(u) {
 export function createExamBattle(db, player, examinerName, exam, seed) {
   const me = playerUnit(db, player);
   me.hp = me.maxHp; // 考核前师父让你调息好
+  me.mp = me.maxMp;
   const mirror = {
     ...structuredClone(me),
     key: 'e0', side: 'e', name: examinerName, isPlayer: false, used: undefined,

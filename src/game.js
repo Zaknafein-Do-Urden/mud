@@ -7,7 +7,8 @@ import { martial } from './game-martial.js';
 import { trade } from './game-trade.js';
 import { views } from './game-views.js';
 import { party } from './game-party.js';
-import { skillCap, bestInnerLv, isWeaponItem } from './character.js';
+import { food } from './game-food.js';
+import { skillCap, bestInnerLv, isWeaponItem, isFoodItem } from './character.js';
 import { tal } from './talents.js';
 import { xiuwei } from './combat.js';
 import { CONFIG } from './config.js';
@@ -47,7 +48,8 @@ export class Game {
       .replaceAll('{姓名}', p.name)
       .replaceAll('{姓}', p.surname ?? '')
       .replaceAll('{名}', p.given ?? '')
-      .replace(/\{男:([^|}]*)\|女:([^}]*)\}/g, (_, m, f) => (female ? f : m));
+      .replace(/\{男:([^|}]*)\|女:([^}]*)\}/g, (_, m, f) => (female ? f : m))
+      .replace(/\{@([^}]+)\}/g, (_, k) => String(this.amount('@' + k))); // 掷出来的件数（D-134）
   }
 
   /** 执行一条玩家命令，返回本次产生的输出。 */
@@ -136,6 +138,10 @@ export class Game {
         this.buy(arg); break;
       case '卖': case 'sell':
         this.sell(arg); break;
+      case '吃': case '喝': case 'eat': case 'drink':
+        this.eat(arg, v); break;
+      case '店铺': case 'shop':
+        this.showShop(); break;
       case '货物': case 'cargo':
         this.showCargo(); break;
       case '乘车': case '坐车': case '马车':
@@ -155,6 +161,11 @@ export class Game {
 
   // ---- 条件与效果 ----
 
+  /** 条件、效果里的件数：数字，或 @名字（roll 掷出来记下的数，D-134） */
+  amount(s) {
+    return s.startsWith('@') ? this.state.rolls?.[s.slice(1)] ?? 0 : Number(s);
+  }
+
   check(conds) {
     const { flags, player, visited } = this.state;
     return conds.every((c) => {
@@ -162,7 +173,8 @@ export class Game {
       const [kind, key] = splitOnce(neg ? c.slice(1) : c);
       let ok;
       if (kind === 'flag') ok = !!flags[key];
-      else if (kind === 'has') ok = (player.inventory[key] ?? 0) > 0;
+      // 有没有某件物品；has:物品:件数 要够数（交食物、酒的差事，D-135）
+      else if (kind === 'has') { const [id, n] = splitOnce(key); ok = (player.inventory[id] ?? 0) >= (n ? this.amount(n) : 1); }
       else if (kind === 'visited') ok = !!visited[key];
       else if (kind === 'sect') ok = key === 'none' ? !player.sect : player.sect?.id === key;
       else if (kind === 'rank') ok = (player.sect?.rank ?? -1) >= Number(key);
@@ -181,7 +193,7 @@ export class Game {
       else if (kind === 'party') ok = 1 + (this.party?.members.length ?? 0) >= Number(key);
       else if (kind === 'learned') ok = player.skills[key] !== undefined;
       // 车上的货够不够（门派材料差事，D-125）：cargo:货物:件数
-      else if (kind === 'cargo') { const [g, n] = splitOnce(key); ok = (player.cargo?.[g] ?? 0) >= Number(n || 1); }
+      else if (kind === 'cargo') { const [g, n] = splitOnce(key); ok = (player.cargo?.[g] ?? 0) >= (n ? this.amount(n) : 1); }
       // 每日差事（D-124）：pick:差事池:差事 —— 今天这件差事有没有被抽中
       else if (kind === 'pick') { const i = key.lastIndexOf(':'); ok = this.jobPicked(key.slice(0, i), key.slice(i + 1)); }
       else { console.warn('未知条件', c); ok = false; }
@@ -260,10 +272,12 @@ export class Game {
           player.equip.weapon = key;
           this.emit('sys', `（你手里正空着，顺手把${this.db.item[key].props.name}握在了手里。）`);
         }
-      } else if (kind === 'take') {
-        inv[key] = (inv[key] ?? 0) - 1;
-        if (inv[key] <= 0) delete inv[key];
-        this.emit('sys', `你失去了${this.itemLink(key)}。`);
+      } else if (kind === 'take') { // take:物品 或 take:物品:件数（D-135）
+        const [id, n] = splitOnce(key);
+        const k = n ? this.amount(n) : 1;
+        inv[id] = (inv[id] ?? 0) - k;
+        if (inv[id] <= 0) delete inv[id];
+        this.emit('sys', `你失去了${this.itemLink(id)}${k > 1 ? `×${k}` : ''}。`);
       } else if (kind === 'goto') this.enter(key);
       else if (kind === 'start') this.startStoryline(key);
       else if (kind === 'chapter') this.showChapter(key);
@@ -271,7 +285,7 @@ export class Game {
       else if (kind === 'join') this.joinSect(key);
       else if (kind === 'rep') { const [sect, n] = splitOnce(key); this.addRep(sect, Number(n)); }
       else if (kind === 'potential') { player.potential += Number(key); this.emit('sys', `潜能 +${key}`); }
-      else if (kind === 'heal') { player.hp = this.hpMax(); this.emit('sys', '你的气血恢复了。'); }
+      else if (kind === 'heal') { this.fullHeal(); this.emit('sys', '你的气血、内力恢复了。'); }
       else if (kind === 'today') { this.state.daily ??= {}; this.state.daily[key] = todayStr(); }
       else if (kind === 'money') this.addMoney(Number(key));
       else if (kind === 'pay') this.addMoney(-Number(key));
@@ -281,10 +295,18 @@ export class Game {
       else if (kind === 'escort') this.hireEscort(Number(key) || 1); // 车马行雇镖师（D-104、D-122）
       else if (kind === 'buycart') this.buyCart(); // 车马行添一辆马车（D-122）
       else if (kind === 'deliver') { // 交出车上的货（门派材料差事，D-125）：deliver:货物:件数
-        const [g, n] = splitOnce(key);
-        const left = (player.cargo?.[g] ?? 0) - Number(n || 1);
+        const [g, s] = splitOnce(key);
+        const n = s ? this.amount(s) : 1;
+        const left = (player.cargo?.[g] ?? 0) - n;
         if (left > 0) player.cargo[g] = left; else delete player.cargo[g];
         this.emit('sys', `你从马车上卸下 ${n} 件${this.db.goods[g]?.props.name ?? g}交了上去。`);
+      }
+      // 掷个件数记下来（D-134）：roll:名字:5~10。之后条件、效果里的件数写 @名字，文字里写 {@名字}
+      else if (kind === 'roll') {
+        const [name, range] = splitOnce(key);
+        const [lo, hi] = range.split('~').map(Number);
+        this.state.rolls ??= {};
+        this.state.rolls[name] = lo + Math.floor(Math.random() * ((hi ?? lo) - lo + 1));
       }
       else if (kind === 'qiyu') this.qiyuEnd(key === 'good'); // 马车奇遇收场：good 发奖励，然后到站（D-114）
       else if (kind === 'study') this.studyBook(key); // 研读奇遇得来的秘籍（D-114）
@@ -369,9 +391,8 @@ export class Game {
     for (const k of Object.keys(this.state.flags)) if (k.startsWith(prefix)) delete this.state.flags[k];
     Object.assign(this.state.flags, cp.flags);
     this.endDialog();
-    const p = this.state.player;
-    p.hp = this.hpMax();
-    if (this.db.room[cp.room]) p.room = cp.room; // 直接放回，不触发进入房间的剧情
+    this.fullHeal();
+    if (this.db.room[cp.room]) this.state.player.room = cp.room; // 直接放回，不触发进入房间的剧情
     const ch = this.db.chapter[cp.chapter];
     this.emit('story', ch?.props.retry ?? '胜败乃兵家常事。你回到了本章开始的时候——已经获得的经验和潜能都还在，练好了再来。');
     this.look();
@@ -507,6 +528,8 @@ export class Game {
     if (verb && item?.props.verb !== verb) { this.emit('err', `${this.itemName(id)}没法${verb}。`); return; }
 
     const room = this.state.player.room;
+    // 吃喝的东西（D-133）：没写专门的 use 块就是吃一件
+    if (isFoodItem(this.db, id) && !Object.values(this.db.use ?? {}).some((u) => u.props.item === id)) { this.eat(id, item.props.verb); return; }
     const uses = Object.values(this.db.use ?? {})
       .filter((u) => u.props.item === id && (!u.props.room || u.props.room === room))
       .sort((a, b) => (b.props.room ? 1 : 0) - (a.props.room ? 1 : 0));
@@ -807,4 +830,4 @@ function splitOnce(s) {
   return i < 0 ? [s, ''] : [s.slice(0, i), s.slice(i + 1)];
 }
 
-Object.assign(Game.prototype, martial, trade, views, party);
+Object.assign(Game.prototype, martial, trade, views, party, food);

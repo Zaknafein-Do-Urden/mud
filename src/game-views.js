@@ -66,7 +66,7 @@ export const views = {
     const ranks = sect ? sectRanks(sect) : [];
     return {
       name: p.name, gender: p.gender, attrs: p.attrs,
-      hp: p.hp, maxHp: this.hpMax(), mp: maxMp(this.db, p),
+      hp: p.hp, maxHp: this.hpMax(), mp: p.mp, maxMp: this.mpMax(),
       potential: p.potential, money: p.money ?? 0, bank: p.bank ?? 0, day: this.state.day ?? 1,
       xiuwei: xiuwei(this.db, p),
       sect: sect ? {

@@ -224,6 +224,7 @@ function refreshQuick() {
   const r = game.room()?.props ?? {};
   if (r.station === 'true') add('乘车', '乘车');
   if (r.market === 'true') add('市集', '@market');
+  if (r.shop) add('店铺', '@shop'); // 客栈卖吃喝（D-133）
   if (r.bank === 'true') add('钱庄', '@bank');
   if (r.inn === 'true') add('休息', '休息');
   // 旅店、门派驻地可以组队（D-011、D-046）
@@ -280,7 +281,7 @@ $('lobby').addEventListener('close', () => party.closeSearch());
 
 function refreshStatus() {
   const st = game.statusView();
-  $('status-text').textContent = `${game.state.player.name}　气血 ${st.hp}/${st.maxHp}　内力 ${st.mp}　潜能 ${st.potential}　${st.money} 文`;
+  $('status-text').textContent = `${game.state.player.name}　气血 ${st.hp}/${st.maxHp}　内力 ${st.mp}/${st.maxMp}　潜能 ${st.potential}　${st.money} 文`;
   statusBox.classList.toggle('low', st.hp < st.maxHp * 0.3);
 }
 
@@ -440,6 +441,7 @@ quick.addEventListener('click', (e) => {
   if (!cmd) return;
   // @ 开头的是打开面板或输入框，不是命令
   if (cmd === '@market') panels.open('market');
+  if (cmd === '@shop') panels.open('shop');
   else if (cmd === '@bank') panels.open('bank');
   else if (cmd === '@say') { const t = prompt('对队友说：'); if (t) run(`说 ${t}`); }
   else { run(cmd); input.focus(); }

@@ -145,6 +145,7 @@ talk: linan.beggar.start
 name: 望湖客栈
 exits: 东=linan.gate
 inn: true
+shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
 一间干净的客栈，楼上是客房，楼下几张方桌。掌柜的在柜台后面拨着算盘。
 在这里可以 休息 恢复气血，也可以 修炼 武功。

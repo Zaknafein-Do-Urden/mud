@@ -38,6 +38,7 @@ bank: true
 name: 苏州·枕河客栈
 exits: 东=suzhou.center
 inn: true
+shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
 客栈临着河，后窗一推开就是水，夜里有船从窗下过，橹声咿咿呀呀，听着听着人就睡着了。
 在这里可以 休息、修炼。

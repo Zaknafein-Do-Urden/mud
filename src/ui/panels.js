@@ -81,6 +81,7 @@ export function initPanels(api) {
     char: { title: '人物', tabs: ['状态', '武功', '天赋', '合击', '背包'], render: renderChar },
     journal: { title: '江湖', tabs: ['主线', '差事', '百科'], render: renderJournal },
     market: { title: '市集', tabs: [], render: renderMarket },
+    shop: { title: '店铺', tabs: [], render: renderShop },
     bank: { title: '钱庄', tabs: [], render: renderBank },
   };
 
@@ -110,7 +111,7 @@ export function initPanels(api) {
       body.append(
         el('h3', 'pn-name', `${v.name}　${v.gender}`),
         row(el('span', 'pn-k', '气血'), bar(v.hp, v.maxHp, 'hp'), el('span', 'pn-v', `${v.hp}/${v.maxHp}`)),
-        kv('内力上限', `${v.mp}（每场战斗开始时回满）`),
+        row(el('span', 'pn-k', '内力'), bar(v.mp, v.maxMp, 'mp'), el('span', 'pn-v', `${v.mp}/${v.maxMp}`)),
         attrRow(v.attrs),
         kv('兵器', v.weapon),
         kv('修为', `${v.xiuwei}（刚、巧、守三势最狠一招的攻击值之和，加气血上限的五分之一）`),
@@ -256,7 +257,7 @@ export function initPanels(api) {
             it.equipped ? button('卸下', () => act(`卸下 ${it.id}`)) : button('装备', () => act(`装备 ${it.id}`)),
           ));
         } else {
-          r.append(row(el('span', 'pn-skill-name', `${it.name}×${it.count}`), button(it.verb, () => act(`use ${it.id}`), { disabled: !it.usable, title: it.usable ? '' : '这件东西暂时用不上' })));
+          r.append(row(el('span', 'pn-skill-name', `${it.name}×${it.count}`), button(it.verb, () => act(`${['吃', '喝'].includes(it.verb) ? it.verb : 'use'} ${it.id}`), { disabled: !it.usable, title: it.usable ? '' : '这件东西暂时用不上' })));
         }
         r.append(el('div', 'pn-moves', it.desc));
         body.append(r);
@@ -288,8 +289,9 @@ export function initPanels(api) {
         } else {
           box.append(el('p', 'pn-moves', s.brief));
           const list = el('ol', 'pn-chapters');
-          for (const c of s.chapters) {
-            const li = el('li', `ch-${c.state}`, c.state === 'locked' ? '？？？' : c.name);
+          // 只列已完成和进行中的章节，后面没解锁的不显示（D-136）
+          for (const c of s.chapters.filter((x) => x.state !== 'locked')) {
+            const li = el('li', `ch-${c.state}`, c.name);
             if (c.state === 'done') li.append(el('span', 'pn-v', '　已完成'));
             if (c.state === 'current') li.append(el('span', 'pn-v', '　进行中'));
             list.append(li);
@@ -450,6 +452,30 @@ export function initPanels(api) {
         button('全卖', () => act(`卖 ${gd.id} 全部`), { disabled: !gd.have }),
       );
       tr.append(el('td', '', gd.local ? `${gd.name}（特产）` : gd.name), el('td', noBuy ? 'pn-dim' : '', noBuy ? '无货' : gd.buy), el('td', noBuy ? 'pn-dim' : '', gd.stock || ''), el('td', '', gd.sell), el('td', '', gd.have || ''), ops);
+      t.append(tr);
+    }
+    body.append(t);
+  }
+
+  // ---- 店铺：客栈卖吃喝（D-133）----
+
+  function renderShop() {
+    const g = api.game();
+    const list = g.shopList();
+    if (!list.length) { body.append(el('p', 'pn-hint', '这里没有店铺。')); return; }
+    const money = g.state.player.money ?? 0;
+    body.append(el('p', 'pn-hint', `身上 ${money} 文　食物回气血，酒回内力。气血、内力打完不会自己回满，打斗中也腾不出手吃喝，开打前要补足。越贵的，一文钱回得越多。`));
+    const t = el('table', 'pn-table');
+    t.append(Object.assign(el('tr'), { innerHTML: '<th>名字</th><th>价钱</th><th>效果</th><th>身上</th><th></th>' }));
+    for (const f of list) {
+      const tr = el('tr');
+      const ops = el('td', 'pn-btns');
+      ops.append(
+        button('买1', () => act(`买 ${f.id} 1`), { disabled: money < f.price }),
+        button('买5', () => act(`买 ${f.id} 5`), { disabled: money < f.price * 5 }),
+        button('买10', () => act(`买 ${f.id} 10`), { disabled: money < f.price * 10 }),
+      );
+      tr.append(el('td', '', f.name), el('td', '', `${f.price} 文`), el('td', '', f.hp ? `气血 +${f.hp}` : `内力 +${f.mp}`), el('td', '', f.have || ''), ops);
       t.append(tr);
     }
     body.append(t);

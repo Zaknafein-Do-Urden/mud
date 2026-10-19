@@ -36,6 +36,7 @@ bank: true
 name: 成都·客栈
 exits: 东=chengdu.center
 inn: true
+shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
 客栈的老板娘泼辣能干，一嗓子能喊到后街。
 在这里可以 休息、修炼。

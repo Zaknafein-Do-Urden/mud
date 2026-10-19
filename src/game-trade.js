@@ -80,6 +80,9 @@ export const trade = {
   },
 
   buy(arg) {
+    // 客栈的店铺（D-133）：买的是吃喝，放进背包
+    if (this.room()?.props.shop && this.room()?.props.market !== 'true') { if (!this.buyFood(arg)) this.emit('err', arg ? `店里没有「${arg.split(/\s+/)[0]}」。输入 店铺 看看。` : '买什么？例如：买 馒头 10'); return; }
+    if (this.room()?.props.shop && this.buyFood(arg)) return;
     if (!this.inMarket()) return;
     const [name, qtyStr] = arg.split(/\s+/);
     const p = this.state.player;
@@ -373,7 +376,7 @@ export const trade = {
       const lost = Math.floor((p.money ?? 0) * CONFIG.outcome.robberyMoneyLoss);
       p.money -= lost;
       p.cargo = {};
-      p.hp = Math.max(1, Math.round(this.hpMax() * CONFIG.outcome.loseHpRate));
+      this.loseHeal();
       this.emit('combat', '——你寡不敌众，被打倒在地。——');
       this.emit('story', `劫匪抢走了车上所有的货物，还从你身上搜走了 ${lost} 文钱。车把式哆哆嗦嗦地把你扶上车，继续赶路。`);
     }

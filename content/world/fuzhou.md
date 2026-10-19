@@ -39,6 +39,7 @@ bank: true
 name: 福州·榕荫客栈
 exits: 东=fuzhou.center
 inn: true
+shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
 客栈院里也是一株大榕树，树下摆着几张竹榻。掌柜的爱跟客人聊海上的事，说得天花乱坠。
 夜里听得见远处江上的橹声，一下一下，很催人睡。

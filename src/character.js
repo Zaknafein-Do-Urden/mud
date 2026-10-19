@@ -27,8 +27,9 @@ export function newPlayer(startRoom) {
     room: startRoom,
     attrs: { 根骨: 20, 身法: 20, 悟性: 20 },
     hp: null, // null 表示满血（首次计算时填入）
+    mp: null, // 内力，同上；战斗之间保留，不再开打就回满（D-133）
     potential: 0,
-    inventory: {},
+    inventory: { ...CONFIG.food.starter }, // 带些初级吃喝上路（D-133）
     money: 120, // 身上的现钱（文）：开局 120（D-079）
     bank: 0, // 钱庄存款
     cargo: {}, // 马车上的货物 {goodsId: 件数}
@@ -160,6 +161,9 @@ export function gainExp(db, p, id, amount) {
 
 /** 需要相应兵器才能施展的武功类型 */
 export const ARMED = ['刀', '剑', '枪', '棍', '鞭'];
+
+/** 吃喝的东西（D-133）：物品带 hp（回气血）或 mp（回内力） */
+export const isFoodItem = (db, id) => !!(db.item[id]?.props.hp || db.item[id]?.props.mp);
 
 /** 物品是否是兵器 */
 export const isWeaponItem = (db, id) => db.item[id]?.props.slot === 'weapon';

@@ -264,8 +264,10 @@ ifnone: 慧明禅师：今天的差事都办完了，目前没有门派任务。
 * 可有香客要人护送？ -> shaolin.task.escort ?pick:sect.shaolin:escort ?!flag:world.shaolin.task_escort ?!today:world.shaolin.task_escort
 * 山门外可有人生事？ -> shaolin.task.rival ?pick:sect.shaolin:rival ?!flag:world.shaolin.task_rival ?!today:world.shaolin.task_rival
 * 可有棘手的差事？ -> shaolin.task.hunt ?pick:sect.shaolin:hunt ?rank:1 ?!flag:world.shaolin.task_hunt ?!today:world.shaolin.task_hunt
-* 师门缺什么材料？ -> shaolin.task.material_ask ?!flag:world.shaolin.task_material_on ?!cargo:tea:100 ?!today:world.shaolin.task_material
-* 交上茶叶 100 件 -> shaolin.task.material ?cargo:tea:100 ?!today:world.shaolin.task_material
+* 斋堂可缺什么？ -> shaolin.task.food_ask ?pick:sect.shaolin:food ?!flag:world.shaolin.task_food ?!today:world.shaolin.task_food
+* 交上馒头 {@world.shaolin.food} 件 -> shaolin.task.food ?flag:world.shaolin.task_food ?has:food.mantou:@world.shaolin.food
+* 师门缺什么材料？ -> shaolin.task.material_ask ?!flag:world.shaolin.task_material_on ?!today:world.shaolin.task_material
+* 交上茶叶 {@world.shaolin.material} 件 -> shaolin.task.material ?flag:world.shaolin.task_material_on ?cargo:tea:@world.shaolin.material ?!today:world.shaolin.task_material
 * 告辞
 
 === dialog: shaolin.task.bandit

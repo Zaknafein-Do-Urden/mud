@@ -40,6 +40,7 @@ bank: true
 name: 衡阳·雁来客栈
 exits: 东=hengyang.center
 inn: true
+shop: food.mantou, food.niurou, food.jiaohuaji, food.mijiu, food.nverhong, food.houerjiu
 ---
 客栈两层，院里支着酒缸。这几日住满了人，掌柜的见谁都说"实在没有房了"，转身却又把柴房收拾出来。
 夜里楼上楼下都有人在谈同一件事：刘三爷要金盆洗手了。
