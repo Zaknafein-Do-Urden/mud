@@ -4,7 +4,6 @@ import { CONFIG } from './config.js';
 import { maxHp, maxMp, skillCap, trainCost, sectRanks, bestInnerLv, MAX_OUTER, movesOf, expNeed, expPerUse, gainExp, isWeaponItem, weaponOf, ARMED } from './character.js';
 import { TALENT_TREE, talentPointsSpent, canAddTalent, findTalent, tal } from './talents.js';
 import { adaptEnemyHp, isAdaptive, teamOf, xiuwei } from './combat.js';
-import { todayStr } from './game.js';
 import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, playersOf, enemiesOf, hpText, moveInfo, canUse, comboHint, aimSeenBy, stunChance } from './combat.js';
 
 const KIND_LABEL = { 外功: '外功', 内功: '内功', 轻功: '轻功' };
@@ -225,7 +224,7 @@ export const martial = {
 
   /**
    * 晋阶选项（D-099）：只出现在本门师父自己的对话里；已是最高阶时不出现。
-   * 声望够了可以点（走"晋阶"命令的规则：每天一次、要过考核）；不够时选项是灰的，点了提示还差多少。
+   * 声望够了可以点（走"晋阶"命令的规则：要过考核；不限每天次数，D-121）；不够时选项是灰的，点了提示还差多少。
    */
   promoteChoice(dialogId) {
     const p = this.state.player;
@@ -281,8 +280,6 @@ export const martial = {
     const next = ranks[p.sect.rank + 1];
     if (!next) { this.emit('sys', '你已是本门最高阶位。'); return; }
     if (p.sect.rep < next.rep) { this.emit('err', `声望不足：晋升${next.name}需要 ${next.rep}，你现有 ${p.sect.rep}。`); return; }
-    // 每天最多晋阶一次（D-054）
-    if (this.state.daily?.[`promote.${sectId}`] === todayStr()) { this.emit('err', '你今天已经晋阶过了，根基未稳，明天再来吧。'); return; }
     // 晋阶考核：与一位势均力敌的同门过招（D-036）
     const sect = this.db.sect[sectId];
     const examiner = sect.props.examiner ?? '同门师兄';
@@ -456,8 +453,6 @@ export const martial = {
     const ranks = sectRanks(this.db.sect[b.exam.sect]);
     if (result === 'win' && p.sect?.id === b.exam.sect) {
       p.sect.rank = b.exam.rank;
-      this.state.daily ??= {};
-      this.state.daily[`promote.${b.exam.sect}`] = todayStr();
       p.hp = Math.max(p.hp, 1);
       this.emit('combat', '——考核通过！——');
       this.emit('story', `师父点了点头：“好，从今日起，你便是本门${ranks[b.exam.rank]?.name}了。”（天赋点 +1）`);
