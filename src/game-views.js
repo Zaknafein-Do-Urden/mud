@@ -125,9 +125,9 @@ export const views = {
       const cap = skillCap(this.db, p, id);
       return {
         id, name: sk.props.name, kind: sk.props.kind, stance: this.stancesOf(sk), lv, cap,
-        exp: p.exp?.[id] ?? 0, need: expNeed(lv), frozen: !!p.frozen?.[id],
+        exp: p.exp?.[id] ?? 0, need: expNeed(lv),
         equipped: lo.outer.includes(id) || lo.inner === id || lo.light === id,
-        trainCost: trainCost(p, lv), canTrain: canTrain && lv < cap && !p.frozen?.[id],
+        trainCost: trainCost(p, lv), canTrain: canTrain && lv < cap,
         moves: movesOf(this.db, id, 999).map((m) => this.moveTip(sk, m, lv)),
         info: this.skillInfo(sk, lv, cap),
         sectName: sk.props.sect ? this.db.sect[sk.props.sect]?.props.name : '',

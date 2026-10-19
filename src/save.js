@@ -7,7 +7,7 @@ const PREFIX = 'wuxia-mud:'; // 同一 github.io 用户下所有项目共享 loc
 const SLOT = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('slot')) || '1';
 const SLOT_KEY = PREFIX + 'save:' + SLOT.replace(/[^\w-]/g, '');
 const EXPORT_TAG = 'WXMUD1';
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 export function newState(startRoom) {
   const now = Date.now();
@@ -80,6 +80,13 @@ const migrations = {
   9: (s) => ({ ...s, player: { ...s.player, talents: {} } }),
   // v11：马车奇遇（D-114）。看过哪些故事；坐车途中的行程 trip 只在奇遇进行中才有
   10: (s) => ({ qiyu: { seen: [] }, ...s }),
+  // v12：叛师不再冻结武功，改记离开时的等级上限（D-117）。已冻结的按当前等级封顶，和以前一样不能再升
+  11: (s) => {
+    const { frozen = {}, ...player } = s.player;
+    const leftCap = { ...(player.leftCap ?? {}) };
+    for (const id of Object.keys(frozen)) if (frozen[id]) leftCap[id] = player.skills?.[id] ?? 0;
+    return { ...s, player: { ...player, leftCap } };
+  },
 };
 
 /** 已开始的主线 id（用于决定加载哪些内容） */

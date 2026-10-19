@@ -122,7 +122,7 @@ export function initPanels(api) {
         body.append(kv('门派', `${v.sect.name}　${v.sect.rank}　声望 ${v.sect.rep}`));
         if (v.sect.next) body.append(row(el('span', 'pn-k', '晋阶'), bar(v.sect.rep, v.sect.next.rep, 'mp'), el('span', 'pn-v', `${v.sect.next.name} 需声望 ${v.sect.next.rep}`)));
         body.append(row(button('叛出师门', () => {
-          if (confirm(`叛出${v.sect.name}后，本门武功等级减半，且永远不能再提升，也不能再回${v.sect.name}。确定吗？`)) act('叛出师门 确定');
+          if (confirm(`叛出${v.sect.name}后，已学的本门武功保留（最多练到现在阶位的上限），但再也学不到本门新功夫，也不能再回${v.sect.name}。确定吗？`)) act('叛出师门 确定');
         }, { cls: 'pn-danger' })));
       } else {
         body.append(kv('门派', '无（江湖散人）。去各地门派拜师学艺。'));
@@ -153,7 +153,7 @@ export function initPanels(api) {
           head.append(
             el('span', `pn-stance st-${s.stance || '无'}`, s.stance || kind[0]),
             nameEl,
-            el('span', 'pn-v', `${s.lv} / ${s.cap} 级${s.frozen ? '（冻结）' : ''}`),
+            el('span', 'pn-v', `${s.lv} / ${s.cap} 级`),
           );
           const btns = el('span', 'pn-btns');
           btns.append(s.equipped
@@ -161,11 +161,11 @@ export function initPanels(api) {
             : button('装备', () => act(`装备 ${s.id}`), { disabled: kind === '外功' && v.outerCount >= v.maxOuter, title: kind === '外功' && v.outerCount >= v.maxOuter ? '外功栏已满，先卸下一门' : '' }));
           btns.append(button(`修炼（${s.trainCost} 潜能）`, () => act(`修炼 ${s.id}`), {
             disabled: !s.canTrain || v.potential < s.trainCost,
-            title: s.frozen ? '已冻结' : !v.canTrain ? '要在旅店或本门驻地修炼' : s.lv >= s.cap ? '已到上限' : v.potential < s.trainCost ? '潜能不足' : '',
+            title: !v.canTrain ? '要在旅店或本门驻地修炼' : s.lv >= s.cap ? '已到上限' : v.potential < s.trainCost ? '潜能不足' : '',
           }));
           head.append(btns);
           r.append(head, info);
-          if (!s.frozen && s.lv < s.cap) r.append(row(el('span', 'pn-k', '经验'), bar(s.exp, s.need, 'mp'), el('span', 'pn-v', `${s.exp}/${s.need}`)));
+          if (s.lv < s.cap) r.append(row(el('span', 'pn-k', '经验'), bar(s.exp, s.need, 'mp'), el('span', 'pn-v', `${s.exp}/${s.need}`)));
           if (s.moves.length) {
             // 每个招式悬停显示威力、内力、估算伤害、效果（D-053）
             const mv = el('div', 'pn-moves');

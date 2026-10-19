@@ -43,7 +43,7 @@ export const martial = {
       const on = outer.includes(id) || inner === id || light === id ? '★' : '　';
       const stance = sk.props.stance ? `·${sk.props.stance}` : '';
       const cap = skillCap(this.db, p, id);
-      const prog = p.frozen?.[id] ? '（已冻结）' : lv >= cap ? '（已到上限）' : `　经验 ${p.exp?.[id] ?? 0}/${expNeed(lv)}`;
+      const prog = lv >= cap ? '（已到上限）' : `　经验 ${p.exp?.[id] ?? 0}/${expNeed(lv)}`;
       this.emit('sys', `${on} [[${sk.props.name}|${id}]]（${KIND_LABEL[sk.props.kind] ?? sk.props.kind}${stance}）${lv} / ${cap} 级${prog}`);
     }
     this.emit('sys', `外功栏 ${outer.length}/${MAX_OUTER}。装备 / 卸下 武功名 可调整。战斗中用哪门武功，哪门就长经验。`);
@@ -112,7 +112,6 @@ export const martial = {
     const lv = p.skills[id];
     const cap = skillCap(this.db, p, id);
     const sk = this.db.skill[id];
-    if (p.frozen?.[id]) { this.emit('err', `你已叛出师门，${sk.props.name}再也无法精进了。`); return; }
     if (lv >= cap) {
       const why = sk.props.kind !== '内功' && bestInnerLv(this.db, p) + 20 <= cap ? '先把内功练上去吧' : '需要更高的门派阶位或更完整的典籍';
       this.emit('err', `${sk.props.name}已到 ${cap} 级，眼下无法再进，${why}。`);
@@ -296,22 +295,20 @@ export const martial = {
     beginRound(this.db, this.state.battle, (cls, text, extra) => this.emit(cls, text, extra));
   },
 
-  /** 叛出师门：本门武功等级减半，且再也不能提升（D-037）。需要输入"叛出师门 确定" */
+  /** 叛出师门：本门武功保留，最多练到离开时阶位的上限；不能再学本门新功夫，也不能再拜回去（D-117，取代 D-037 的减半冻结）。需要输入"叛出师门 确定" */
   leaveSect(arg) {
     const p = this.state.player;
     if (!p.sect) { this.emit('err', '你并无师门。'); return; }
     const sect = this.db.sect[p.sect.id];
     const own = Object.keys(p.skills).filter((id) => this.db.skill[id]?.props.sect === p.sect.id);
     if (arg !== '确定') {
-      this.emit('err', `叛出${sect.props.name}后，本门武功（${own.map((id) => this.db.skill[id].props.name).join('、') || '无'}）等级减半，且永远不能再提升；也再不能回到${sect.props.name}。`);
+      this.emit('err', `叛出${sect.props.name}后，已学的本门武功（${own.map((id) => this.db.skill[id].props.name).join('、') || '无'}）可以保留，但最多只能练到现在阶位的上限；本门的新功夫再也学不到，也再不能回到${sect.props.name}。`);
       this.emit('err', '若心意已决，输入：叛出师门 确定');
       return;
     }
-    for (const id of own) {
-      p.skills[id] = Math.max(1, Math.floor(p.skills[id] / 2));
-      p.frozen[id] = true;
-      delete p.exp[id];
-    }
+    const rankCap = Number((sect.props.caps ?? '').split(',')[p.sect.rank]) || 0;
+    p.leftCap ??= {};
+    for (const id of own) p.leftCap[id] = Math.max(p.skills[id], rankCap);
     p.formerSects.push(p.sect.id);
     p.sect = null;
     this.normalizeHp();

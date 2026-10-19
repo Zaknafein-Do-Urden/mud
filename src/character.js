@@ -38,7 +38,7 @@ export function newPlayer(startRoom) {
     exp: {}, // 武功实战经验 {skillId: exp}
     sect: null, // {id, rep, rank}
     formerSects: [], // 叛出过的门派（不能再回去）
-    frozen: {}, // 叛师后被冻结的武功 {skillId: true}：不能再提升
+    leftCap: {}, // 叛师时本门武功的等级上限 {skillId: 上限}：功夫保留，最多练到离开时阶位的上限（D-117）
     lastInn: null,
     talents: {}, // 天赋 {天赋id: 等级}（D-044）
     equip: { weapon: null }, // 装备的兵器（物品 id，D-057）
@@ -87,11 +87,10 @@ export function innerBonus(innerLv, innerSkill, stance) {
   return b;
 }
 
-/** 武功等级上限：取 内功+20（外功/轻功）、门派阶位上限、典籍上限 中的最小值。叛师后冻结的武功不能再升 */
+/** 武功等级上限：取 内功+20（外功/轻功）、门派阶位上限、典籍上限 中的最小值。叛师后本门武功按离开时的阶位上限算（D-117） */
 export function skillCap(db, p, id) {
   const sk = db.skill[id];
   if (!sk) return 0;
-  if (p.frozen?.[id]) return p.skills[id] ?? 0;
   const caps = [];
   if (sk.props.kind !== '内功') caps.push(bestInnerLv(db, p) + 20);
   if (id.startsWith('base.')) caps.push(BASE_CAP);
@@ -99,7 +98,7 @@ export function skillCap(db, p, id) {
     const sect = db.sect[sk.props.sect];
     const mine = p.sect?.id === sk.props.sect;
     const rankCaps = (sect?.props.caps ?? '').split(',').map(Number);
-    caps.push(mine ? rankCaps[p.sect.rank] ?? 0 : num(sk.props.cap, 0));
+    caps.push(mine ? rankCaps[p.sect.rank] ?? 0 : Math.max(num(sk.props.cap, 0), p.leftCap?.[id] ?? 0));
   } else {
     // 门派之外的武功：典籍上限；剧情可以用 cap 效果提高（如独门武功随章节解锁）
     caps.push(Math.max(num(sk.props.cap, 100), p.skillcap?.[id] ?? 0));
