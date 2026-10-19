@@ -441,7 +441,7 @@ quick.addEventListener('click', (e) => {
   if (!cmd) return;
   // @ 开头的是打开面板或输入框，不是命令
   if (cmd === '@market') panels.open('market');
-  if (cmd === '@shop') panels.open('shop');
+  else if (cmd === '@shop') panels.open('shop');
   else if (cmd === '@bank') panels.open('bank');
   else if (cmd === '@say') { const t = prompt('对队友说：'); if (t) run(`说 ${t}`); }
   else { run(cmd); input.focus(); }
