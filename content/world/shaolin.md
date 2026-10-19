@@ -264,7 +264,7 @@ ifnone: 慧明禅师：今天的差事都办完了，目前没有门派任务。
 * 可有香客要人护送？ -> shaolin.task.escort ?pick:sect.shaolin:escort ?!flag:world.shaolin.task_escort ?!today:world.shaolin.task_escort
 * 山门外可有人生事？ -> shaolin.task.rival ?pick:sect.shaolin:rival ?!flag:world.shaolin.task_rival ?!today:world.shaolin.task_rival
 * 可有棘手的差事？ -> shaolin.task.hunt ?pick:sect.shaolin:hunt ?rank:1 ?!flag:world.shaolin.task_hunt ?!today:world.shaolin.task_hunt
-* 师门缺什么材料？ -> shaolin.task.material_ask ?!cargo:tea:100 ?!today:world.shaolin.task_material
+* 师门缺什么材料？ -> shaolin.task.material_ask ?!flag:world.shaolin.task_material_on ?!cargo:tea:100 ?!today:world.shaolin.task_material
 * 交上茶叶 100 件 -> shaolin.task.material ?cargo:tea:100 ?!today:world.shaolin.task_material
 * 告辞
 

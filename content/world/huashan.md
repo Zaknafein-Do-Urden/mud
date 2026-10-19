@@ -261,7 +261,7 @@ ifnone: 穆清风：今天的差事都办完了，目前没有门派任务。明
 * 可有师妹要下山？ -> huashan.task.escort ?pick:sect.huashan:escort ?!flag:world.huashan.task_escort ?!today:world.huashan.task_escort
 * 山下可有人挑衅？ -> huashan.task.rival ?pick:sect.huashan:rival ?!flag:world.huashan.task_rival ?!today:world.huashan.task_rival
 * 可有棘手的差事？ -> huashan.task.hunt ?pick:sect.huashan:hunt ?rank:1 ?!flag:world.huashan.task_hunt ?!today:world.huashan.task_hunt
-* 师门缺什么材料？ -> huashan.task.material_ask ?!cargo:herbs:100 ?!today:world.huashan.task_material
+* 师门缺什么材料？ -> huashan.task.material_ask ?!flag:world.huashan.task_material_on ?!cargo:herbs:100 ?!today:world.huashan.task_material
 * 交上药材 100 件 -> huashan.task.material ?cargo:herbs:100 ?!today:world.huashan.task_material
 * 告辞
 

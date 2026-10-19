@@ -292,7 +292,7 @@ ifnone: 清虚道长：今天的差事都办完了，目前没有门派任务。
 * 可有师弟要下山？ -> wudang.task.escort ?pick:sect.wudang:escort ?!flag:world.wudang.task_escort ?!today:world.wudang.task_escort
 * 山门前可有人闹事？ -> wudang.task.rival ?pick:sect.wudang:rival ?!flag:world.wudang.task_rival ?!today:world.wudang.task_rival
 * 可有棘手的差事？ -> wudang.task.hunt ?pick:sect.wudang:hunt ?rank:1 ?!flag:world.wudang.task_hunt ?!today:world.wudang.task_hunt
-* 师门缺什么材料？ -> wudang.task.material_ask ?!cargo:porcelain:100 ?!today:world.wudang.task_material
+* 师门缺什么材料？ -> wudang.task.material_ask ?!flag:world.wudang.task_material_on ?!cargo:porcelain:100 ?!today:world.wudang.task_material
 * 交上瓷器 100 件 -> wudang.task.material ?cargo:porcelain:100 ?!today:world.wudang.task_material
 * 告辞
 

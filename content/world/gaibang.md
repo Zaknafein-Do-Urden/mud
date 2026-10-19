@@ -248,7 +248,7 @@ ifnone: 鲁有脚：今天的差事都办完了，目前没有门派任务。明
 * 可有小兄弟要人照看？ -> gaibang.task.escort ?pick:sect.gaibang:escort ?!flag:world.gaibang.task_escort ?!today:world.gaibang.task_escort
 * 城门口可有人闹事？ -> gaibang.task.rival ?pick:sect.gaibang:rival ?!flag:world.gaibang.task_rival ?!today:world.gaibang.task_rival
 * 可有棘手的人要对付？ -> gaibang.task.hunt ?pick:sect.gaibang:hunt ?rank:1 ?!flag:world.gaibang.task_hunt ?!today:world.gaibang.task_hunt
-* 师门缺什么材料？ -> gaibang.task.material_ask ?!cargo:fur:100 ?!today:world.gaibang.task_material
+* 师门缺什么材料？ -> gaibang.task.material_ask ?!flag:world.gaibang.task_material_on ?!cargo:fur:100 ?!today:world.gaibang.task_material
 * 交上皮货 100 件 -> gaibang.task.material ?cargo:fur:100 ?!today:world.gaibang.task_material
 * 告辞
 

@@ -193,15 +193,23 @@ where: linan.road
 鲁有脚的差遣：城外官道上有个人贩子，拐了两个孩子，想卖到北边去。你去截住他，把孩子带回来。
 
 === dialog: gaibang.task.material_ask
+do: flag:world.gaibang.task_material_on
 ---
 鲁有脚：入冬了，城里城外的弟兄们还穿着单衣。你要是跑商路过长安，捎一百件皮货回来，帮里记你一功。
 （门派材料差事：交纳皮货 100 件，每天可交一次。货在马车上就行，不用搬来。）
 
 === dialog: gaibang.task.material
-do: deliver:fur:100 today:world.gaibang.task_material rep:gaibang:100 potential:30
+do: unflag:world.gaibang.task_material_on deliver:fur:100 today:world.gaibang.task_material rep:gaibang:100 potential:30
 ---
 鲁有脚让几个小叫化把皮货一捆捆搬进庙里，拍着你的肩膀笑道：“好！今年冬天，弟兄们不用抱着稻草过夜了。”
 （门派材料差事完成）
+
+=== quest: world.q.gaibang_material
+name: 丐帮：交纳皮货
+flag: world.gaibang.task_material_on
+where: linan.temple
+---
+鲁有脚的差遣：跑商捎 100 件皮货回来，车上凑够了回去找鲁有脚交上（每天可交一次）。
 
 # ================= 少林 =================
 
@@ -393,15 +401,23 @@ where: shaolin.hill
 慧明禅师的差遣：有一伙人趁夜到后山盗伐寺里的古柏，已经倒了三棵。你去把他们赶走。
 
 === dialog: shaolin.task.material_ask
+do: flag:world.shaolin.task_material_on
 ---
 慧明禅师：寺里禅堂坐香，向来以茶提神。今年山上的茶树遭了霜，你若跑商，带一百件茶叶上山，便是一桩功德。
 （门派材料差事：交纳茶叶 100 件，每天可交一次。货在马车上就行，不用搬来。）
 
 === dialog: shaolin.task.material
-do: deliver:tea:100 today:world.shaolin.task_material rep:shaolin:100 potential:30
+do: unflag:world.shaolin.task_material_on deliver:tea:100 today:world.shaolin.task_material rep:shaolin:100 potential:30
 ---
 慧明禅师命知客僧把茶叶收进库房，合十道：“阿弥陀佛，这一季禅堂的茶不缺了。”
 （门派材料差事完成）
+
+=== quest: world.q.shaolin_material
+name: 少林：交纳茶叶
+flag: world.shaolin.task_material_on
+where: shaolin.hall
+---
+慧明禅师的差遣：跑商捎 100 件茶叶回来，车上凑够了回去找慧明禅师交上（每天可交一次）。
 
 # ================= 武当 =================
 
@@ -594,15 +610,23 @@ where: wudang.forest
 清虚道长的差遣：丹房丢了一炉九转丹，脚印往密林里去了。你追过去，把丹药追回来。
 
 === dialog: wudang.task.material_ask
+do: flag:world.wudang.task_material_on
 ---
 清虚道长：丹房里盛药的瓷瓶，碎的碎、裂的裂。洛阳的瓷器最好，你若跑商，捎一百件上山。
 （门派材料差事：交纳瓷器 100 件，每天可交一次。货在马车上就行，不用搬来。）
 
 === dialog: wudang.task.material
-do: deliver:porcelain:100 today:world.wudang.task_material rep:wudang:100 potential:30
+do: unflag:world.wudang.task_material_on deliver:porcelain:100 today:world.wudang.task_material rep:wudang:100 potential:30
 ---
 清虚道长拿起一只瓷瓶对着光看了看，点头道：“釉色匀净，好。”命道童一一收进丹房。
 （门派材料差事完成）
+
+=== quest: world.q.wudang_material
+name: 武当：交纳瓷器
+flag: world.wudang.task_material_on
+where: wudang.hall
+---
+清虚道长的差遣：跑商捎 100 件瓷器回来，车上凑够了回去找清虚道长交上（每天可交一次）。
 
 # ================= 华山 =================
 
@@ -795,15 +819,23 @@ where: huashan.cliff
 穆清风的差遣：有个采花贼躲进了山里，官府追不上来。你去苍龙岭一带搜一搜。
 
 === dialog: huashan.task.material_ask
+do: flag:world.huashan.task_material_on
 ---
 穆清风：练剑难免受伤，派里的金创药快配不出来了。你若跑商，从襄阳或成都捎一百件药材回来。
 （门派材料差事：交纳药材 100 件，每天可交一次。货在马车上就行，不用搬来。）
 
 === dialog: huashan.task.material
-do: deliver:herbs:100 today:world.huashan.task_material rep:huashan:100 potential:30
+do: unflag:world.huashan.task_material_on deliver:herbs:100 today:world.huashan.task_material rep:huashan:100 potential:30
 ---
 穆清风让弟子把药材抬进库房，难得露出笑容：“这一季练剑，弟子们放心了。”
 （门派材料差事完成）
+
+=== quest: world.q.huashan_material
+name: 华山：交纳药材
+flag: world.huashan.task_material_on
+where: huashan.hall
+---
+穆清风的差遣：跑商捎 100 件药材回来，车上凑够了回去找穆清风交上（每天可交一次）。
 
 # ================= 唐门 =================
 
@@ -996,15 +1028,23 @@ where: tangmen.bamboo
 唐姥姥的差遣：前些日子叛出唐门的那个畜生，还有同党在竹林里接应。去把人揪出来。
 
 === dialog: tangmen.task.material_ask
+do: flag:world.tangmen.task_material_on
 ---
 唐姥姥：暗器房缺好铁。蜀中的铁脆，打不出好针好镖。你跑商路过襄阳、洛阳，捎一百件铁器回来。
 （门派材料差事：交纳铁器 100 件，每天可交一次。货在马车上就行，不用搬来。）
 
 === dialog: tangmen.task.material
-do: deliver:iron:100 today:world.tangmen.task_material rep:tangmen:100 potential:30
+do: unflag:world.tangmen.task_material_on deliver:iron:100 today:world.tangmen.task_material rep:tangmen:100 potential:30
 ---
 唐姥姥拿起一块铁掂了掂，用指甲一弹，听了听声音，满意地点点头：“是好铁。”
 （门派材料差事完成）
+
+=== quest: world.q.tangmen_material
+name: 唐门：交纳铁器
+flag: world.tangmen.task_material_on
+where: tangmen.hall
+---
+唐姥姥的差遣：跑商捎 100 件铁器回来，车上凑够了回去找唐姥姥交上（每天可交一次）。
 
 === enemy: world.foe.job_drunk
 weapon: 拳

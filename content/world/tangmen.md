@@ -241,7 +241,7 @@ ifnone: 唐姥姥：今天的差事都办完了，目前没有门派任务。明
 * 可有族人要出远门？ -> tangmen.task.escort ?pick:sect.tangmen:escort ?!flag:world.tangmen.task_escort ?!today:world.tangmen.task_escort
 * 堡外可有人窥探？ -> tangmen.task.rival ?pick:sect.tangmen:rival ?!flag:world.tangmen.task_rival ?!today:world.tangmen.task_rival
 * 可有棘手的差事？ -> tangmen.task.hunt ?pick:sect.tangmen:hunt ?rank:1 ?!flag:world.tangmen.task_hunt ?!today:world.tangmen.task_hunt
-* 师门缺什么材料？ -> tangmen.task.material_ask ?!cargo:iron:100 ?!today:world.tangmen.task_material
+* 师门缺什么材料？ -> tangmen.task.material_ask ?!flag:world.tangmen.task_material_on ?!cargo:iron:100 ?!today:world.tangmen.task_material
 * 交上铁器 100 件 -> tangmen.task.material ?cargo:iron:100 ?!today:world.tangmen.task_material
 * 告辞
 
