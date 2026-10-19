@@ -86,11 +86,20 @@ export function escortFee(value) {
 /** 有镖师护送时，被劫的概率乘这个系数 */
 export const ESCORT_RATE = 0.4;
 
-/** 劫匪的水平与人数：取决于货物价值加身上现钱 */
+/**
+ * 劫匪的人数与难度系数：取决于货物价值加身上现钱（D-040）。
+ * 强弱本身按我方战斗力自适应（D-115），货越值钱，盯上你的人越多、越狠（hard 1.0 ~ 1.2）。
+ */
 export function robbers(total) {
-  const level = Math.min(90, Math.round(4 + 3 * Math.sqrt(total / 100)));
   const count = 1 + (total >= 3000 ? 1 : 0) + (total >= 15000 ? 1 : 0);
-  return { level, count };
+  const hard = 1 + 0.2 * Math.min(1, Math.sqrt(total / 50000));
+  return { count, hard };
+}
+
+/** 主角的武功水平：出招武功的平均等级（劫匪等按这个生成武功等级，D-115） */
+export function martialLevel(p) {
+  const lvs = (p.loadout?.outer ?? []).map((id) => p.skills?.[id] ?? 0).filter((x) => x > 0);
+  return Math.max(1, Math.round(lvs.length ? lvs.reduce((a, c) => a + c, 0) / lvs.length : 1));
 }
 
 /** 城市间直达路线 {cityId: 天数} */

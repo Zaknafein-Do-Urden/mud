@@ -394,6 +394,8 @@ hpx: 0.7
 
 === battle: world.b.huashan_spar
 enemies: world.foe.huashan_spar
+# 陪练是固定的标尺，不按玩家强弱浮动（D-115）
+adapt: false
 ---
 陪练弟子摆开了架势。
 

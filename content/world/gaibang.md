@@ -286,6 +286,8 @@ hpx: 0.7
 
 === battle: world.b.spar
 enemies: world.foe.shitou
+# 陪练是固定的标尺，不按玩家强弱浮动（D-115）
+adapt: false
 ---
 小石头把破碗往地上一扔，摆了个歪歪扭扭的架势。
 

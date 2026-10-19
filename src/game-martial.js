@@ -2,7 +2,7 @@
 
 import { maxHp, maxMp, skillCap, trainCost, sectRanks, bestInnerLv, MAX_OUTER, movesOf, expNeed, expPerUse, gainExp, isWeaponItem, weaponOf, ARMED } from './character.js';
 import { TALENT_TREE, talentPointsSpent, canAddTalent, findTalent, tal } from './talents.js';
-import { adaptEnemyHp, teamOf, xiuwei } from './combat.js';
+import { adaptEnemyHp, isAdaptive, teamOf, xiuwei } from './combat.js';
 import { todayStr } from './game.js';
 import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, playersOf, enemiesOf, hpText, moveInfo, canUse, comboHint, aimSeenBy } from './combat.js';
 
@@ -346,12 +346,10 @@ export const martial = {
     this.normalizeHp();
     // 组队时全队参战（MULTIPLAYER.md）
     const b = createBattle(this.db, block, this.partyPlayers(), (Date.now() ^ (Math.random() * 1e9)) | 0);
-    // 必须打赢的主线战斗（以及标了 adapt 的战斗）：敌人气血按玩家当前功力调整，
-    // 使猜对 80% 以上的招式能赢、以下会输（D-051）
-    const storyMustWin = !!this.db.storyline[id.split('.')[0]] && !block.props.lose;
-    // globalThis.MUD_SKIP_ADAPT 是给通关脚本用的开关（D-226）：那里敌人气血本来就要压到 1，
-    // 自适应每场要模拟四百次，一轮下来几分钟全花在这上头。浏览器里没人设这个变量。
-    if ((storyMustWin || block.props.adapt === 'true') && !globalThis.MUD_SKIP_ADAPT) adaptEnemyHp(this.db, b);
+    // 敌人按我方当前战斗力浮动（D-051、D-106、D-115）：主线必胜战、门派任务、城市差事都是；
+    // 必败剧情战（写了 lose）和陪练（adapt: false）除外。
+    // globalThis.MUD_SKIP_ADAPT 是给通关脚本用的开关（D-226）：那里敌人气血本来就要压到 1。浏览器里没人设这个变量。
+    if (isAdaptive(block) && !globalThis.MUD_SKIP_ADAPT) adaptEnemyHp(this.db, b);
     this.state.battle = b;
     this.emitLines(block.lines, 'desc');
     this.emit('combat', `——与${enemiesOf(b).map((e) => e.name).join('、')}交手！——`);
@@ -361,7 +359,6 @@ export const martial = {
   combatInput(line, pid = 'host') {
     const b = this.state.battle;
     const v = line.split(/\s+/)[0].toLowerCase();
-    const emit = (cls, text, extra) => this.emit(cls, text, extra);
     const to = { to: pid };
     if (['逃', '逃跑', 'flee'].includes(v)) {
       if (pid !== 'host') { this.emit('err', '只有队长能下令撤退。', to); return; }
@@ -380,7 +377,25 @@ export const martial = {
     const errMsg = setPlayerIntent(this.db, b, line, pid);
     if (errMsg) { this.emit('err', errMsg, to); return; }
     if (this.party && playersOf(b).length > 1) { this.partyIntent(pid); return; }
+    this.finishRound();
+  },
+
+  /**
+   * 结算这一回合，接着开下一回合。玩家全倒下、NPC 队友还站着时，由队友自己打下去，
+   * 直到分出胜负（D-115：我方还有一人站着就没输）。
+   */
+  finishRound() {
+    const b = this.state.battle;
+    const emit = (cls, text, extra) => this.emit(cls, text, extra);
     resolveRound(this.db, b, emit);
+    if (!b.over && !playersOf(b).some((u) => u.hp > 0)) {
+      emit('combat', '——你已倒地，队友还在苦战……——');
+      for (let n = 0; !b.over && n < 60; n++) {
+        beginRound(this.db, b, emit);
+        resolveRound(this.db, b, emit);
+      }
+      if (!b.over) b.over = 'lose';
+    }
     if (b.over) this.endBattle(b.over);
     else beginRound(this.db, b, emit);
   },
@@ -390,7 +405,8 @@ export const martial = {
     const block = this.db.battle[b.id];
     const p = this.state.player;
     const me = playerUnitOf(b);
-    p.hp = Math.max(0, me.hp);
+    // 打赢了，战斗中倒下的人也回到 1 点气血，接着走剧情（D-115）
+    p.hp = Math.max(result === 'win' ? 1 : 0, me.hp);
     // 战斗中换过兵器就保留新的；被打飞的兵器战后拾回（D-057）
     if (me.wid !== (p.equip?.weapon ?? null)) { p.equip ??= {}; p.equip.weapon = me.wid; }
     if (me.dropped) this.emit('sys', `战后你拾回了被打飞的${this.db.item[me.dropped]?.props.name ?? '兵器'}。`, { to: 'host' });

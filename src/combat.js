@@ -176,7 +176,7 @@ function enemyUnit(db, foe, i) {
   const mhp = Math.round((100 + gg * 5 + innerLv * num(innerSk?.props.hp, 6)) * num(foe.props.hpx, 1));
   const mmp = Math.round(50 + gg * 2 + innerLv * num(innerSk?.props.mp, 8));
   return {
-    key: 'e' + i, side: 'e', name: foe.props.name, foe: foe.id,
+    key: 'e' + i, side: 'e', name: foe.props.name, foe: foe.id, baseHp: mhp,
     weapon: foe.props.weapon ?? '拳', weaponName: foe.props.weaponName ?? WEAPON_NAME[foe.props.weapon ?? '拳'],
     hp: mhp, maxHp: mhp, mp: mmp, maxMp: mmp,
     speed: attrs.身法 ?? 15, innerLv, innerId, wuxing: attrs.悟性 ?? 10,
@@ -204,6 +204,14 @@ function playerUnits(db, players) {
 function scaleForParty(units, n) {
   if (n <= 1) return;
   for (const u of units) { u.maxHp = Math.round(u.maxHp * (1 + 0.7 * (n - 1))); u.hp = u.maxHp; }
+}
+
+/**
+ * 这场战斗要不要按我方战斗力自适应（D-115）：默认都要——主线、门派任务、城市差事、劫道。
+ * 例外：写了 lose 分支的必败剧情战（输是剧情），和标了 adapt: false 的（陪练切磋，对手强弱是固定的标尺）。
+ */
+export function isAdaptive(block) {
+  return !block.props.lose && block.props.adapt !== 'false';
 }
 
 /** 创建战斗。battleBlock 来自内容中的 battle 块 */
@@ -550,8 +558,9 @@ export function resolveRound(db, b, emit) {
     u.intent = null;
   }
 
+  // 我方（玩家、联机队友、NPC 队友）只要还有一个站着，就没输（D-115）
   if (enemiesOf(b).every((e) => !alive(e))) b.over = 'win';
-  else if (playersOf(b).every((p) => !alive(p))) b.over = 'lose';
+  else if (teamOf(b).every((p) => !alive(p))) b.over = 'lose';
   // 金创（D-107）：打赢后全队回 20% 气血
   if (b.over === 'win' && teamOf(b).some((x) => tal(x, 'jinchuang'))) {
     for (const x of teamOf(b).filter(alive)) x.hp = Math.min(x.maxHp, x.hp + Math.round(x.maxHp * 0.2));
@@ -912,7 +921,7 @@ export function createScaledBattle(db, foeIds, level, meta, seed) {
   if (units.length > 1) units.forEach((u, i) => { u.name += LABEL[i]; });
   const pUnits = playerUnits(db, meta.players);
   delete meta.players;
-  scaleForParty(units, pUnits.length);
+  // 不再按人数放大气血：调用方随后用 adaptEnemyHp 按我方战斗力定强弱（D-115）
   // 随行的 NPC 队友（如镖师，D-104）：和敌人一样按等级缩放，站在玩家一边
   const allyUnits = (meta.allies ?? []).map((id, i) => {
     const a = db.enemy[id];
@@ -1035,54 +1044,64 @@ export const enemyXiuwei = (db, foeId) => unitXiuwei(db, enemyUnit(db, db.enemy[
 export const ADAPT_ACC = 0.6;
 export const ADAPT_ROUNDS = 6;
 export const ADAPT_TAKEN = 0.6;
-/** NPC 队友的输出、分担敌人火力，都按玩家的几成算 */
-export const ADAPT_ALLY = 0.5;
+/**
+ * 我方各人的战斗力权重（D-115）：主角 1、NPC 队友 1、联机客人 0.5。
+ * 客人只算一半：联机图的是热闹，多一个人不该让每场都难一截。
+ */
+export const ADAPT_ALLY = 1;
+export const ADAPT_GUEST = 0.5;
 /** 敌人气血的放大 / 缩小范围（D-102）：太大成了肉盾，太小一碰就倒 */
 export const ADAPT_HP_CAP = 3;
 export const ADAPT_HP_MIN = 0.25;
 
 /**
- * 必须打赢的剧情战：按玩家的强度调整敌人（D-051、D-106）。
- * 强度不看武功等级之和，看刚、巧、守三势各自最狠的一招和气血；不再模拟几百场战斗，直接算：
+ * 按我方战斗力调整敌人（D-051、D-106、D-115）。主线必胜战、门派任务、城市差事、劫道都走这里。
+ * 强度不看武功等级之和，看刚、巧、守三势各自最狠的一招和气血；不模拟，直接算：
  * - 按 ADAPT_ACC 的猜对率算出每回合的期望交换（见 exchange）；虚招（cunning）让猜对率打折扣；
- * - 敌人气血放缩到约 ADAPT_ROUNDS 回合打完（限在 0.25 ~ 3 倍）；
- * - 敌人伤害放缩到打完时玩家约掉 ADAPT_TAKEN 的气血。敌人按排列顺序一个个倒下：
- *   正在打的那个按猜对率算，其余同时出手的按瞎猜（三分之一）算。
+ * - 我方输出 = 主角 ×1 + 每个 NPC 队友 ×1 + 每个联机客人 ×0.5（各人按自己的武功算）；
+ * - 敌人气血放缩到约 ADAPT_ROUNDS 回合打完（相对敌人模板气血，限在 0.25 ~ 3 倍；
+ *   战斗块的 hpx、旧的组队人数加成都不再起作用）；
+ * - 敌人伤害放缩到打完时主角约掉 ADAPT_TAKEN 的气血。敌人的招按同样的权重分摊到我方各人身上；
+ *   敌人按排列顺序一个个倒下：正在打的那个按猜对率算，其余同时出手的按瞎猜（三分之一）算。
+ * opts.hard：难度系数（劫道按货值给，1 为标准），乘在回合数和掉血比例上。
  * 返回气血倍率。
  */
-export function adaptEnemyHp(db, b) {
+export function adaptEnemyHp(db, b, opts = {}) {
   const foes = enemiesOf(b);
   const team = teamOf(b);
   const players = playersOf(b);
   if (!foes.length || !players.length) return 1;
+  const hard = Math.min(1.25, Math.max(0.8, opts.hard ?? 1));
   const me = players[0];
-  const pSide = { best: stanceBest(db, me), moves: stanceMoves(db, me) };
-  // NPC 队友按一半算：他们常出辅助招，也可能先倒下（倒下不算输，但之后只剩玩家自己打）
+  const sideOf = (u) => ({ best: stanceBest(db, u), moves: stanceMoves(db, u) });
+  const pSides = players.map((u, i) => ({ u, w: i === 0 ? 1 : ADAPT_GUEST, side: sideOf(u) }));
   const allies = team.filter((u) => !u.isPlayer);
   const allyOut = allies.reduce((s, u) => s + meanOut(stanceBest(db, u)), 0) * ADAPT_ALLY;
-  const share = 1 / (1 + allies.length * ADAPT_ALLY); // 敌人的招落在玩家身上的比例
+  const weight = pSides.reduce((s, x) => s + x.w, 0) + allies.length * ADAPT_ALLY;
+  const share = 1 / weight; // 敌人的招落在主角身上的比例
   const ex = foes.map((e) => {
-    const eSide = { best: stanceBest(db, e), moves: stanceMoves(db, e) };
+    const eSide = sideOf(e);
     const odds = stanceOdds(db, e, eSide.best);
     const acc = Math.max(1 / 3, ADAPT_ACC - (e.cunning ?? 0) / 200);
-    const aimed = exchange(pSide, eSide, odds, acc, armorOf(me), armorOf(e));
-    const stray = exchange(pSide, eSide, odds, 1 / 3, armorOf(me), armorOf(e));
-    return { aimed, stray, toFoe: aimed.toFoe * players.length + allyOut * armorOf(e) };
+    const aimed = exchange(pSides[0].side, eSide, odds, acc, armorOf(me), armorOf(e));
+    const stray = exchange(pSides[0].side, eSide, odds, 1 / 3, armorOf(me), armorOf(e));
+    const guestOut = pSides.slice(1).reduce((s, x) => s + x.w * exchange(x.side, eSide, odds, acc, armorOf(x.u), armorOf(e)).toFoe, 0);
+    return { aimed, stray, toFoe: aimed.toFoe + guestOut + allyOut * armorOf(e) };
   });
-  const base = foes.reduce((s, e, i) => s + e.maxHp / Math.max(1, ex[i].toFoe), 0);
-  const m = Math.min(ADAPT_HP_CAP, Math.max(ADAPT_HP_MIN, ADAPT_ROUNDS / base));
-  // 每个阶段（正在打第 j 个敌人）的回合数，和这期间玩家挨的打
+  const baseHp = (e) => e.baseHp ?? e.maxHp;
+  const base = foes.reduce((s, e, i) => s + baseHp(e) / Math.max(1, ex[i].toFoe), 0);
+  const m = Math.min(ADAPT_HP_CAP, Math.max(ADAPT_HP_MIN, ADAPT_ROUNDS * hard / base));
+  // 每个阶段（正在打第 j 个敌人）的回合数，和这期间主角挨的打
   let hit = 0; let refl = 0;
   foes.forEach((e, j) => {
-    const rounds = e.maxHp * m / Math.max(1, ex[j].toFoe);
+    const rounds = baseHp(e) * m / Math.max(1, ex[j].toFoe);
     for (let i = j; i < foes.length; i++) {
       const x = i === j ? ex[i].aimed : ex[i].stray;
       hit += rounds * x.toMe * share;
       refl += rounds * x.reflect;
     }
   });
-  const hp = players.reduce((s, u) => s + u.maxHp, 0) / players.length;
-  const dmgx = Math.min(8, Math.max(0.1, (ADAPT_TAKEN * hp - refl) / Math.max(1, hit)));
-  for (const e of foes) { e.maxHp = Math.max(1, Math.round(e.maxHp * m)); e.hp = e.maxHp; e.dmgx = dmgx; }
+  const dmgx = Math.min(8, Math.max(0.1, (ADAPT_TAKEN * hard * me.maxHp - refl) / Math.max(1, hit)));
+  for (const e of foes) { e.maxHp = Math.max(1, Math.round(baseHp(e) * m)); e.hp = e.maxHp; e.dmgx = dmgx; }
   return m;
 }

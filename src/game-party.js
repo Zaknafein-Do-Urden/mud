@@ -4,7 +4,7 @@
 // 输出条目可以带 to 字段（接收者 pid）：没有 to 的发给所有人，有 to 的只给那个人。
 // 'host' 是房主自己；客人的 pid 是网络层给的对端 id。
 
-import { playerUnitOf, playersOf, intentsReady, resolveRound, beginRound, moveInfo } from './combat.js';
+import { playerUnitOf, playersOf, intentsReady, moveInfo } from './combat.js';
 import { expPerUse, gainExp, maxHp } from './character.js';
 
 export const MAX_GUESTS = 3;
@@ -127,11 +127,7 @@ export const party = {
   },
 
   resolvePartyRound() {
-    const b = this.state.battle;
-    const emit = (cls, text, extra) => this.emit(cls, text, extra);
-    resolveRound(this.db, b, emit);
-    if (b.over) this.endBattle(b.over);
-    else beginRound(this.db, b, emit);
+    this.finishRound();
   },
 
   /**

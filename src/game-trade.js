@@ -1,7 +1,7 @@
 // 引擎的经济部分：金钱、市场、钱庄、马车。以方法的形式并入 Game（见 game.js 末尾）。
 
-import { escortFee, ESCORT_RATE, goodsPrice, goodsLocal, cargoUnits, cargoValue, robberyChance, robbers, routesOf, cityOfRoom, CARGO_CAP, SELL_RATE } from './economy.js';
-import { createScaledBattle, beginRound, enemiesOf } from './combat.js';
+import { escortFee, ESCORT_RATE, goodsPrice, goodsLocal, cargoUnits, cargoValue, robberyChance, robbers, martialLevel, routesOf, cityOfRoom, CARGO_CAP, SELL_RATE } from './economy.js';
+import { createScaledBattle, beginRound, enemiesOf, adaptEnemyHp } from './combat.js';
 
 const ALL = ['全部', 'all'];
 
@@ -199,7 +199,9 @@ export const trade = {
     const escort = !!this.state.escort;
     delete this.state.escort; // 镖师只管这一趟
     if (Math.random() < robberyChance(days, value) * (escort ? ESCORT_RATE : 1)) {
-      const { level, count } = robbers(value + (p.money ?? 0));
+      // 劫匪的武功等级跟着主角走，强弱再按我方战斗力自适应；货值只定人数和难度系数（D-115）
+      const { count, hard } = robbers(value + (p.money ?? 0));
+      const level = martialLevel(p);
       const foe = Object.keys(this.db.enemy).find((id) => this.db.enemy[id].props.robber === 'true');
       if (foe) {
         this.normalizeHp();
@@ -209,6 +211,7 @@ export const trade = {
         this.emit('desc', '走到半路，前面林子里一声呼哨，几条汉子拦住了马车。');
         if (guard) this.emit('desc', '镖师把镖旗往车辕上一插，抽出刀来，站到了你身边。');
         this.emit('combat', `——遭遇劫道！${enemiesOf(this.state.battle).map((e) => e.name).join('、')}——`);
+        adaptEnemyHp(this.db, this.state.battle, { hard });
         beginRound(this.db, this.state.battle, (cls, text, extra) => this.emit(cls, text, extra));
         return;
       }

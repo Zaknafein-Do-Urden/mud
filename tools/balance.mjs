@@ -8,7 +8,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse, addBlocks, emptyDb } from '../src/content.js';
 import { newPlayer } from '../src/character.js';
-import { createBattle, simWinRate, adaptEnemyHp } from '../src/combat.js';
+import { createBattle, simWinRate, adaptEnemyHp, isAdaptive } from '../src/combat.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'content');
 const index = JSON.parse(readFileSync(join(root, 'index.json'), 'utf8'));
@@ -54,7 +54,7 @@ const pct = (x) => `${Math.round(x * 100)}%`.padStart(5);
 console.log('战斗'.padEnd(22), '角色', ACC.map((a) => `猜对${a * 100}%`).join(' '), ' 备注');
 for (const id of ids) {
   const block = db.battle[id];
-  const adaptive = (!!db.storyline[id.split('.')[0]] && !block.props.lose) || block.props.adapt === 'true';
+  const adaptive = isAdaptive(block);
   for (const [label, mk] of Object.entries(profiles)) {
     const b = createBattle(db, block, mk(), 12345);
     let note = '';

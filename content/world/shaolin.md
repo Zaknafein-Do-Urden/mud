@@ -396,6 +396,8 @@ hpx: 0.7
 
 === battle: world.b.shaolin_spar
 enemies: world.foe.shaolin_spar
+# 陪练是固定的标尺，不按玩家强弱浮动（D-115）
+adapt: false
 ---
 小沙弥摆开了架势。
 

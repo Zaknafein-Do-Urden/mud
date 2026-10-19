@@ -413,6 +413,8 @@ hpx: 0.7
 
 === battle: world.b.wudang_spar
 enemies: world.foe.wudang_spar
+# 陪练是固定的标尺，不按玩家强弱浮动（D-115）
+adapt: false
 ---
 小道童摆开了架势。
 

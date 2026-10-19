@@ -157,7 +157,7 @@
 | `src/net/transport.js` | 传输层：Trystero（WebRTC + Nostr 信令）和 local（BroadcastChannel）两种实现，接口相同 |
 | `src/game-party.js` | 引擎的联机部分（房主一侧）：成员、客人命令、组队出招、超时、战后结算 |
 | `src/ui/party.js` | 联机控制：开设 / 加入、消息收发、按接收者分发输出、倒计时、客人一侧的结算 |
-| `src/combat.js` | 战斗支持多个玩家单位（`pid` 区分），敌人气血按人数加成 |
+| `src/combat.js` | 战斗支持多个玩家单位（`pid` 区分），敌人按我方战斗力浮动，客人按半个人算（D-115） |
 
 ### 9.3 输出分发
 

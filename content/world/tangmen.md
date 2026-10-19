@@ -376,6 +376,8 @@ hpx: 0.7
 
 === battle: world.b.tangmen_spar
 enemies: world.foe.tangmen_spar
+# 陪练是固定的标尺，不按玩家强弱浮动（D-115）
+adapt: false
 ---
 唐小妹摆开了架势。
 
