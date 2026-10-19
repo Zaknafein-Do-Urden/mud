@@ -97,7 +97,7 @@ name: 开碑手
 kind: 外功
 stance: 刚
 sect: tangmen
-rank: 1
+rank: 2
 ---
 唐门少见的硬功夫，掌力凝聚，可开碑裂石。
 
@@ -547,7 +547,7 @@ name: 百草疗毒
 kind: 外功
 stance: 守
 sect: tangmen
-rank: 1
+rank: 3
 ---
 唐门的医毒之术，用毒者必先识毒。金针渡穴、灵药续命，都是唐家秘传。
 

@@ -106,7 +106,7 @@ name: 破玉拳
 kind: 外功
 stance: 刚
 sect: huashan
-rank: 1
+rank: 2
 ---
 华山的拳法，拳力集中一点，专破对手的护体功夫。
 
@@ -564,7 +564,7 @@ name: 华山剑阵
 kind: 外功
 stance: 守
 sect: huashan
-rank: 1
+rank: 3
 ---
 华山弟子结阵御敌的法门，护住同伴的空门，为其创造出手的良机。
 

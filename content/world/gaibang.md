@@ -112,7 +112,7 @@ name: 逍遥游
 kind: 外功
 stance: 巧
 sect: gaibang
-rank: 1
+rank: 2
 ---
 一路轻灵飘逸的掌法，身随掌走，掌随身转，叫人捉摸不定。
 
@@ -554,7 +554,7 @@ name: 莲花落
 kind: 外功
 stance: 守
 sect: gaibang
-rank: 1
+rank: 3
 ---
 丐帮弟子沿街唱的莲花落，在帮中是聚众鼓劲的号子。唱起来，同伴便斗志昂扬。
 

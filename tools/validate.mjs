@@ -184,12 +184,15 @@ for (const b of all) {
     // 用户规定：门派可以有侧重，但刚、巧、守三类外功至少各有一门
     const outer = Object.values(db.skill).filter((sk) => sk.props.sect === b.id && sk.props.kind === '外功');
     for (const st of ['刚', '巧', '守']) if (!outer.some((sk) => sk.props.stance === st)) err(b, `门派缺少「${st}」类外功`);
-    // D-109：入门就能用上刚巧守三势的招式（0 级招式，可以是招式自带的势）；晋阶一次后三势各有一门主势外功（辅助武功不算）
+    // D-109：入门就能用上刚巧守三势的招式（0 级招式，可以是招式自带的势）
     const movesOf = (sk) => Object.values(db.move).filter((m) => m.props.skill === sk.id && m.props.support !== 'true');
     const entry = outer.filter((sk) => Number(sk.props.rank ?? 0) === 0).flatMap(movesOf).filter((m) => Number(m.props.level ?? 0) === 0);
     for (const st of ['刚', '巧', '守']) if (!entry.some((m) => (m.props.stance ?? db.skill[m.props.skill].props.stance) === st)) err(b, `入门武功缺少 0 级的「${st}」招（D-109）`);
-    const early = outer.filter((sk) => Number(sk.props.rank ?? 0) <= 1 && movesOf(sk).length);
-    for (const st of ['刚', '巧', '守']) if (!early.some((sk) => sk.props.stance === st)) err(b, `晋阶一次后还学不到主势为「${st}」的外功（D-109）`);
+    // D-118：每一阶都要能跟师父新学至少一门武功（绝学任务的奖励不算）
+    const nRanks = (b.props.ranks ?? '').split(',').filter(Boolean).length;
+    for (let r = 0; r < nRanks; r++) {
+      if (!Object.values(db.skill).some((sk) => sk.props.sect === b.id && sk.props.secret !== 'true' && Number(sk.props.rank ?? 0) === r)) err(b, `第 ${r + 1} 阶没有能新学的武功（D-118）`);
+    }
     if (!Object.values(db.skill).some((sk) => sk.props.sect === b.id && sk.props.kind === '内功')) err(b, '门派没有内功');
     const ranks = (b.props.ranks ?? '').split(',').filter(Boolean).length;
     const caps = (b.props.caps ?? '').split(',').filter(Boolean).length;

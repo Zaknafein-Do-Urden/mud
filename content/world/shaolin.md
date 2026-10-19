@@ -107,7 +107,7 @@ name: 拈花指
 kind: 外功
 stance: 巧
 sect: shaolin
-rank: 1
+rank: 2
 ---
 少林七十二绝技之一，指力含而不露，专点人身大穴。
 
@@ -566,7 +566,7 @@ name: 伏魔护法
 kind: 外功
 stance: 守
 sect: shaolin
-rank: 1
+rank: 3
 ---
 少林武僧护持同门的功夫，以自身内力为同伴撑起护体罡气，也能以佛门手法疗伤。
 

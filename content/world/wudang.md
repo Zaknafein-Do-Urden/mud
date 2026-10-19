@@ -126,7 +126,7 @@ name: 震山掌
 kind: 外功
 stance: 刚
 sect: wudang
-rank: 1
+rank: 2
 ---
 武当少有的刚猛掌法，以纯阳内力催动，掌力浑厚。
 
@@ -583,7 +583,7 @@ name: 太极导引
 kind: 外功
 stance: 守
 sect: wudang
-rank: 1
+rank: 3
 ---
 武当以太极之理调和气血的导引术，可为同伴疏通经脉、疗伤回气。
 
