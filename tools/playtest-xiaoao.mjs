@@ -111,7 +111,7 @@ function ch1(g, label, { ask = false, protect = false, spare = true, block = fal
   expectFlag(g, spare ? 'xiaoao.c1_spare' : 'xiaoao.c1_kill', label);
   pick(g, '向阳巷', label);
   // 镖局
-  ex(g, '西南', label);        // 荔香楼 → 鼓楼前
+  ex(g, '西北', label);        // 荔香楼 → 鼓楼前
   ex(g, '西北', label);        // 鼓楼前 → 向阳巷口
   expectRoom(g, 'xiaoao.fz.lane', label);
   ex(g, '西', label);
@@ -209,7 +209,7 @@ function ch3(g, label, { how = 'qiao', meet = 'front', qin = 'out', ask = 'plan'
   pick(g, '先进城看看', label);
   // 回雁楼
   ex(g, '北', label);
-  ex(g, '东北', label);
+  ex(g, '东南', label);
   expectRoom(g, 'xiaoao.hy.louyan', label);
   pick(g, { front: '挡在林平之前面', hide: '支下楼', hu: '令狐冲怎么说' }[meet], label);
   pick(g, '动手', label);
@@ -217,7 +217,7 @@ function ch3(g, label, { how = 'qiao', meet = 'front', qin = 'out', ask = 'plan'
   expectFlag(g, 'xiaoao.c3_fight', label);
   pick(g, '喝完这一碗', label);
   // 刘府
-  ex(g, '西南', label);
+  ex(g, '西北', label);
   ex(g, '西北', label);
   expectRoom(g, 'xiaoao.hy.liufu', label);
   pick(g, ask === 'plan' ? '明日之后有什么打算' : '为什么要金盆洗手', label);
@@ -991,7 +991,7 @@ function ch18(g, label, { how = 'qiao', ask = true, pull = true, ending = 'burn'
   if (!flag(g, 'xiaoao.ch1')) note(`${label}：打输之后连 xiaoao.ch1 都回滚了，会要玩家回头重看开场`);
   // 走回荔香楼重演一次，这回打赢
   ex(g, '北', label + '（重来）');
-  ex(g, '东北', label + '（重来）');
+  ex(g, '东南', label + '（重来）');
   pick(g, '站到林平之身边', label + '（重来）');
   pick(g, '动手', label + '（重来）');
   win(g, label + '/青城弟子（重来）');
