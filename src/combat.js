@@ -623,6 +623,18 @@ function attackValue(db, u, m) {
   return m.power * (1 + (u.skills[m.skill] ?? 0) * 0.02) * innerBonus(u.innerLv, innerSk, m.stance) * bonus;
 }
 
+/**
+ * 点穴（D-120）：对手内功越深越难点住。概率 = base + (出招这门武功的等级 − 对手内功等级) × perLv，夹在 min ~ max。
+ * lv 不传时取 u 这门武功的等级。界面选中敌人后显示这个数。
+ */
+export function stunChance(u, target, skillId, lv) {
+  const S = CONFIG.combat.stun;
+  const d = (lv ?? u.skills?.[skillId] ?? 0) - (target.innerLv ?? 0);
+  return Math.min(S.max, Math.max(S.min, S.base + d * S.perLv));
+}
+/** 点穴能不能生效（D-120）：打守势不触发；对手这一回合正僵着时也不触发（解开后的下一回合照样能点） */
+const stunnable = (target, tPosture) => tPosture !== '守' && target.intent?.type !== 'stunned' && !target.status.点穴;
+
 /** 记下本回合谁伤了 target 多少：下回合敌人按这个挑目标（仇恨，D-113） */
 function hurt(target, by, dmg) {
   target.hurtBy ??= {};
@@ -672,8 +684,8 @@ function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
 
   // 克制了对手：后发制人、吐纳（D-107）
   if (mult > 1 && tPosture !== '无' && opts.primary !== false) countered(b, u, target, emit);
-  // 截脉（D-107）：没被克制时有机会顺势点穴
-  if (mult >= 1 && alive(target) && opts.primary !== false && !target.status.点穴 && !m.effects.some((e) => e.startsWith('点穴')) && rand(b) < 0.06 * tal(u, 'jiemai')) {
+  // 截脉（D-107）：没被克制时有机会顺势点穴；同样受点穴的条件和内功抵抗约束（D-120）
+  if (mult >= 1 && alive(target) && opts.primary !== false && stunnable(target, tPosture) && !m.effects.some((e) => e.startsWith('点穴')) && rand(b) < 0.06 * tal(u, 'jiemai') && rand(b) < stunChance(u, target, m.skill)) {
     target.status.点穴 = tal(u, 'fengxue') ? 2 : 1;
     emit('fx', `${u.name}顺势一截，点中了${target.name}的穴道！（截脉）`);
   }
@@ -682,7 +694,13 @@ function attack(db, b, u, target, m, tPosture, emit, opts = {}) {
     for (const e of m.effects) {
       const [kind, k] = e.split(':');
       if (kind === '内伤') { target.status.内伤 = 3 + 2 * tal(u, 'zhongchuang'); target.status.内伤dot = Math.max(3, Math.round(dmg * 0.2)); emit('fx', `${target.name}受了内伤。`); }
-      else if (kind === '点穴') { target.status.点穴 = tal(u, 'fengxue') ? 2 : 1; emit('fx', `${target.name}被点中穴道，${tal(u, 'fengxue') ? '接下来两回合' : '下一回合'}动弹不得！`); }
+      else if (kind === '点穴') {
+        // D-120：打守势、对手正僵着时不触发；否则按内功深浅抵抗
+        if (!stunnable(target, tPosture)) continue;
+        const p = stunChance(u, target, m.skill);
+        if (rand(b) < p) { target.status.点穴 = tal(u, 'fengxue') ? 2 : 1; emit('fx', `${target.name}被点中穴道，${tal(u, 'fengxue') ? '接下来两回合' : '下一回合'}动弹不得！`); }
+        else emit('fx', `${target.name}内力一震，穴道没被点住。（点穴 ${Math.round(p * 100)}%）`);
+      }
       else if (kind === '破绽') { target.status.破绽 = 1; emit('fx', `${target.name}露出了破绽。`); }
       else if (kind === '缴械') tryDisarm(b, u, target, num(k, 20) + 15 * tal(u, 'xiebing'), emit);
       else if (kind === '吸内' || kind === '化内') {
@@ -819,7 +837,13 @@ function resolveCombos(db, b, emit) {
         for (const e of parseList(best.c.props.effects)) {
           const [kind, k] = e.split(':');
           if (kind === '内伤') { target.status.内伤 = 3; target.status.内伤dot = Math.max(3, Math.round(dmg * 0.2)); emit('fx', `${target.name}受了内伤。`); }
-          else if (kind === '点穴') { target.status.点穴 = 1; emit('fx', `${target.name}被点中穴道，下一回合动弹不得！`); }
+          else if (kind === '点穴') {
+            // D-120：合击也按点穴的规矩：对手守着或正僵着不触发；按两人里较高的武功等级对抗对手内功
+            const [A, B] = comboSides(best.c);
+            const tp = target.intent?.type === 'move' ? target.intent.stance : '无';
+            const p = stunChance(best.P, target, null, Math.max(best.P.skills[A.skill] ?? 0, best.Q.skills[B.skill] ?? 0));
+            if (stunnable(target, tp) && rand(b) < p) { target.status.点穴 = 1; emit('fx', `${target.name}被点中穴道，下一回合动弹不得！`); }
+          }
           else if (kind === '破绽') { target.status.破绽 = 1; emit('fx', `${target.name}露出了破绽。`); }
           else if (kind === '化内') { const d = Math.min(target.mp, Math.round(dmg * num(k, 1))); target.mp -= d; emit('fx', `${target.name}内力大泄！（内力 -${d}）`); }
         }
@@ -1021,16 +1045,19 @@ function exchange(p, e, odds, acc, pArmor, eArmor) {
       if (ps !== '守') {
         const mult = MULT[ps][es] ?? 1;
         toFoe += pr * p.best[ps] * mult * eArmor * (mult >= 1 ? 1 + effectExtra(p.moves[ps]) : 1);
-        if (mult >= 1 && stuns(p.moves[ps])) foeStunned += pr;
+        if (mult >= 1 && es !== '守' && stuns(p.moves[ps])) foeStunned += pr * stunChance(p.u, e.u, p.moves[ps].skill); // D-120
       } else if (es === '巧') toFoe += pr * p.best.守 * eArmor; // 守化解巧招，反震
       if (es !== '守') {
         const mult = MULT[es][ps] ?? 1;
         toMe += pr * e.best[es] * mult * pArmor * (mult >= 1 ? 1 + effectExtra(e.moves[es]) : 1);
-        if (mult >= 1 && stuns(e.moves[es])) meStunned += pr;
+        if (mult >= 1 && ps !== '守' && stuns(e.moves[es])) meStunned += pr * stunChance(e.u, p.u, e.moves[es].skill);
       } else if (ps === '巧') reflect += pr * e.best.守 * pArmor;
     }
   }
-  // 被点穴的一回合：自己不出手，对方的招打在门户大开的身上（×1.2）
+  // 被点穴的一回合：自己不出手，对方的招打在门户大开的身上（×1.2）。
+  // 僵住的那一回合不能再被点（D-120），每回合点住的机会是 q 时，被控的回合约占 q / (1 + q)
+  meStunned /= 1 + meStunned;
+  foeStunned /= 1 + foeStunned;
   return { toFoe: toFoe * (1 - meStunned), toMe: toMe * (1 - foeStunned) * (1 + 0.2 * meStunned), reflect };
 }
 
@@ -1077,7 +1104,7 @@ export function adaptEnemyHp(db, b, opts = {}) {
   if (!foes.length || !players.length) return 1;
   const hard = Math.min(CONFIG.adapt.hardMax, Math.max(CONFIG.adapt.hardMin, opts.hard ?? 1));
   const me = players[0];
-  const sideOf = (u) => ({ best: stanceBest(db, u), moves: stanceMoves(db, u) });
+  const sideOf = (u) => ({ u, best: stanceBest(db, u), moves: stanceMoves(db, u) });
   const pSides = players.map((u, i) => ({ u, w: i === 0 ? ADAPT_HOST : ADAPT_GUEST, side: sideOf(u) }));
   const allies = team.filter((u) => !u.isPlayer);
   const allyOut = allies.reduce((s, u) => s + meanOut(stanceBest(db, u)), 0) * ADAPT_ALLY;

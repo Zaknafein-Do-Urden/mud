@@ -5,7 +5,7 @@ import { maxHp, maxMp, skillCap, trainCost, sectRanks, bestInnerLv, MAX_OUTER, m
 import { TALENT_TREE, talentPointsSpent, canAddTalent, findTalent, tal } from './talents.js';
 import { adaptEnemyHp, isAdaptive, teamOf, xiuwei } from './combat.js';
 import { todayStr } from './game.js';
-import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, playersOf, enemiesOf, hpText, moveInfo, canUse, comboHint, aimSeenBy } from './combat.js';
+import { createBattle, createExamBattle, beginRound, setPlayerIntent, resolveRound, unitMoves, playerUnitOf, playersOf, enemiesOf, hpText, moveInfo, canUse, comboHint, aimSeenBy, stunChance } from './combat.js';
 
 const KIND_LABEL = { 外功: '外功', 内功: '内功', 轻功: '轻功' };
 
@@ -492,7 +492,9 @@ export const martial = {
         if (hint?.foe) { const foes = enemiesOf(b).filter((e) => e.hp > 0); const k = foes.findIndex((e) => e.key === hint.foe); hint.foeN = k + 1; hint.foeName = foes[k]?.name; }
         // 悬停说明（D-096）：和武功页同一份招式说明（威力、内力、估算伤害、效果）
         const tip = this.db.move[m.id] ? this.moveTip(this.db.skill[m.skill], this.db.move[m.id], m.lv).tip : '';
-        return { n: i + 1, name: m.name, skillName: m.skillName, stance: m.stance, mp: m.mp, effects: m.effects, usable: (m.mp <= me.mp || (tal(me, 'qichen') && me.hp > (m.mp - me.mp) * 2)) && armedOk, need: armedOk ? '' : `需要${m.weapon}`, support: m.support, combo: hint, tip };
+        // 点穴对每个敌人的生效概率（D-120）：界面选中哪个敌人，卡片上就显示 点穴:xx%
+        const stunVs = m.effects.some((e) => e.startsWith('点穴')) ? Object.fromEntries(enemiesOf(b).map((e) => [e.key, Math.round(stunChance(me, e, m.skill) * 100)])) : null;
+        return { n: i + 1, name: m.name, skillName: m.skillName, stance: m.stance, mp: m.mp, effects: m.effects, stunVs, usable: (m.mp <= me.mp || (tal(me, 'qichen') && me.hp > (m.mp - me.mp) * 2)) && armedOk, need: armedOk ? '' : `需要${m.weapon}`, support: m.support, combo: hint, tip };
       }),
       // 兵器：手里的、被打飞的、可以换上的（D-057）
       weapon: me.disarmed ? null : me.wname,

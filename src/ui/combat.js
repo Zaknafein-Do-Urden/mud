@@ -37,6 +37,8 @@ export function renderCombat(root, view, run, secondsLeft = 0) {
   // 守招 / 辅助招式的目标（D-064）：默认自己
   let ally = (view.allies ?? []).find((a) => a.self) ?? null;
 
+  let refreshCost = () => {}; // 招式卡片建好后换成真的（换目标时刷新点穴概率）
+
   // 对手
   const foes = el('div', 'cb-foes');
   for (const e of view.enemies) {
@@ -51,6 +53,7 @@ export function renderCombat(root, view, run, secondsLeft = 0) {
       picked.key = e.key;
       foes.querySelectorAll('.cb-foe').forEach((r) => r.classList.remove('sel'));
       row.classList.add('sel');
+      refreshCost();
     });
     foes.append(row);
   }
@@ -82,13 +85,21 @@ export function renderCombat(root, view, run, secondsLeft = 0) {
   const targetArg = () => (alive.length > 1 ? ' ' + (alive.indexOf(target) + 1) : '');
   const allyArg = () => (ally && !ally.self ? ' @' + ally.n : '');
   const cards = el('div', 'cb-cards');
+  // 效果标签：点穴换成对当前目标的生效概率（D-120），换目标时刷新
+  const costEls = [];
+  const costText = (m) => {
+    const fx = m.effects.map((e) => (e.startsWith('点穴') && m.stunVs && target ? `点穴:${m.stunVs[target.key]}%` : e));
+    return `内力 ${m.mp}${fx.length ? ' · ' + fx.join(' ') : ''}`;
+  };
+  const costOf = (m) => { const s = el('span', 'cb-cost', costText(m)); costEls.push([s, m]); return s; };
+  refreshCost = () => { for (const [s, m] of costEls) s.textContent = costText(m); };
   for (const m of view.moves) {
     const c = el('button', `cb-card st-${m.stance}`);
     c.disabled = !m.usable;
     c.append(
       el('span', 'cb-stance', `${m.n} · ${m.stance} · ${m.skillName}`),
       el('span', 'cb-move', m.name),
-      el('span', 'cb-cost', `内力 ${m.mp}${m.effects.length ? ' · ' + m.effects.join(' ') : ''}`),
+      costOf(m),
     );
     c.title = [m.usable ? '' : `【${m.need || '内力不足'}】`, m.tip ?? ''].filter(Boolean).join('\n');
     if (m.need) c.append(el('span', 'cb-need', m.need));

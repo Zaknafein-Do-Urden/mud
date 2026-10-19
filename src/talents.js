@@ -8,7 +8,7 @@ export const TALENT_TREE = [
   {
     id: 'zhidi', name: '制敌', desc: '点穴、缴械、内伤：让对手有力使不出',
     nodes: [
-      { id: 'jiemai', name: '截脉', max: 3, desc: '招式没被克制时，有 6% / 级的机会顺势点中对手穴道（即使招式本身不带点穴）' },
+      { id: 'jiemai', name: '截脉', max: 3, desc: '招式没被克制时，有 6% / 级的机会顺势点穴（即使招式本身不带点穴）；和点穴一样，打守招、对手正僵着时不触发，也要过对手内功这一关' },
       { id: 'xiebing', name: '卸兵', max: 2, desc: '招式自带的缴械成功率 +15% / 级' },
       { id: 'zhongchuang', name: '重创', max: 1, desc: '你造成的内伤多发作两回合（3 → 5 回合）' },
       { id: 'fengxue', name: '封穴', max: 1, desc: '被你点中穴道的对手，要僵住两回合' },

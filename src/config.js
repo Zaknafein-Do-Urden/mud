@@ -29,6 +29,8 @@ export const CONFIG = {
     openMult: 1.2,
     restRate: 0.1, // 调息回复内力上限的比例
     aoeRate: 0.6, // 群攻招式对多个对手时，每人受的伤害比例（D-081）
+    // 点穴（D-120）：生效概率 = base + (出招武功等级 − 对手内功等级) × perLv，夹在 min ~ max 之间
+    stun: { base: 0.5, perLv: 0.005, min: 0.1, max: 0.9 },
     partyHpPerExtra: 0.7, // 不自适应的战斗（必败战、陪练）：每多一个玩家，敌人气血加几成
     allyAutoRounds: 60, // 玩家全倒、NPC 队友自己打，最多再打几回合（打不完算输）
   },
