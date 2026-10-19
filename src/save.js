@@ -8,7 +8,7 @@ const PREFIX = 'wuxia-mud:'; // 同一 github.io 用户下所有项目共享 loc
 const SLOT = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('slot')) || '1';
 const SLOT_KEY = PREFIX + 'save:' + SLOT.replace(/[^\w-]/g, '');
 const EXPORT_TAG = 'WXMUD1';
-export const SAVE_VERSION = 14;
+export const SAVE_VERSION = 15;
 
 export function newState(startRoom) {
   const now = Date.now();
@@ -101,8 +101,15 @@ const migrations = {
       if (s.flags?.[`world.${sect}.task_material_on`]) rolls[`world.${sect}.material`] ??= 10;
     }
     const inventory = { ...s.player.inventory };
-    for (const [id, n] of Object.entries(CONFIG.food.starter)) inventory[id] = (inventory[id] ?? 0) + n;
+    for (const [id, n] of Object.entries(CONFIG.food?.starter ?? {})) inventory[id] = (inventory[id] ?? 0) + n;
     return { ...s, rolls, player: { mp: null, ...s.player, inventory } };
+  },
+  // v15：有的老存档没补上 v14 的初级吃喝（D-138，用户报告）。馒头、米酒都没有的再补一次
+  14: (s) => {
+    const inventory = { ...s.player.inventory };
+    const starter = CONFIG.food?.starter ?? {};
+    if (Object.keys(starter).every((id) => !inventory[id])) for (const [id, n] of Object.entries(starter)) inventory[id] = n;
+    return { ...s, player: { ...s.player, inventory } };
   },
 };
 
