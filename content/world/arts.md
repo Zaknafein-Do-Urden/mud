@@ -710,3 +710,363 @@ affinity: 巧
 照着练上一个月，你会发现自己的手比从前快——不是力气大了，是手上的那点迟疑没有了。
 后半部从第一页起就缺了。缺的地方不是撕的，是抄的人根本没有往下抄；
 卷末只有一行小字，和福州林家墙里拆出来的那半句，是同一个意思。
+
+# ================= 射雕英雄传（第十一章起）=================
+# 玩家可学：空明拳（周伯通，桃花岛）、九阴真经（内功，周伯通口授）、摧坚神爪（九阴真经下卷的正路爪功，一灯译出总纲之后才看得懂）。
+# 上限随章节用 cap: 提高，第二十章华山论剑放到 100（POWER.md §6）。
+# 蛤蟆功、灵蛇杖法、神驼雪山掌、铁掌、泥鳅功只给敌人用；伏魔杖法只给 NPC 队友柯镇恶用（定义在这里是因为合击要认得它，D-083）。
+
+# ---------------- 空明拳：第十一章，桃花岛岩洞里周伯通所授 ----------------
+
+=== skill: shediao.kongming
+name: 空明拳
+kind: 外功
+stance: 守
+cap: 25
+---
+周伯通在岩洞里关了十五年，没人陪他打架，就自己琢磨出来的一路拳。
+拳理只有一个字：空。碗要空才盛得下饭，屋子要空才住得了人；拳头要空，才接得住别人的力气。
+他教的时候一边教一边笑，说这路拳是专门用来气人的——打的人越使劲，越像打进了一缸水里。
+
+=== move: shediao.kongming.1
+skill: shediao.kongming
+name: 空碗盛水
+level: 0
+power: 24
+mp: 8
+omen: $N双拳虚握，拳心朝上，像捧着一只空碗……|$N肩膀一松，整个人软得像没长骨头……
+---
+$N双拳虚虚一合，「$招」，把$n的来势兜进拳圈里，顺手一送，反打在$n$部位。
+
+=== move: shediao.kongming.2
+skill: shediao.kongming
+name: 空屋待客
+level: 25
+power: 30
+mp: 11
+effects: 破绽
+omen: $N往后一缩，胸前门户大开，好像故意请你进来……
+---
+$N胸腹一收，「$招」，$n一拳落空，身子前倾收不住，$N的拳头早已等在那里。
+
+=== move: shediao.kongming.3
+skill: shediao.kongming
+name: 以虚御实
+level: 50
+power: 38
+mp: 15
+effects: 化内
+omen: $N拳势忽然慢了下来，一拳一拳都像在棉花里打……
+---
+$N拳头软软地贴上$n的手臂，「$招」，$n的劲力像泥牛入海，一身内力被化去了一截。
+
+=== move: shediao.kongming.4
+skill: shediao.kongming
+name: 空明若水
+level: 80
+power: 46
+mp: 20
+effects: 点穴
+omen: $N眼神一空，拳路也跟着空了，看不出从哪里来……
+---
+$N拳意空明，「$招」，一拳像水一样漫过$n的守势，指节正落在$n$部位的穴道上。
+
+# ---------------- 九阴真经（内功）：第十一章，周伯通把经文当作"他自己的功夫"口授 ----------------
+
+=== skill: shediao.jiuyin
+name: 九阴真经
+kind: 内功
+cap: 20
+hp: 9
+mp: 12
+affinity: 巧
+---
+道家的一部奇书。写书的人把天下武学都看过一遍，从里面挑出最要紧的道理，写成上下两卷。
+上卷讲内功根基，周伯通背得滚瓜烂熟，却守着师兄的遗命一招不练；他在岩洞里把经文一句一句念给你们听，只说是"老顽童自己的功夫"。
+下卷的总纲是一大段古怪的音译，像咒语，谁也读不懂。读不懂的地方，这门内功就只能练到一半。
+
+# ---------------- 摧坚神爪：第十六章，一灯大师译出总纲之后，九阴真经下卷才看得懂 ----------------
+
+=== skill: shediao.cuijian
+name: 摧坚神爪
+kind: 外功
+stance: 巧
+cap: 30
+---
+九阴真经下卷里的爪功，正路的练法：五指运劲，攻敌要害，以力摧坚。
+梅超风夫妇当年只偷到半部下卷，又读不懂总纲，把"摧敌首脑"当成了往人头顶上插手指，练成了九阴白骨爪。
+同一段经文，读对了是摧坚神爪，读岔了是白骨爪。差的不是那几页纸，是读的人心里想的是什么。
+
+=== move: shediao.cuijian.1
+skill: shediao.cuijian
+name: 摧坚
+level: 0
+power: 30
+mp: 10
+effects: 破绽
+omen: $N五指微屈，指节一节一节绷紧……|$N手掌翻起，掌心朝下，像要扣住什么……
+---
+$N五指一扣，「$招」，指力透过$n的守势，结结实实抓在$n$部位上！
+
+=== move: shediao.cuijian.2
+skill: shediao.cuijian
+name: 裂石
+level: 30
+power: 40
+mp: 14
+effects: 内伤
+omen: $N沉肩坠肘，五指慢慢收拢成钩，指尖上隐隐泛着青气……
+---
+$N一爪抓落，「$招」，指劲像凿子一样钻进$n$部位，连骨头都震得发麻！
+
+=== move: shediao.cuijian.3
+skill: shediao.cuijian
+name: 伏魔
+level: 60
+power: 52
+mp: 19
+effects: 点穴
+omen: $N脚下一错，身子已欺到近前，五指却一点声息也没有……
+---
+$N贴身一爪，「$招」，五指分扣$n$部位的几处要穴，$n半边身子顿时酸麻！
+
+=== move: shediao.cuijian.4
+skill: shediao.cuijian
+name: 九阴归元
+level: 90
+power: 62
+mp: 26
+effects: 内伤, 破绽
+omen: $N双手一上一下，十指箕张，周身的劲力都往指尖上收……
+---
+$N十指齐发，「$招」，一爪接一爪，每一爪都落在$n劲力最弱的那一处，像要把$n整个人拆开！
+
+# ---------------- 蛤蟆功（只给敌人用：欧阳锋）----------------
+
+=== skill: shediao.hama
+name: 蛤蟆功
+kind: 外功
+stance: 刚
+---
+白驼山的看家功夫。蹲在地上咕咕作声，像一只蛤蟆；全身的劲力蓄足了，一推之下，排山倒海。
+越是被逼到绝处，蓄的劲越足。
+
+=== move: shediao.hama.1
+skill: shediao.hama
+name: 蹲身蓄劲
+stance: 守
+level: 0
+power: 28
+mp: 8
+omen: $N两腿一屈蹲了下去，喉咙里咕咕作响……
+---
+$N蹲在地上，「$招」，周身鼓胀如球，$n的劲力打上去像打在一面鼓上。
+
+=== move: shediao.hama.2
+skill: shediao.hama
+name: 蛤蟆吐气
+level: 0
+power: 40
+mp: 14
+effects: 内伤
+omen: $N腮帮子一鼓一鼓，蹲着的身子慢慢往后坐……|$N咕的一声长鸣，双掌贴着地面……
+---
+$N双掌齐推，「$招」，一股劲风贴着地面卷过来，撞在$n$部位，五脏六腑都跟着一震！
+
+=== move: shediao.hama.3
+skill: shediao.hama
+name: 惊雷出蛰
+level: 40
+power: 52
+mp: 20
+effects: 内伤, 破绽
+omen: $N蹲着一动不动，忽然没了声响，四下静得吓人……
+---
+$N猛地弹起，「$招」，蓄了半天的劲力一下子全放了出来，像一声闷雷砸在$n身上！
+
+# ---------------- 灵蛇杖法（只给敌人用：欧阳锋）----------------
+
+=== skill: shediao.lingshe
+name: 灵蛇杖法
+kind: 外功
+stance: 巧
+weapon: 棍
+---
+欧阳锋那根蛇杖的使法。杖头盘着两条活蛇，杖到了，蛇也到了，蛇牙上带着白驼山的毒。
+
+=== move: shediao.lingshe.1
+skill: shediao.lingshe
+name: 灵蛇吐信
+level: 0
+power: 34
+mp: 12
+effects: 内伤
+omen: $N的蛇杖一颤，杖头的两条蛇昂起头来，咝咝吐信……
+---
+$N蛇杖一点，「$招」，杖头的毒蛇猛地窜出，一口咬向$n$部位！
+
+=== move: shediao.lingshe.2
+skill: shediao.lingshe
+name: 盘杖缠身
+level: 30
+power: 42
+mp: 16
+effects: 点穴
+omen: $N蛇杖贴地一扫，杖身弯弯曲曲，像一条游过来的长蛇……
+---
+$N杖随身转，「$招」，蛇杖绕着$n转了半圈，杖头从意想不到的地方点中了$n$部位！
+
+# ---------------- 神驼雪山掌（只给敌人用：欧阳克）----------------
+
+=== skill: shediao.shentuo
+name: 神驼雪山掌
+kind: 外功
+stance: 巧
+---
+白驼山的掌法，掌影飘忽，专拣人看不见的地方下手。欧阳克使这路掌法的时候，手里的折扇也不闲着。
+
+=== move: shediao.shentuo.1
+skill: shediao.shentuo
+name: 驼铃摇月
+level: 0
+power: 30
+mp: 10
+omen: $N折扇轻摇，脚下却已转了半个圈……
+---
+$N身形一晃，「$招」，一掌从扇影后面拍出，正中$n$部位。
+
+=== move: shediao.shentuo.2
+skill: shediao.shentuo
+name: 雪岭飞沙
+level: 30
+power: 38
+mp: 14
+effects: 破绽
+omen: $N折扇一合，掌风忽然变得又冷又碎……
+---
+$N双掌连拍，「$招」，掌风像雪粒子一样扑在$n脸上，$n眼前一花，露出了空门。
+
+# ---------------- 铁掌（只给敌人用：裘千仞）----------------
+
+=== skill: shediao.tiezhang
+name: 铁掌
+kind: 外功
+stance: 刚
+---
+湖南铁掌帮的掌法。练的人每天把双掌插进滚烫的铁砂里，一练几十年，一双手掌乌黑发亮，硬过铁板。
+
+=== move: shediao.tiezhang.1
+skill: shediao.tiezhang
+name: 开碑
+level: 0
+power: 38
+mp: 12
+omen: $N双掌一搓，掌心乌沉沉的，像两块生铁……
+---
+$N一掌劈下，「$招」，掌风沉得像一块铁板压向$n$部位！
+
+=== move: shediao.tiezhang.2
+skill: shediao.tiezhang
+name: 掌底翻云
+level: 30
+power: 46
+mp: 16
+effects: 内伤
+omen: $N身子微侧，一只手掌藏在袖子底下……
+---
+$N袖底翻掌，「$招」，掌力贴着$n的手臂钻进来，正印在$n$部位！
+
+=== move: shediao.tiezhang.3
+skill: shediao.tiezhang
+name: 铁掌横江
+level: 60
+power: 56
+mp: 22
+effects: 内伤, 破绽
+omen: $N双掌缓缓推出，掌未到，风已到，吹得人睁不开眼……
+---
+$N双掌横推，「$招」，掌力像一道铁闸横过江面，把$n连人带招一齐压住！
+
+=== move: shediao.tiezhang.4
+skill: shediao.tiezhang
+name: 铁掌护身
+stance: 守
+level: 0
+power: 30
+mp: 8
+omen: $N双掌交叉护在胸前，掌背黑得发亮……
+---
+$N双掌一封，「$招」，把$n的来招硬生生磕了回去。
+
+# ---------------- 泥鳅功（只给敌人用：瑛姑）----------------
+
+=== skill: shediao.niqiu
+name: 泥鳅功
+kind: 外功
+stance: 巧
+---
+瑛姑在黑沼里住了十几年，看泥鳅在烂泥里钻来钻去，自己琢磨出来的身法。滑不留手，抓不住，打不实。
+
+=== move: shediao.niqiu.1
+skill: shediao.niqiu
+name: 钻泥
+level: 0
+power: 30
+mp: 10
+effects: 破绽
+omen: $N身子一扭，滑得像抹了一层油……
+---
+$N身子一扭，「$招」，从$n的掌底下钻了过去，反手一掌拍在$n$部位。
+
+=== move: shediao.niqiu.2
+skill: shediao.niqiu
+name: 摆尾
+level: 30
+power: 38
+mp: 14
+effects: 点穴
+omen: $N腰身一摆，手指已经伸到了你看不见的地方……
+---
+$N腰身一摆，「$招」，指尖从$n的肋下滑过，点中了$n$部位的穴道。
+
+=== move: shediao.niqiu.3
+skill: shediao.niqiu
+name: 滑脱
+stance: 守
+level: 0
+power: 24
+mp: 6
+omen: $N缩成一团，周身滑溜溜的……
+---
+$N身子一缩，「$招」，$n的劲力一沾她的衣服就滑开了。
+
+# ---------------- 伏魔杖法（NPC 专用：柯镇恶）----------------
+
+=== skill: shediao.fumo
+name: 伏魔杖法
+kind: 外功
+stance: 刚
+weapon: 棍
+---
+柯镇恶那根铁杖的使法。他眼睛瞎了，全凭耳朵听风辨位；铁杖一顿，就是一记，招招砸向声音来的地方。
+
+=== move: shediao.fumo.1
+skill: shediao.fumo
+name: 听风
+level: 0
+power: 32
+mp: 10
+omen: $N侧着头，铁杖在地上轻轻一点……
+---
+$N循声一杖，「$招」，铁杖带着风声砸向$n$部位！
+
+=== move: shediao.fumo.2
+skill: shediao.fumo
+name: 降魔
+level: 30
+power: 40
+mp: 14
+effects: 破绽
+omen: $N铁杖横在身前，两只白眼翻着，嘴唇抿得紧紧的……
+---
+$N铁杖一抡，「$招」，杖风把$n的守势砸开一个缺口！

@@ -332,3 +332,59 @@ b: xiaoao.fantian@20
 bonus: 1.5
 ---
 $A软软地挡了一掌，$n的力道刚被卸开，$B沉沉的一掌已经压在他收力的那一瞬上。
+
+# ---------------- 射雕英雄传（第十一章起：周伯通、洪七公、黄蓉、柯镇恶、郭靖）----------------
+
+=== combo: combo.sd_kongming_luoying
+name: 空花落影
+a: shediao.kongming@10
+b: shediao.luoying@20
+bonus: 1.6
+effects: 破绽
+---
+$A软软地接住$n的来招，把那股劲力兜在拳圈里；$B的掌影就从$A让出来的空当里飘进去，一掌落实。
+
+=== combo: combo.sd_kongming_xianglong
+name: 刚柔相济
+a: shediao.kongming@20
+b: gaibang.xianglong@20
+bonus: 1.9
+effects: 内伤
+---
+$A的空明拳把$n的劲力化得干干净净，$n一口气还没换过来，$B一掌降龙已经推到，刚柔一转，正撞在他最空的时候。
+
+=== combo: combo.sd_kongming_pair
+name: 左右互搏
+a: shediao.kongming@20
+b: shediao.kongming@20
+bonus: 1.7
+effects: 化内
+---
+$A和$B一左一右，两路空明拳像一个人的两只手，一只手接，一只手送，$n的劲力进去了就出不来。
+
+=== combo: combo.sd_dagou_luoying
+name: 棒挑落英
+a: gaibang.dagou@20
+b: shediao.luoying@20
+bonus: 1.8
+effects: 点穴
+---
+$A竹棒一绊一挑，把$n的下盘引得一晃；$B的落英掌早已罩住他的上身，掌影一落，正点中穴道。
+
+=== combo: combo.sd_fumo_nanshan
+name: 七怪遗风
+a: shediao.fumo@30
+b: shediao.nanshan@40
+bonus: 1.8
+effects: 破绽
+---
+$A铁杖循声砸落，$B一掌南山掌法跟着劈下——一个是大师父，一个是四师父的掌法，十几年前在大漠里，他们也是这样一前一后。
+
+=== combo: combo.sd_cuijian_xianglong
+name: 摧坚降龙
+a: shediao.cuijian@30
+b: gaibang.xianglong@30
+bonus: 2.0
+effects: 内伤
+---
+$A五指扣住$n的手腕，$n一挣没挣开，$B的降龙掌已经到了胸前——一个锁住，一个推倒。

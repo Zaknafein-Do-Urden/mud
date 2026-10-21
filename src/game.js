@@ -358,10 +358,24 @@ export class Game {
 
   // ---- 主线 ----
 
+  /**
+   * 三部曲的先后（D-141）：storyline 写了 requires: 前一部的主线 id，前一部的 done 条件不成立时，这条主线开不了。
+   * 返回还没走完的那一部的名字；没有限制或已经满足时返回空字符串。
+   */
+  storylineLock(id) {
+    const req = this.db.storyline[id]?.props.requires;
+    if (!req) return '';
+    const prev = this.db.storyline[req];
+    if (prev?.props.done && this.check(words(prev.props.done))) return '';
+    return prev?.props.name ?? req;
+  }
+
   startStoryline(id) {
     const line = this.db.storyline[id];
     if (!line) { this.emit('err', `[内容错误] 主线不存在: ${id}`); return; }
     if (this.state.flags[`${id}.started`]) return;
+    const lock = this.storylineLock(id);
+    if (lock) { this.emit('sys', `「${line.props.name}」的故事，要等《${lock}》走完之后才会开始。`); return; }
     this.state.flags[`${id}.started`] = true;
     this.pendingLoads.push(id);
     this.emit('story', `【江湖传闻】你卷入了「${line.props.name}」的故事。`);

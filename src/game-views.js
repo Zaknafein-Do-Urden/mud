@@ -350,8 +350,10 @@ export const views = {
       const goals = Object.values(this.db.goal ?? {}).filter((g) => g.props.storyline === line.id && this.check(words(g.props.if)));
       const goal = goals.find((g) => g.props.pre !== 'true');
       const pre = goals.find((g) => g.props.pre === 'true');
+      // 三部曲：前一部没走完，后一部只显示"须先走完《……》"，不给开始的提示（D-141）
+      const lock = started ? '' : this.storylineLock(line.id);
       return {
-        id: line.id, name: line.props.name, started, xiuwei: (line.props.xiuwei ?? '').replace('-', '~'),
+        id: line.id, name: line.props.name, started, lock, xiuwei: (line.props.xiuwei ?? '').replace('-', '~'),
         brief: line.lines.map((l) => this.fmt(l.text)).join(''),
         hint: pre ? pre.lines.map((l) => this.fmt(l.text)).join('') : line.props.hint ?? '', chapters: chs,
         // 目标只显示做什么（name），具体怎么做放在提示里，玩家点"提示"才看（D-074）

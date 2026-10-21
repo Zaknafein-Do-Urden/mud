@@ -186,6 +186,16 @@ for (const b of all) {
   if (b.type === 'goal' && !b.props.name) err(b, '目标要写 name（只显示做什么），正文写具体怎么做（点"提示"才显示，D-074）');
   if (b.type === 'storyline' && b.props.level) err(b, '主线的建议等级改用 xiuwei: 起-止（建议修为，D-075）');
   if (b.type === 'storyline' && b.props.done) checkConds(b, b.props.done.split(/\s+/));
+  // 三部曲的先后（D-141）：requires 写前一部的主线 id，前一部要有 done（完结条件），否则这条主线永远开不了
+  if (b.type === 'storyline' && b.props.requires) {
+    const prev = db.storyline[b.props.requires];
+    if (!prev) err(b, `requires 指向的主线不存在: ${b.props.requires}`);
+    else if (!prev.props.done) err(b, `requires 指向的主线「${prev.props.name}」还没写 done（完结条件），这条主线永远开不了`);
+    for (let cur = b, seen = new Set(); cur?.props.requires; cur = db.storyline[cur.props.requires]) {
+      if (seen.has(cur.id)) { err(b, 'requires 绕成了一个圈'); break; }
+      seen.add(cur.id);
+    }
+  }
   if (b.type === 'storyline' && b.props.milestones) {
     const ms = parseList(b.props.milestones);
     if (ms.length > 2) err(b, 'milestones 最多两个（三成左右、七成左右各一个；完结那 1 点写在 done，D-108）');

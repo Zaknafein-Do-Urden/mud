@@ -275,7 +275,10 @@ export function initPanels(api) {
       for (const s of g.storyView()) {
         const box = el('div', 'pn-story');
         box.append(el('h3', 'pn-name', `${s.name}${s.xiuwei ? `（建议修为 ${s.xiuwei}）` : ''}`));
-        if (!s.started) {
+        if (!s.started && s.lock) {
+          // 三部曲：前一部没走完（D-141）
+          box.append(el('p', 'pn-hint', `尚未开启：须先走完《${s.lock}》`));
+        } else if (!s.started) {
           // 尚未开始：只显示四个字，怎么开始放在提示里（D-082）
           const head = el('p', 'pn-hint', '尚未开始');
           box.append(head);

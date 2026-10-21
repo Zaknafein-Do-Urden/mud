@@ -45,7 +45,17 @@
         "shediao/ch07.md",
         "shediao/ch08.md",
         "shediao/ch09.md",
-        "shediao/ch10.md"
+        "shediao/ch10.md",
+        "shediao/ch11.md",
+        "shediao/ch12.md",
+        "shediao/ch13.md",
+        "shediao/ch14.md",
+        "shediao/ch15.md",
+        "shediao/ch16.md",
+        "shediao/ch17.md",
+        "shediao/ch18.md",
+        "shediao/ch19.md",
+        "shediao/ch20.md"
       ]
     },
     "feiyan": {
@@ -114,6 +124,18 @@
         "tianlong/ch23.md",
         "tianlong/ch24.md"
       ]
+    },
+    "shendiao": {
+      "hook": [
+        "shendiao/hook.md"
+      ],
+      "files": []
+    },
+    "yitian": {
+      "hook": [
+        "yitian/hook.md"
+      ],
+      "files": []
     }
   }
 }
