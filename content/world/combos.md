@@ -388,3 +388,59 @@ bonus: 2.0
 effects: 内伤
 ---
 $A五指扣住$n的手腕，$n一挣没挣开，$B的降龙掌已经到了胸前——一个锁住，一个推倒。
+
+# ---------------- 神雕侠侣（杨过、小龙女、郭靖、黄蓉、程英）----------------
+
+=== combo: combo.sd2_yunv_quanzhen
+name: 玉女素心
+a: shendiao.yunv@20
+b: quanzhen.jianfa@60
+bonus: 2.0
+effects: 点穴
+---
+$A的玉女剑和$B的全真剑本是对头，此刻一攻一守，一个的破绽正被另一个补上，两道剑光交织成一张网，$n竟找不到一处空当。
+
+=== combo: combo.sd2_kongming_anran
+name: 空心护魂
+a: shediao.kongming@60
+b: shendiao.anran@20
+bonus: 2.0
+effects: 内伤
+---
+$A的空明拳把$n的劲力化得干干净净，$B的独臂就从那片空里一掌按落，掌力沉得像十六年的等待。
+
+=== combo: combo.sd2_tianluo_yunv
+name: 罗网护剑
+a: shendiao.tianluo@20
+b: shendiao.yunv@20
+bonus: 1.8
+effects: 破绽
+---
+$A的掌影罗网似的护住$B的周身，$B的玉女剑只管往前递——古墓里学的两样功夫，一守一攻，本来就是一家。
+
+=== combo: combo.sd2_xuantie_xianglong
+name: 重剑降龙
+a: shendiao.xuantie@20
+b: gaibang.xianglong@40
+bonus: 2.0
+effects: 内伤
+---
+$A一剑沉沉压下，$n举兵器硬接，整个人被压得一矮；$B的降龙掌就在这一矮的工夫推到了胸前。
+
+=== combo: combo.sd2_dagou_tanzhi
+name: 棒影弹指
+a: gaibang.dagou@40
+b: shendiao.tanzhi@20
+bonus: 1.9
+effects: 点穴
+---
+$A竹棒一绊，$n脚下一个踉跄；$B屈指一弹，指风正打在他踉跄时露出来的那处穴道上。
+
+=== combo: combo.sd2_tanzhi_luoying
+name: 桃花指雨
+a: shendiao.tanzhi@20
+b: shediao.luoying@60
+bonus: 1.8
+effects: 点穴
+---
+$A的指风和$B的落英掌都出自桃花岛，掌影像花瓣，指风像花雨，$n眼前一片粉红，等看清楚时穴道已经被点中了。

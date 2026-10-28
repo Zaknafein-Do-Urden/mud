@@ -129,7 +129,26 @@
       "hook": [
         "shendiao/hook.md"
       ],
-      "files": []
+      "files": [
+        "shendiao/ch01.md",
+        "shendiao/ch02.md",
+        "shendiao/ch03.md",
+        "shendiao/ch04.md",
+        "shendiao/ch05.md",
+        "shendiao/ch06.md",
+        "shendiao/ch07.md",
+        "shendiao/ch08.md",
+        "shendiao/ch09.md",
+        "shendiao/ch10.md",
+        "shendiao/ch11.md",
+        "shendiao/ch12.md",
+        "shendiao/ch13.md",
+        "shendiao/ch14.md",
+        "shendiao/ch15.md",
+        "shendiao/ch16.md",
+        "shendiao/ch17.md",
+        "shendiao/ch18.md"
+      ]
     },
     "yitian": {
       "hook": [

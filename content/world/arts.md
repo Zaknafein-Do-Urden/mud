@@ -1070,3 +1070,378 @@ effects: 破绽
 omen: $N铁杖横在身前，两只白眼翻着，嘴唇抿得紧紧的……
 ---
 $N铁杖一抡，「$招」，杖风把$n的守势砸开一个缺口！
+
+# ================= 神雕侠侣 =================
+# 玩家可学：天罗地网势（古墓，第四章）、弹指神通（黄药师，第七章）、玄铁剑法（剑冢，第十章）。上限随章节抬，第十八章通关 140（docs/SHENDIAO.md §2.6）。
+# NPC 专用：玉女剑法（杨过、小龙女）、黯然销魂掌（杨过）；敌人专用：赤练神掌（李莫愁）、龙象般若功（金轮法王）、阴阳倒乱刃（公孙止）。
+# 定义在这里是因为合击要认得它们（D-083）。
+
+# ---------------- 天罗地网势：第四章，古墓里小龙女教杨过捉麻雀的手法，杨过转教你 ----------------
+
+=== skill: shendiao.tianluo
+name: 天罗地网势
+kind: 外功
+stance: 守
+cap: 40
+---
+古墓派入门的掌法。小龙女把八十一只麻雀放在一间石室里，叫杨过只用一双手掌拦着，一只也不许飞出去。
+麻雀往哪边飞，掌就先到哪边。练熟了，对手的拳脚在你眼里也就是一只只麻雀。
+杨过学会之后得意得很，非要教你；他说这是他在古墓里头一回觉得自己学会了点什么。
+
+=== move: shendiao.tianluo.1
+skill: shendiao.tianluo
+name: 拦雀
+level: 0
+power: 26
+mp: 8
+omen: $N双掌在身前虚虚一圈，掌缘轻轻颤着……|$N眼睛盯着你的手，脚下一动不动……
+---
+$N双掌一拦，「$招」，$n的来势像撞进一张网里，被兜着送了回去，正拍在$n$部位。
+
+=== move: shendiao.tianluo.2
+skill: shendiao.tianluo
+name: 八方罗网
+level: 30
+power: 32
+mp: 12
+effects: 破绽
+omen: $N双掌忽上忽下，掌影像织网的梭子……
+---
+$N掌影四面一合，「$招」，$n往哪边走，哪边就有一只手掌等着，脚下一乱，露出了空门。
+
+=== move: shendiao.tianluo.3
+skill: shendiao.tianluo
+name: 收网
+level: 60
+power: 38
+mp: 15
+effects: 点穴
+omen: $N掌势一收，像是把网口慢慢扎紧……
+---
+$N双掌一收，「$招」，掌缘贴着$n的手臂一路滑上去，指尖点中了$n$部位的穴道。
+
+=== move: shendiao.tianluo.4
+skill: shendiao.tianluo
+name: 天罗地网
+level: 100
+power: 46
+mp: 20
+effects: 点穴, 破绽
+omen: $N身形绕着你转起来，转得你眼前全是手掌……
+---
+$N绕身疾走，「$招」，一双手掌化作千百只，上下左右全是掌影，$n像一只撞进网里的雀儿，再也挣不出去！
+
+# ---------------- 弹指神通：第七章，黄药师所授 ----------------
+
+=== skill: shendiao.tanzhi
+name: 弹指神通
+kind: 外功
+stance: 巧
+cap: 40
+---
+桃花岛的指上功夫。中指扣在拇指下，一弹出去，或是一缕指风，或是一枚石子，远远地打人穴道。
+黄药师教你的时候没说几句话，只在桌上弹落了一排茶杯盖，一个一个，听着像在敲琴。
+他说："当年在牛家村那间酒馆，你守了七天门。这一手，算我谢你的。"
+
+=== move: shendiao.tanzhi.1
+skill: shendiao.tanzhi
+name: 弹石
+level: 0
+power: 30
+mp: 10
+effects: 破绽
+omen: $N中指扣在拇指下，指甲盖上隐隐发亮……|$N袖子一抖，指间夹着一枚小石子……
+---
+$N中指一弹，「$招」，一缕指风嗤的一声破空而至，打在$n$部位！
+
+=== move: shendiao.tanzhi.2
+skill: shendiao.tanzhi
+name: 碧海潮生
+level: 30
+power: 38
+mp: 14
+effects: 点穴
+omen: $N手指在身侧轻轻敲着拍子，一下快一下慢……
+---
+$N屈指连弹，「$招」，指风一阵紧一阵松，像潮水一样涌过来，有一缕正点中$n$部位的穴道。
+
+=== move: shendiao.tanzhi.3
+skill: shendiao.tanzhi
+name: 落英弹指
+level: 60
+power: 48
+mp: 18
+effects: 点穴, 破绽
+omen: $N身形一转，掌影里夹着指风，分不清哪是掌哪是指……
+---
+$N掌中藏指，「$招」，掌影一落，真正的那一指早从花影里弹出，透过$n的守势直取$部位！
+
+=== move: shendiao.tanzhi.4
+skill: shendiao.tanzhi
+name: 一弹惊雷
+level: 90
+power: 58
+mp: 24
+effects: 点穴, 内伤
+omen: $N指尖慢慢扣紧，满身的劲力都往一根手指上收……
+---
+$N一指弹出，「$招」，指风炸开，像一声闷雷打在$n$部位，穴道连着经脉一齐震伤！
+
+# ---------------- 玄铁剑法：第十章，剑冢石壁上独孤求败的字 ----------------
+
+=== skill: shendiao.xuantie
+name: 玄铁剑法
+kind: 外功
+stance: 刚
+weapon: 剑
+cap: 40
+---
+独孤求败晚年的剑意。剑冢石壁上只留了几行字，说的是他这一生用过的几把剑：少年时锋利，中年时柔韧，后来剑越来越重，锋口越来越钝，到最后连剑也不用了。
+这门剑法没有花巧，只有一个"重"字：出手越慢，对手看得越清楚，却越躲不开、挡不住。
+拿什么剑都能使，拿的剑越沉越像样。
+
+=== move: shendiao.xuantie.1
+skill: shendiao.xuantie
+name: 沉剑
+level: 0
+power: 36
+mp: 12
+omen: $N剑尖垂地，慢慢地把剑举了起来，像举着一座山……|$N双手握剑，脚下踩进土里半寸……
+---
+$N一剑平平推出，「$招」，没有半点花样，$n明明看得清清楚楚，却怎么也让不开，被剑身结结实实撞在$部位！
+
+=== move: shendiao.xuantie.2
+skill: shendiao.xuantie
+name: 钝锋
+level: 30
+power: 46
+mp: 16
+effects: 破绽
+omen: $N剑势一沉，剑身带起的风压得人喘不过气……
+---
+$N剑走中宫，「$招」，剑未到，风先到，$n的兵器被剑风压得往下一沉，门户大开！
+
+=== move: shendiao.xuantie.3
+skill: shendiao.xuantie
+name: 拙剑
+level: 60
+power: 58
+mp: 21
+effects: 内伤
+omen: $N剑尖微微抬起，整个人却像钉在了地上……
+---
+$N一剑劈落，「$招」，那一剑笨得出奇，也重得出奇，劲力透过$n的守势直撞进五脏六腑！
+
+=== move: shendiao.xuantie.4
+skill: shendiao.xuantie
+name: 万物皆剑
+level: 100
+power: 70
+mp: 28
+effects: 内伤, 破绽
+omen: $N把剑收在身后，像是忘了手里还有一把剑……
+---
+$N剑意一发，「$招」，手里的是剑，是枝，是什么都一样，剑气排山倒海地压向$n，像一整座山塌了下来！
+
+# ---------------- 玉女剑法（NPC 专用：杨过、小龙女）----------------
+
+=== skill: shendiao.yunv
+name: 玉女剑法
+kind: 外功
+stance: 巧
+weapon: 剑
+---
+古墓派的剑法，当年林朝英专为克制全真剑法而创，招招都是全真剑法的对头。
+可是一个人使玉女剑法、一个人使全真剑法，两套剑一攻一守，破绽互相补上，反倒成了最难破的剑阵。
+
+=== move: shendiao.yunv.1
+skill: shendiao.yunv
+name: 远行
+level: 0
+power: 34
+mp: 12
+omen: $N长剑斜指，衣袂飘飘，像是要出门远行……
+---
+$N身随剑走，「$招」，剑光轻轻一挥，削向$n$部位。
+
+=== move: shendiao.yunv.2
+skill: shendiao.yunv
+name: 月下拈花
+level: 30
+power: 42
+mp: 15
+effects: 点穴
+omen: $N剑尖低垂，一副漫不经心的样子……
+---
+$N剑尖忽然一挑，「$招」，从意想不到的地方点中$n$部位的穴道。
+
+=== move: shendiao.yunv.3
+skill: shendiao.yunv
+name: 冷月护身
+stance: 守
+level: 0
+power: 30
+mp: 10
+omen: $N收剑当胸，剑身映着一片冷光……
+---
+$N剑身一横，「$招」，剑光绕身一圈，把$n的来招都隔在外面。
+
+# ---------------- 黯然销魂掌（NPC 专用：杨过）----------------
+
+=== skill: shendiao.anran
+name: 黯然销魂掌
+kind: 外功
+stance: 刚
+---
+杨过断臂之后，等一个人等了十六年，自己琢磨出来的一路掌法。
+出手全凭心境：心里越是难过，掌力越是沉。他自己说，这掌法别人学不去——学的人得先把心伤透。
+
+=== move: shendiao.anran.1
+skill: shendiao.anran
+name: 空袖
+level: 0
+power: 44
+mp: 16
+effects: 内伤
+omen: $N的独臂垂在身侧，空着的那只袖子被风吹得乱飘……
+---
+$N一掌拍出，「$招」，掌力里有说不出的凄凉，$n的心口一沉，像被什么重重撞了一下。
+
+=== move: shendiao.anran.2
+skill: shendiao.anran
+name: 失神
+level: 30
+power: 54
+mp: 20
+effects: 内伤, 破绽
+omen: $N站在那里发怔，好像压根没看见你……
+---
+$N似乎在出神，「$招」，那一掌却已经到了，$n根本没看清是怎么来的，$部位已经结结实实挨了一记！
+
+# ---------------- 赤练神掌（只给敌人用：李莫愁）----------------
+
+=== skill: shendiao.chilian
+name: 赤练神掌
+kind: 外功
+stance: 巧
+---
+李莫愁的掌法。掌心带毒，打中的地方先是一片殷红，过一会儿就发黑。她另一只手里的拂尘也不闲着，冰魄银针藏在拂尘丝里。
+
+=== move: shendiao.chilian.1
+skill: shendiao.chilian
+name: 赤练掌
+level: 0
+power: 36
+mp: 12
+effects: 内伤
+omen: $N掌心翻起，红得像抹了一层胭脂……|$N拂尘一甩，嘴角带着笑……
+---
+$N一掌拍来，「$招」，掌心那一片殷红印在$n$部位，毒气顺着皮肉往里钻！
+
+=== move: shendiao.chilian.2
+skill: shendiao.chilian
+name: 冰魄银针
+level: 30
+power: 44
+mp: 16
+effects: 点穴, 内伤
+omen: $N拂尘丝一抖，里面闪过几点寒光……
+---
+$N拂尘一扬，「$招」，几枚银针无声无息地钉向$n$部位，针上的寒毒直透经脉！
+
+=== move: shendiao.chilian.3
+skill: shendiao.chilian
+name: 拂尘卷
+stance: 守
+level: 0
+power: 30
+mp: 8
+omen: $N拂尘在身前一绕，丝丝缕缕散成一片……
+---
+$N拂尘一卷，「$招」，把$n的来招缠得拖泥带水。
+
+# ---------------- 龙象般若功（只给敌人用：金轮法王）----------------
+
+=== skill: shendiao.longxiang
+name: 龙象般若功
+kind: 外功
+stance: 刚
+---
+密宗的护法神功，分十三层，练到一层就多一龙一象之力。金轮法王练到了第十层，几百年里少有人练到这一层。
+他出手时身边五只轮子轮流飞旋，金、银、铜、铁、铅，一轮比一轮重。
+
+=== move: shendiao.longxiang.1
+skill: shendiao.longxiang
+name: 金轮飞旋
+level: 0
+power: 40
+mp: 14
+effects: 破绽
+omen: $N袖中一只金轮呜呜作响，绕着他飞了一圈……
+---
+$N手一扬，「$招」，金轮呼啸着旋了过来，砸向$n$部位！
+
+=== move: shendiao.longxiang.2
+skill: shendiao.longxiang
+name: 龙象之力
+level: 40
+power: 52
+mp: 20
+effects: 内伤
+omen: $N双掌缓缓合拢，周身的僧袍鼓了起来，像有一头大象要从里面冲出来……
+---
+$N双掌一推，「$招」，十龙十象的力道排山倒海地撞向$n，$n像被一堵墙迎面拍中！
+
+=== move: shendiao.longxiang.3
+skill: shendiao.longxiang
+name: 五轮齐转
+level: 80
+power: 62
+mp: 26
+effects: 内伤, 破绽
+omen: $N五只轮子同时出手，在半空里转成一片金光……
+---
+$N五轮齐发，「$招」，金银铜铁铅五只轮子从五个方向一齐砸到，$n挡得住一只，挡不住五只！
+
+=== move: shendiao.longxiang.4
+skill: shendiao.longxiang
+name: 金刚坐
+stance: 守
+level: 0
+power: 34
+mp: 10
+omen: $N盘膝一坐，宝相庄严……
+---
+$N双掌合十，「$招」，周身如罩金刚，$n的劲力打上去像打在一口铜钟上。
+
+# ---------------- 阴阳倒乱刃（只给敌人用：公孙止）----------------
+
+=== skill: shendiao.yinyang
+name: 阴阳倒乱刃
+kind: 外功
+stance: 巧
+weapon: 刀
+---
+公孙止的家传刀剑功夫：左手黑剑，右手金刀，刀走剑路，剑走刀路，倒过来使，看得人眼花缭乱。
+
+=== move: shendiao.yinyang.1
+skill: shendiao.yinyang
+name: 刀剑互易
+level: 0
+power: 36
+mp: 12
+effects: 破绽
+omen: $N左手剑、右手刀，忽然两手一交换……
+---
+$N刀剑一换，「$招」，本该是刀砍的地方来了一剑，本该是剑刺的地方来了一刀，$n顿时手忙脚乱！
+
+=== move: shendiao.yinyang.2
+skill: shendiao.yinyang
+name: 阴阳倒乱
+level: 40
+power: 48
+mp: 18
+effects: 点穴
+omen: $N刀剑一黑一金，在身前绞成一团……
+---
+$N刀剑齐出，「$招」，黑剑引开$n的兵器，金刀已经贴着刀背削到$n$部位！

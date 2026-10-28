@@ -72,7 +72,7 @@ function win(g, label) {
 function lose(g, label) {
   if (!g.state.battle) { note(`${label}：以为在打架，其实没有`); return; }
   for (let i = 0; i < 60 && g.state.battle; i++) {
-    for (const u of g.state.battle.units) { if (u.side === 'p' && u.hp > 0) u.hp = 1; if (u.side === 'e') u.hp = Math.max(u.hp, u.maxHp); } // 敌人不倒：免得 NPC 队友替你打赢
+    for (const u of g.state.battle.units) { if (u.side === 'p' && u.hp > 0) u.hp = 1; if (u.side === 'e') u.hp = 1e9; } // 敌人不倒：免得 NPC 队友替你打赢
     ex(g, '0', label);
   }
   if (g.state.battle) note(`${label}：六十回合还没输掉`);
