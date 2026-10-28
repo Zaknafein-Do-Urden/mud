@@ -4,7 +4,7 @@
 === storyline: shediao
 name: 射雕英雄传
 xiuwei: 60-710
-milestones: flag:shediao.mo.mei_won, flag:shediao.th.mei_won
+milestones: flag:shediao.ch6_done, flag:shediao.ch10_done
 # 全线完结（第二十章），走完给 1 个天赋点；神雕侠侣的 requires 读它（D-141）
 done: flag:shediao.ch20_done
 # 尚未开始时，在"江湖 → 主线"里给出的线索

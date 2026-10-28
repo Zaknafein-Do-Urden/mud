@@ -15,7 +15,7 @@
 **[docs/WRITING.md](docs/WRITING.md)**：用户对剧情的全部要求（版权、章节结构、战斗、门槛、联机、武学秘籍的平衡、防丢规则、检查流程、各主线章节规划）。
 
 写天龙八部的会话再读 **[docs/TIANLONG.md](docs/TIANLONG.md)**（地图、门派关系、章节规划、多会话协作规则）。
-射雕英雄传二十章、神雕侠侣十八章已完结；三部曲后一部要等前一部走完才能开（D-141）。接手射雕读 **[docs/SHEDIAO.md](docs/SHEDIAO.md)**；接手神雕或开写倚天读 **[docs/SHENDIAO.md](docs/SHENDIAO.md)**（规划、和射雕的前后联系、跨章标记、留给倚天的伏笔见 TODO-CONTENT）。
+射雕英雄传（20 章）→ 神雕侠侣（18 章）→ 倚天屠龙记（20 章）三部曲已完结，后一部要等前一部走完才能开（D-141）。接手各部分别读 **[docs/SHEDIAO.md](docs/SHEDIAO.md)**、**[docs/SHENDIAO.md](docs/SHENDIAO.md)**、**[docs/YITIAN.md](docs/YITIAN.md)**（规划、前后联系、跨章标记；番外线头见 TODO-CONTENT）。
 笑傲江湖十八章已完结；接手这条线或写番外的会话读 **[docs/XIAOAO.md](docs/XIAOAO.md)**（全线清单、地图出口、华山派怎么与现有门派共存、踩过的坑、验收命令）。
 
 ## 多个会话同时工作时

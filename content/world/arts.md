@@ -1445,3 +1445,331 @@ effects: 点穴
 omen: $N刀剑一黑一金，在身前绞成一团……
 ---
 $N刀剑齐出，「$招」，黑剑引开$n的兵器，金刀已经贴着刀背削到$n$部位！
+
+# ================= 倚天屠龙记 =================
+# 玩家可学：九阳神功（内功，第一章觉远临终、第八章白猿腹中）、乾坤大挪移（守，光明顶秘道，第十章）、七伤拳（刚，谢逊，第十四章）。
+# 上限随章节抬，第二十章通关 200（docs/YITIAN.md §2.6）。
+# NPC／敌人专用：玄冥神掌、幻阴指、圣火令武功、寒冰绵掌、鹰爪擒拿手、狮吼。定义在这里是因为合击要认得它们（D-083）。
+
+# ---------------- 九阳神功（内功）：第一章，觉远临终那一夜念的经 ----------------
+
+=== skill: yitian.jiuyang
+name: 九阳神功
+kind: 内功
+cap: 40
+hp: 12
+mp: 12
+affinity: 刚
+---
+觉远临终那一夜念了一整晚的经，念的是力从哪里来、往哪里去：别人的力气再大，由它大去，像风吹过山，山还是山；别人再横，由它横去，像月光照在江上，江水照样流。
+他念的时候不知道自己在念什么，只是一句一句往外倒。你听进去了几句，郭襄听进去几句，那个叫君宝的少年听进去几句。
+几句就够你受用的了。剩下的几百几千句，在一只白猿的肚子里。
+
+# ---------------- 乾坤大挪移：第十章，光明顶秘道里的羊皮 ----------------
+
+=== skill: yitian.qiankun
+name: 乾坤大挪移
+kind: 外功
+stance: 守
+cap: 40
+---
+明教历代教主相传的心法，写在一张羊皮上，藏在光明顶的秘道里。讲的不是怎么出力，是怎么把别人的力挪个地方。
+对手一拳打来，你不接，你把它挪开；挪得好，挪回到他自己身上。
+羊皮上一共七层。写的人在第七层末尾留了一句：有十九句我也没练成，后人不必强求。
+
+=== move: yitian.qiankun.1
+skill: yitian.qiankun
+name: 挪
+level: 0
+power: 30
+mp: 10
+omen: $N双手一引，像是要接住什么，又像是要推开什么……|$N肩膀一松，整个人软了下来……
+---
+$N手腕轻轻一带，「$招」，$n的劲力被引偏了半尺，自己的拳头反倒撞向自己的$部位！
+
+=== move: yitian.qiankun.2
+skill: yitian.qiankun
+name: 移
+level: 40
+power: 38
+mp: 14
+effects: 破绽
+omen: $N脚下一转，身子侧开了一点点……
+---
+$N借势一转，「$招」，把$n的来招整个挪到一边，$n一个踉跄，门户大开。
+
+=== move: yitian.qiankun.3
+skill: yitian.qiankun
+name: 颠倒乾坤
+level: 80
+power: 46
+mp: 18
+effects: 化内
+omen: $N双掌一上一下，像是捧着一个看不见的圆……
+---
+$N双掌一旋，「$招」，$n的内力顺着交手处被引了出去，打了个转，散在空里。
+
+=== move: yitian.qiankun.4
+skill: yitian.qiankun
+name: 借力还施
+level: 120
+power: 56
+mp: 24
+effects: 化内, 破绽
+omen: $N纹丝不动，只是看着你，等你先出手……
+---
+$N不闪不避，「$招」，$n多大的力道打过来，就有多大的力道原样还回去，打在$n$部位上！
+
+# ---------------- 七伤拳：第十四章，灵蛇岛上谢逊口授 ----------------
+
+=== skill: yitian.qishang
+name: 七伤拳
+kind: 外功
+stance: 刚
+cap: 50
+---
+崆峒派的镇派拳法，一拳之中七股劲力，刚柔阴阳各不相同，打进对手体内，七股劲在里面各走各的路。
+练的人自己也要先挨这七股劲：内功不到家就练，先伤的是自己。谢逊就是这么伤的。
+他把拳谱一句一句念给你听，念完了说："你内功比我当年深，伤不着你。伤着了，别学我。"
+
+=== move: yitian.qishang.1
+skill: yitian.qishang
+name: 一拳七劲
+level: 0
+power: 42
+mp: 14
+effects: 内伤
+omen: $N拳头握紧又松开，松开又握紧，像是在数什么……|$N沉腰坐马，拳头上青筋一根根鼓起来……
+---
+$N一拳打出，「$招」，拳上七股劲力一齐涌进$n$部位，有的往上钻，有的往下沉！
+
+=== move: yitian.qishang.2
+skill: yitian.qishang
+name: 阴阳相冲
+level: 40
+power: 52
+mp: 18
+effects: 内伤
+omen: $N一拳在前、一拳在后，两只拳头一冷一热……
+---
+$N双拳先后打到，「$招」，一股阴劲、一股阳劲在$n体内撞在一起，震得$n五脏六腑都翻了个身！
+
+=== move: yitian.qishang.3
+skill: yitian.qishang
+name: 伤人伤己
+level: 80
+power: 64
+mp: 24
+effects: 内伤, 破绽
+omen: $N脸色忽然一白，像是自己先挨了一拳……
+---
+$N拼着自己受震，「$招」，一拳结结实实砸在$n$部位，$n整个人被打得弯了下去！
+
+=== move: yitian.qishang.4
+skill: yitian.qishang
+name: 七伤归一
+level: 120
+power: 74
+mp: 30
+effects: 内伤, 破绽
+omen: $N闭上眼，满身的劲力一股一股往拳头上收，七股收成一股……
+---
+$N一拳推出，「$招」，七股劲力合成一股，像一根烧红的铁柱捅进$n的$部位！
+
+# ---------------- 玄冥神掌（只给敌人用：鹿杖客、鹤笔翁）----------------
+
+=== skill: yitian.xuanming
+name: 玄冥神掌
+kind: 外功
+stance: 巧
+---
+百损道人传下的阴寒掌力。中掌的人起初只觉得一阵凉，过几个时辰，寒毒从骨髓里往外冒，冷得牙齿打战，生不如死。
+
+=== move: yitian.xuanming.1
+skill: yitian.xuanming
+name: 玄冥寒气
+level: 0
+power: 40
+mp: 14
+effects: 内伤
+omen: $N掌心泛出一层青白色，四周的空气都凉了……
+---
+$N一掌拍来，「$招」，掌风冷得像腊月的井水，寒气透进$n$部位，冻得经脉都僵了！
+
+=== move: yitian.xuanming.2
+skill: yitian.xuanming
+name: 寒毒入髓
+level: 50
+power: 54
+mp: 20
+effects: 内伤, 点穴
+omen: $N双掌一合，指缝里冒出一缕缕白气……
+---
+$N双掌齐推，「$招」，一股寒毒顺着$n的$部位钻进骨头里，$n半边身子都麻了！
+
+=== move: yitian.xuanming.3
+skill: yitian.xuanming
+name: 寒冰护体
+stance: 守
+level: 0
+power: 32
+mp: 10
+omen: $N周身罩上一层寒气，眉毛上都结了霜……
+---
+$N运起寒气护身，「$招」，$n的劲力一沾上就冻住了一半。
+
+# ---------------- 幻阴指（只给敌人用：成昆）----------------
+
+=== skill: yitian.huanyin
+name: 幻阴指
+kind: 外功
+stance: 巧
+---
+成昆的指上功夫，阴柔狠辣，指力打进人体之后不散，专封要穴。他一辈子就靠这一手，在暗处算计人。
+
+=== move: yitian.huanyin.1
+skill: yitian.huanyin
+name: 幻影
+level: 0
+power: 42
+mp: 14
+effects: 点穴
+omen: $N笑眯眯的，手指却已经慢慢伸了出来……
+---
+$N一指点来，「$招」，指影虚虚实实，真正的那一指正点在$n$部位的穴道上！
+
+=== move: yitian.huanyin.2
+skill: yitian.huanyin
+name: 阴劲封穴
+level: 50
+power: 56
+mp: 20
+effects: 点穴, 内伤
+omen: $N身形一晃，指尖上隐隐带着一股阴风……
+---
+$N连点三指，「$招」，阴劲封住$n三处要穴，在里面一直往深处钻！
+
+# ---------------- 圣火令武功（只给敌人用：波斯三使）----------------
+
+=== skill: yitian.shenghuo
+name: 圣火令武功
+kind: 外功
+stance: 巧
+---
+波斯明教刻在圣火令上的武功，路数古怪之极，一会儿翻筋斗，一会儿在地上打滚，出手的方位全不合中原的规矩。
+三个人一起使，像三个人用一副身子。
+
+=== move: yitian.shenghuo.1
+skill: yitian.shenghuo
+name: 怪招
+level: 0
+power: 42
+mp: 14
+effects: 破绽
+omen: $N忽然一个筋斗翻了过来，手里的圣火令在头顶乱舞……
+---
+$N身子倒翻，「$招」，圣火令从一个绝不可能的方位敲下来，正砸在$n$部位！
+
+=== move: yitian.shenghuo.2
+skill: yitian.shenghuo
+name: 三才合一
+level: 50
+power: 56
+mp: 20
+effects: 点穴, 破绽
+omen: $N和两个同伴交换了一个眼神，三个人同时动了……
+---
+$N和同伴一前一后一侧，「$招」，三块圣火令同时到了，$n躲得开一块，躲不开三块！
+
+# ---------------- 寒冰绵掌（NPC 与敌人：韦一笑）----------------
+
+=== skill: yitian.hanbing
+name: 寒冰绵掌
+kind: 外功
+stance: 巧
+---
+青翼蝠王韦一笑的掌法。他练功岔了经脉，每次发功都要吸人热血才压得住寒毒。掌力阴冷，身法快得像一阵风。
+
+=== move: yitian.hanbing.1
+skill: yitian.hanbing
+name: 青翼掠影
+level: 0
+power: 40
+mp: 14
+effects: 破绽
+omen: $N身形一飘，人已经不在原地了……
+---
+$N一晃而至，「$招」，一掌冷冰冰地拍在$n$部位，人早已飘到了一丈开外。
+
+=== move: yitian.hanbing.2
+skill: yitian.hanbing
+name: 寒冰入骨
+level: 50
+power: 52
+mp: 18
+effects: 内伤
+omen: $N笑得露出一口白牙，掌心冒着寒气……
+---
+$N绕到身后，「$招」，阴冷的掌力透过$n的背心直钻进去！
+
+# ---------------- 鹰爪擒拿手（NPC 与敌人：殷天正）----------------
+
+=== skill: yitian.yingzhao
+name: 鹰爪擒拿手
+kind: 外功
+stance: 刚
+---
+白眉鹰王殷天正的看家功夫，十指如钩，抓住哪里哪里就断。他七十多岁了，一双手还硬得像铁。
+
+=== move: yitian.yingzhao.1
+skill: yitian.yingzhao
+name: 鹰击
+level: 0
+power: 44
+mp: 14
+effects: 破绽
+omen: $N双臂一张，像一只要扑下来的老鹰……
+---
+$N猛扑而下，「$招」，十指像鹰爪一样扣住$n$部位，用力一拧！
+
+=== move: yitian.yingzhao.2
+skill: yitian.yingzhao
+name: 擒龙
+level: 50
+power: 56
+mp: 20
+effects: 点穴, 破绽
+omen: $N白眉一竖，两只手一前一后封住了你的去路……
+---
+$N一手擒腕、一手扣肩，「$招」，$n的关节被锁得死死的，动弹不得！
+
+# ---------------- 狮吼（只给敌人用：谢逊，群攻）----------------
+
+=== skill: yitian.shihou
+name: 狮吼功
+kind: 外功
+stance: 刚
+---
+金毛狮王谢逊的长啸。内力从丹田里迸出来，化成一声啸，内功浅的人听了，轻的疯，重的死。
+
+=== move: yitian.shihou.1
+skill: yitian.shihou
+name: 狮子吼
+level: 0
+power: 46
+mp: 22
+effects: 群攻, 内伤
+omen: $N仰起头，胸膛一点一点鼓了起来……
+---
+$N仰天长啸，「$招」，啸声像一阵海啸压过来，震得所有人耳中嗡嗡作响，气血翻涌！
+
+=== move: yitian.shihou.2
+skill: yitian.shihou
+name: 屠龙刀法
+level: 30
+power: 52
+mp: 18
+effects: 破绽
+omen: $N手里那把黑沉沉的刀慢慢举了起来……
+---
+$N一刀劈落，「$招」，刀风沉得像一座山，$n举手一挡，手臂都震麻了！

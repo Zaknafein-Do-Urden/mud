@@ -341,7 +341,7 @@ function ch3rest(g, label, { how, shield, loseZhao = false }) {
   expectFlag(g, 'shendiao.ch3_done', label);
   expectCap(g, 'quanzhen.jianfa', 110, label);
   expectCap(g, 'quanzhen.xinfa', 110, label);
-  // 第三章收尾直接带回墓门，第四章的开场接着弹出来（D-145）
+  // 第三章收尾直接带回墓门，第四章的开场接着弹出来（D-144）
   expectFlag(g, 'shendiao.ch4', label);
   if (!g.dialog) note(`${label}：第三章收尾后第四章开场没有接上`);
   g.endDialog();

@@ -444,3 +444,59 @@ bonus: 1.8
 effects: 点穴
 ---
 $A的指风和$B的落英掌都出自桃花岛，掌影像花瓣，指风像花雨，$n眼前一片粉红，等看清楚时穴道已经被点中了。
+
+# ---------------- 倚天屠龙记（张无忌、张三丰、谢逊、殷天正、韦一笑）----------------
+
+=== combo: combo.yt_qiankun_qishang
+name: 挪移七伤
+a: yitian.qiankun@40
+b: yitian.qishang@40
+bonus: 2.1
+effects: 内伤
+---
+$A把$n的劲力挪开半尺，$n收势不住往前一扑；$B的七伤拳就在这一扑里迎面打到，七股劲力一齐撞进去。
+
+=== combo: combo.yt_qiankun_xuantie
+name: 借力重剑
+a: yitian.qiankun@40
+b: shendiao.xuantie@80
+bonus: 2.1
+effects: 破绽
+---
+$A引着$n的兵器往外一带，$n整个人都被带得空了门户；$B的重剑沉沉压下，压的正是那片空门。
+
+=== combo: combo.yt_taiji_xuantie
+name: 太极重剑
+a: wudang.taiji@60
+b: shendiao.xuantie@80
+bonus: 2.0
+effects: 内伤
+---
+$A的太极拳画着圈，把$n的来势一圈一圈卸掉；$B的重剑一点一点逼进去。一个越来越软，一个越来越重。
+
+=== combo: combo.yt_qishang_pair
+name: 七伤双拳
+a: yitian.qishang@40
+b: yitian.qishang@40
+bonus: 2.0
+effects: 内伤
+---
+$A和$B的七伤拳一前一后打到，十四股劲力在$n体内撞成一团，连$n自己也说不清哪里在疼。
+
+=== combo: combo.yt_yingzhao_tanzhi
+name: 鹰爪弹指
+a: yitian.yingzhao@40
+b: shendiao.tanzhi@80
+bonus: 1.9
+effects: 点穴
+---
+$A十指扣住$n的肩头，$n一挣，$B屈指一弹，正点在他挣开时露出来的那处穴道上。
+
+=== combo: combo.yt_hanbing_tianluo
+name: 寒影罗网
+a: shendiao.tianluo@80
+b: yitian.hanbing@40
+bonus: 1.9
+effects: 破绽
+---
+$A的掌影罗网似的护住$B，$B青影一闪已经绕到$n背后，一掌冷冷地拍了下去。

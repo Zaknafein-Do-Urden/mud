@@ -154,7 +154,28 @@
       "hook": [
         "yitian/hook.md"
       ],
-      "files": []
+      "files": [
+        "yitian/ch01.md",
+        "yitian/ch02.md",
+        "yitian/ch03.md",
+        "yitian/ch04.md",
+        "yitian/ch05.md",
+        "yitian/ch06.md",
+        "yitian/ch07.md",
+        "yitian/ch08.md",
+        "yitian/ch09.md",
+        "yitian/ch10.md",
+        "yitian/ch11.md",
+        "yitian/ch12.md",
+        "yitian/ch13.md",
+        "yitian/ch14.md",
+        "yitian/ch15.md",
+        "yitian/ch16.md",
+        "yitian/ch17.md",
+        "yitian/ch18.md",
+        "yitian/ch19.md",
+        "yitian/ch20.md"
+      ]
     }
   }
 }
